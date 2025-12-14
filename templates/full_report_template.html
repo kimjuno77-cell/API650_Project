@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API 650 Tank Design Report</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 20mm;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            color: #333;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #fff;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        header {
+            border-bottom: 2px solid #0056b3;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .report-title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #0056b3;
+            margin: 0;
+        }
+
+        .meta-info {
+            font-size: 14px;
+            color: #666;
+            margin-top: 10px;
+        }
+
+        /* Sections */
+        h1,
+        h2,
+        h3 {
+            color: #2c3e50;
+        }
+
+        h2 {
+            border-left: 5px solid #0056b3;
+            padding-left: 10px;
+            margin-top: 40px;
+            background-color: #f8f9fa;
+            padding: 10px;
+        }
+
+        h3 {
+            margin-top: 25px;
+            color: #444;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            color: #333;
+            font-weight: bold;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        /* Cards/Summary */
+        .summary-box {
+            background-color: #eef2f5;
+            padding: 20px;
+            border-radius: 5px;
+            border: 1px solid #d1d9e6;
+            margin-bottom: 20px;
+        }
+
+        .summary-item {
+            margin-bottom: 10px;
+        }
+
+        .label {
+            font-weight: bold;
+            display: inline-block;
+            width: 180px;
+        }
+
+        /* Footer */
+        footer {
+            margin-top: 50px;
+            font-size: 12px;
+            color: #999;
+            text-align: center;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+
+        .status-ok {
+            color: green;
+            font-weight: bold;
+        }
+
+        .status-fail {
+            color: red;
+            font-weight: bold;
+        }
+
+        @media print {
+            body {
+                background-color: white;
+            }
+
+            .container {
+                max-width: 100%;
+                width: 100%;
+            }
+
+            h2 {
+                page-break-before: always;
+            }
+
+            h2:first-of-type {
+                page-break-before: avoid;
+            }
+
+            .detailed-calc {
+                page-break-inside: avoid;
+            }
+        }
+
+        /* Detailed Report Specifics */
+        .formula-box {
+            background-color: #f8f9fa;
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 4px solid #007bff;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .calc-step {
+            margin-left: 20px;
+            padding: 5px 0;
+            border-bottom: 1px dashed #eee;
+            font-family: monospace;
+            font-size: 13px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <header>
+            <div class="report-title">API 650 Storage Tank Design Report</div>
+            <div class="meta-info">
+                <div><strong>Project:</strong> {{ project_name }}</div>
+                <div><strong>Designer:</strong> {{ designer_name }}</div>
+                <div><strong>Date:</strong> {{ date }}</div>
+                <div><strong>Design Code:</strong> API 650 13th Edition (2020)</div>
+                <div class="summary-item"><span class="label">Applicable Annexes:</span> {{ Applied_Annexes | join(', ')
+                    if Applied_Annexes else 'N/A' }}</div>
+                <hr>
+                <div class="summary-item"><span class="label">Inside Diameter (ID):</span> {{ "%.3f"|format(ID) }} m
+                </div>
+                <div class="summary-item"><span class="label">Nominal Diameter (D):</span> {{ "%.3f"|format(D_Nominal if
+                    D_Nominal is defined else D) }} m</div>
+                <div class="summary-item"><span class="label">Outside Diameter (OD):</span> {{ "%.3f"|format(OD) }} m
+                </div>
+                <div class="summary-item"><span class="label">Shell Height:</span> {{ H }} m</div>
+                <div class="summary-item"><span class="label">Max Liq. Level:</span> {{ Max_Level }} m</div>
+                <div class="summary-item"><span class="label">Min Liq. Level:</span> {{ Min_Level }} m</div>
+                <div class="summary-item"><span class="label">Stored Liquid:</span> {{ Liquid_Name }}</div>
+                <div class="summary-item"><span class="label">S.G of Contents:</span> {{ G }}</div>
+                <div class="summary-item"><span class="label">S.G of Hydrotest:</span> 1.0</div>
+                <div class="summary-item"><span class="label">Design Temperature:</span> {{ Design_Temp }} ºC</div>
+                <div class="summary-item"><span class="label">MDMT:</span> {{ MDMT }} ºC</div>
+                <div class="summary-item"><span class="label">Tank Joint Efficiency:</span> {{
+                    "%.2f"|format(Joint_Efficiency) }}</div>
+                <div class="summary-item"><span class="label">Design Pressure:</span> {{ P_design }} mmH2O</div>
+                <hr>
+                <div class="summary-item"><span class="label">Snow Load:</span> {{ wind_data.get('Snow Load', 0) }} kPa
+                </div>
+                <div class="summary-item"><span class="label">Roof Live Load:</span> {{ wind_data.get('Live Load', 0) }}
+                    kPa</div>
+                <div class="summary-item"><span class="label">Add. Roof Dead Load:</span> {{ wind_data.get('Dead Load
+                    Add', 0) }} kPa</div>
+            </div>
+
+            <h2>2. Roof Design Details</h2>
+            <table>
+                <tr>
+                    <td>Type</td>
+                    <td>{{ roof_type }}</td>
+                </tr>
+                <tr>
+                    <td>Slope</td>
+                    <td>{{ "%.3f"|format(roof_slope) }}</td>
+                </tr>
+                <tr>
+                    <td>Material</td>
+                    <td>{{ roof_data.get('Material', '-') }}</td>
+                </tr>
+                <tr>
+                    <td>Corrosion Allowance (CA)</td>
+                    <td>{{ CA_roof }} mm</td>
+                </tr>
+                <tr>
+                <tr>
+                    <td>Required Thickness</td>
+                    <td>{{ "%.2f"|format(roof_data.get('Req Thk', 0)) }} mm</td>
+                </tr>
+                <tr>
+                    <td>Used Thickness</td>
+                    <td>{{ "%.2f"|format(roof_data.get('Used Thk', 0)) }} mm</td>
+                </tr>
+                <tr>
+                    <td>Status</td>
+                    <td class="{{ 'status-ok' if 'OK' in roof_data.get('Status', '') else 'status-fail' }}">{{
+                        roof_data.get('Status', '-') }}</td>
+                </tr>
+                <tr>
+                    <td>Total Roof Weight</td>
+                    <td>{{ "%.2f"|format(W_roof_kg) }} kg</td>
+                </tr>
+            </table>
+
+            {% if annex_f %}
+            <h3>Annex F (Top Angle & Detail)</h3>
+            <table>
+                <tr>
+                    <td>Detail Type</td>
+                    <td>{{ annex_f.get('Detail', '-') }}</td>
+                </tr>
+                <tr>
+                    <td>Top Angle Size</td>
+                    <td>{{ annex_f.get('Top Angle', '-') }}</td>
+                </tr>
+                <tr>
+                    <td>Junction Area</td>
+                    <td>{{ "%.1f"|format(annex_f.get('Junction Area (mm2)', 0)) }} mm2</td>
+                </tr>
+            </table>
+            {% endif %}
+
+            {% if frangibility %}
+            <h3>Roof Frangibility Check (API 650 5.10.2.6)</h3>
+            <table>
+                <tr>
+                    <td>Participating Joint Area (A)</td>
+                    <td>{{ "%.0f"|format(frangibility.get('Participating_Area_mm2', 0)) }} mm2</td>
+                </tr>
+                <tr>
+                    <td>Limit Area (approx)</td>
+                    <td>{{ "%.0f"|format(frangibility.get('Limit_Area_mm2', 0)) }} mm2</td>
+                </tr>
+                <tr>
+                    <td>Status</td>
+                    <td>
+                        <strong style="color: {{ 'green' if frangibility.get('Is_Frangible') else 'red' }}">
+                            {{ "Frangible" if frangibility.get('Is_Frangible') else "Not Frangible" }}
+                        </strong>
+                    </td>
+                </tr>
+            </table>
+            {% if not frangibility.get('Is_Frangible') %}
+            <div
+                style="background-color: #ffebee; border: 1px solid #ef5350; padding: 10px; margin: 10px 0; color: #c62828;">
+                <strong>⚠️ Warning:</strong> {{ frangibility.get('Warning', 'Joint strength exceeds limit.') }}<br>
+                <strong>🚨 ACTION REQUIRED: Emergency Venting Device (e.g., Gauge Hatch) is REQUIRED.</strong>
+            </div>
+            {% endif %}
+            {% endif %}
+
+            {% if struct_data %}
+            <h3>Roof Structure Design & BOM</h3>
+            <div style="margin-bottom: 15px; text-align: center;">
+                {% if struct_data.get('Plot SVG') %}
+                <div style="display: inline-block; border: 1px solid #ccc; padding: 10px;">
+                    {{ struct_data.get('Plot SVG') | safe }}
+                </div>
+                {% elif struct_data.get('Plot Path') %}
+                <img src="{{ struct_data.get('Plot Path') }}" alt="Structure Layout"
+                    style="border: 1px solid #ccc; max-width: 400px;">
+                {% else %}
+                <em>(Sketch Generation Failed)</em>
+                {% endif %}
+            </div>
+
+            <table class="bom-table" style="width:100%; border-collapse: collapse; font-size: 13px;">
+                <tr style="background-color: #f2f2f2;">
+                    <th style="border: 1px solid #ddd; padding: 5px;">Item</th>
+                    <th style="border: 1px solid #ddd; padding: 5px;">Profile / Description</th>
+                    <th style="border: 1px solid #ddd; padding: 5px;">Qty</th>
+                    <th style="border: 1px solid #ddd; padding: 5px;">Unit Len (m)</th>
+                    <th style="border: 1px solid #ddd; padding: 5px;">Unit Wt (kg/m)</th>
+                    <th style="border: 1px solid #ddd; padding: 5px;">Total Wt (kg)</th>
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #ddd; padding: 5px;">Rafters</td>
+                    <td style="border: 1px solid #ddd; padding: 5px;">{{ struct_data.get('Rafter Section') }}</td>
+                    <td style="border: 1px solid #ddd; padding: 5px;">{{ struct_data.get('Num Rafters') }}</td>
+                    <td style="border: 1px solid #ddd; padding: 5px;">{{ "%.2f"|format(struct_data.get('Rafter_Length',
+                        0)) }}</td>
+                    <td style="border: 1px solid #ddd; padding: 5px;">{{ "%.1f"|format(struct_data.get('Rafter_Wt', 0))
+                        }}</td>
+                    <td style="border: 1px solid #ddd; padding: 5px;">{{
+                        "%.1f"|format(struct_data.get('Rafter_Total_Wt', 0)) }}</td>
+                </tr>
+                {% if struct_data.get('Num Girders', 0) > 0 %}
+                <tr>
+                    <td style="border: 1px solid #ddd; padding: 5px;">Girders</td>
+                    <td style="border: 1px solid #ddd; padding: 5px;">{{ struct_data.get('Girder Section') }}</td>
+                    <td style="border: 1px solid #ddd; padding: 5px;">{{ struct_data.get('Num Girders') }}</td>
+                    <td style="border: 1px solid #ddd; padding: 5px;">{{ "%.2f"|format(struct_data.get('Girder_Length',
+                        0)) }}</td>
+                    <td style="border: 1px solid #ddd; padding: 5px;">{{ "%.1f"|format(struct_data.get('Girder_Wt', 0))
+                        }}</td>
+                    <td style="border: 1px solid #ddd; padding: 5px;">{{
+                        "%.1f"|format(struct_data.get('Girder_Total_Wt', 0)) }}</td>
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #ddd; padding: 5px;">Ring Columns</td>
+                    <td style="border: 1px solid #ddd; padding: 5px;">{{ struct_data.get('Ring Col Section') }}</td>
+                    <td style="border: 1px solid #ddd; padding: 5px;">{{ struct_data.get('Num Ring Cols') }}</td>
+                    <td style="border: 1px solid #ddd; padding: 5px;">{{ "%.2f"|format(H) }}</td>
+                    <td style="border: 1px solid #ddd; padding: 5px;">{{ "%.1f"|format(struct_data.get('Ring_Col_Wt',
+                        0)) }}</td>
+                    <td style="border: 1px solid #ddd; padding: 5px;">{{
+                        "%.1f"|format(struct_data.get('Ring_Col_Total_Wt', 0)) }}</td>
+                </tr>
+                {% endif %}
+                <tr>
+                    <td style="border: 1px solid #ddd; padding: 5px;">Center Column</td>
+                    <td style="border: 1px solid #ddd; padding: 5px;">{{ struct_data.get('Center Col Section') }}</td>
+                    <td style="border: 1px solid #ddd; padding: 5px;">1</td>
+                    <td style="border: 1px solid #ddd; padding: 5px;">{{ "%.2f"|format(H) }}</td>
+                    <td style="border: 1px solid #ddd; padding: 5px;">{{ "%.1f"|format(struct_data.get('Center_Col_Wt',
+                        0)) }}</td>
+                    <td style="border: 1px solid #ddd; padding: 5px;">{{
+                        "%.1f"|format(struct_data.get('Center_Col_Total_Wt', 0)) }}</td>
+                </tr>
+                <tr style="font-weight: bold; background-color: #f9f9f9;">
+                    <td colspan="5" style="border: 1px solid #ddd; padding: 5px; text-align: right;">Total Structure
+                        Weight (incl. 10% misc):</td>
+                    <td style="border: 1px solid #ddd; padding: 5px;">{{
+                        "%.1f"|format(struct_data.get('Total_Struct_Weight', 0)) }} kg</td>
+                </tr>
+            </table>
+            {% endif %}
+
+            <h2>4. Shell Design (Detailed Calculation)</h2>
+            <div class="summary-item"><span class="label">Method Applied:</span> <strong>{{ shell_method }}</strong>
+            </div>
+            <div class="formula-box">
+                <strong>One-Foot Method Formulas (API 650 5.6.3.2):</strong><br>
+                Design Thickness (td) = (4.9 * D * (H - 0.3) * G) / (Sd * E) + CA<br>
+                Hydrotest Thickness (tt) = (4.9 * D * (H - 0.3) * 1.0) / (St * E)<br>
+                <em>Note: H in formula is height from bottom of course to liquid level.</em>
+            </div>
+
+            {% for course in shell_courses %}
+            <div class="detailed-calc"
+                style="background-color: #fff; border: 1px solid #eee; margin-bottom: 20px; padding: 10px;">
+                <h4 style="margin: 0 0 10px 0; border-bottom: 1px solid #ccc;">Course {{ course['Course'] }} (Material:
+                    {{ course['Material'] }})</h4>
+                <div class="calc-step">
+                    <strong>Parameters:</strong>
+                    Width = {{ "%.3f"|format(course['Width']) }} m |
+                    H_liq = {{ "%.3f"|format(course['H_eff_d']) }} m |
+                    Sd = {{ "%.1f"|format(course.get('Sd', 0)) }} MPa |
+                    St = {{ "%.1f"|format(course.get('St', 0)) }} MPa
+                </div>
+                <div class="calc-step">
+                    <strong>Design Thickness (td):</strong><br>
+                    td = (4.9 * {{ D }} * ({{ "%.3f"|format(course['H_eff_d']) }} - 0.3) * {{ G }}) / ({{
+                    "%.1f"|format(course.get('Sd', 0)) }} * {{ "%.2f"|format(Joint_Efficiency) }}) + {{ CA }}<br>
+                    td = <strong>{{ "%.2f"|format(course['td']) }} mm</strong>
+                </div>
+                <div class="calc-step">
+                    <strong>Hydrotest Thickness (tt):</strong><br>
+                    tt = (4.9 * {{ D }} * ({{ "%.3f"|format(course['H_eff_t']) }} - 0.3) * 1.0) / ({{
+                    "%.1f"|format(course.get('St', 0)) }} * {{ "%.2f"|format(Joint_Efficiency) }})<br>
+                    tt = <strong>{{ "%.2f"|format(course['tt']) }} mm</strong>
+                </div>
+                <div class="calc-step">
+                    <strong>Selection:</strong>
+                    Req: {{ "%.2f"|format(course['t_req']) }} mm |
+                    Used: <strong>{{ "%.2f"|format(course['t_used']) }} mm</strong>
+                    <span class="{{ 'status-ok' if 'OK' in course['Status'] else 'status-fail' }}">[{{ course['Status']
+                        }}]</span>
+                </div>
+            </div>
+            {% endfor %}
+
+            <div class="summary-item"><span class="label">Total Shell Weight:</span> {{ "%.2f"|format(W_shell_kg) }}
+                kg
+            </div>
+
+            <h2>5. Bottom Design</h2>
+            <table>
+                <tr>
+                    <td>Material</td>
+                    <td>{{ bottom_data.get('Material', '-') }}</td>
+                </tr>
+                <tr>
+                    <td>Corrosion Allowance</td>
+                    <td>{{ CA_bottom }} mm</td>
+                </tr>
+                <tr>
+                    <td>Required Thickness</td>
+                    <td>{{ "%.2f"|format(bottom_data.get('Req Thk (mm)', 0)) }} mm</td>
+                </tr>
+                <tr>
+                    <td>Annular Plate?</td>
+                    <td>{{ annular_data.get('Required?', '-') }}</td>
+                </tr>
+                <tr>
+                    <td>Status</td>
+                    <td>{{ annular_data.get('Status', '-') }}</td>
+                </tr>
+                <tr>
+                    <td>Note</td>
+                    <td>{{ bottom_data.get('Notes', '-') }}</td>
+                </tr>
+            </table>
+
+            {% if annular_data.get('Warning') %}
+            <div
+                style="background-color: #ffebee; border: 1px solid #ef5350; padding: 10px; margin: 10px 0; color: #c62828;">
+                <strong>⚠️ Warning:</strong> {{ annular_data.get('Warning') }}<br>
+                <strong>Action: Please enable Annular Plate in Design Options.</strong>
+            </div>
+            {% endif %}
+
+            {% if annular_data.get('Calculation Details') %}
+            <h3>5.1 Annular Plate Calculation (API 650 5.5)</h3>
+            <div class="summary-item"><span class="label">1. Thickness Check (5.5.3):</span></div>
+            <div class="formula-box">
+                <strong>Stress Reference (Sd):</strong> {{ annular_data['Calculation Details'].get('Stress in First
+                Shell Course (S_d)') }}<br>
+                <strong>Criterion:</strong> Table 5-1 Limit = {{ annular_data['Calculation Details'].get('Governing
+                Table 5-1 Limit') }}<br>
+                <strong>Calculation:</strong> {{ annular_data['Calculation Details'].get('Formula_Thk') }}<br>
+                <strong>Result:</strong> Min Req Thk = {{ "%.2f"|format(annular_data.get('Min Thk (mm)', 0)) }} mm
+            </div>
+
+            <div class="summary-item"><span class="label">2. Radial Width Check (5.5.2):</span></div>
+            <div class="formula-box">
+                <strong>L_min = 600mm + t_shell + Projection</strong><br>
+                <strong>Shell Calc Height:</strong> {{ annular_data['Calculation Details'].get('Calculated t_shell_bot')
+                }}<br>
+                <strong>Calculation:</strong> {{ annular_data['Calculation Details'].get('Formula_Width') }}<br>
+                <strong>Result:</strong> Min Req Width = {{ "%.2f"|format(annular_data.get('Min Width (mm)', 0)) }} mm
+            </div>
+            {% endif %}
+
+            <h2>6. Wind Moment (Detailed Calculation)</h2>
+            <div class="summary-item"><span class="label">Governing Code:</span> <strong>{{ gov_codes.Wind }}</strong>
+            </div>
+            <div class="formula-box">
+                <strong>Wind Pressure (ASCE 7 / API 650):</strong><br>
+                qz = 0.613 * Kz * Kzt * Kd * V^2 * I (N/m2)<br>
+                P = qz * G * Cf (Design Wind Pressure)
+            </div>
+
+            <div class="detailed-calc" style="background-color: #fff; padding: 10px; border: 1px solid #eee;">
+                <div class="calc-step">
+                    <strong>1. Parameters:</strong><br>
+                    V = {{ wind_data.get('V') }} m/s (3-sec gust)<br>
+                    Kz = {{ wind_data.get('Kz', 1.0) }} (Exposure Coeff)<br>
+                    Kzt = {{ wind_data.get('Kzt', 1.0) }} (Topographic Factor)<br>
+                    Kd = {{ wind_data.get('Kd', 0.95) }} (Directionality)<br>
+                    G = {{ wind_data.get('G', 0.85) }} (Gust Effect)<br>
+                    I = {{ wind_data.get('I', 1.0) }} (Importance)
+                </div>
+                <div class="calc-step">
+                    <strong>2. Velocity Pressure (qz):</strong><br>
+                    qz = 0.613 * {{ wind_data.get('Kz', 1.0) }} * {{ wind_data.get('Kzt', 1.0) }} * {{
+                    wind_data.get('Kd', 0.95) }} * ({{ wind_data.get('V') }})^2 * {{ wind_data.get('I', 1.0) }}<br>
+                    qz (Strength) = <strong>{{ "%.2f"|format(0.613 * wind_data.get('Kz', 1.0) * wind_data.get('Kzt',
+                        1.0) * wind_data.get('Kd', 0.95) * (wind_data.get('V')**2) * wind_data.get('I', 1.0)) }}
+                        N/m2</strong>
+                </div>
+                <div class="calc-step">
+                    <strong>3. Design Pressure (P):</strong><br>
+                    P (ASD) = qz * G * Cf * 0.6 (ASD Factor)<br>
+                    P = <strong>{{ "%.3f"|format(wind_data.get('P_wind_kPa', 0)) }} kPa</strong>
+                </div>
+                <div class="calc-step">
+                    <strong>4. Overturning Moment (Mw):</strong><br>
+                    Area = {{ "%.1f"|format(D*H) }} m2 (D x H)<br>
+                    Arm = {{ "%.1f"|format(H/2) }} m (H/2)<br>
+                    Mw = P * Area * Arm = <strong>{{ "%.1f"|format(wind_data.get('M_wind_kNm', 0)) }} kNm</strong>
+                </div>
+            </div>
+
+            <div class="page-break"></div>
+
+            <h2>7. Seismic Design (Detailed Calculation)</h2>
+            <div class="summary-item"><span class="label">Governing Code:</span> <strong>{{ gov_codes.Seismic
+                    }}</strong></div>
+
+            <div class="formula-box">
+                <strong>Base Shear (API 650 Annex E):</strong> V = sqrt(Vi^2 + Vc^2) (SRSS)<br>
+                Vi = Ai * (Ws + Wr + Wi + Wp_imp)<br>
+                Vc = Ac * Wc<br>
+                Ai = SDS * (I / Rwi), Ac = SD1 * (I / Rwc) * (1/Tc)
+            </div>
+
+            <div class="detailed-calc" style="background-color: #fff; padding: 10px; border: 1px solid #eee;">
+                <div class="calc-step">
+                    <strong>1. Design Spectral Acceleration:</strong><br>
+                    SDS = {{ "%.3f"|format(seismic_data.get('SDS', 0)) }}, SD1 = {{
+                    "%.3f"|format(seismic_data.get('SD1', 0)) }}<br>
+                    Importance (I) = {{ seismic_data.get('Importance_Factor', 1.0) }}
+                </div>
+                <div class="calc-step">
+                    <strong>2. Effective Weights:</strong><br>
+                    W_shell = {{ "%.0f"|format(W_shell_kg) }} kg<br>
+                    W_roof = {{ "%.0f"|format(W_roof_kg) }} kg<br>
+                    W_impulsive (Wi) = {{ "%.0f"|format(seismic_data.get('Wi_kg', 0)) }} kg<br>
+                    W_convective (Wc) = {{ "%.0f"|format(seismic_data.get('Wc_kg', 0)) }} kg
+                </div>
+                <div class="calc-step">
+                    <strong>3. Hydrodynamic Forces:</strong><br>
+                    Base Shear (V) = <strong>{{ "%.1f"|format(seismic_data.get('Base Shear V (kN)', 0)) }}
+                        kN</strong><br>
+                    Overturning Moment (Mrw) = <strong>{{ "%.1f"|format(seismic_data.get('Mrw (kNm)', 0)) }}
+                        kNm</strong>
+                </div>
+            </div>
+            <div class="summary-item"><span class="label">Design SD1:</span> {{
+                "%.3f"|format(seismic_data.get('SD1',
+                0)) }} g
+            </div>
+            <div class="summary-item"><span class="label">T_L:</span> {{ seismic_data.get('T_L', '-') }} sec</div>
+            <hr>
+            <div class="summary-item"><span class="label">Seismic Base Shear (V):</span> {{
+                "%.2f"|format(seismic_data.get('Base Shear V (kN)', 0)) }} kN</div>
+            <div class="summary-item"><span class="label">Ringwall Moment (Mrw):</span> {{
+                "%.2f"|format(seismic_data.get('Mrw (kNm)', 0)) }} kNm</div>
+            <div class="summary-item"><span class="label">Slab Moment (Ms):</span> {{
+                "%.2f"|format(seismic_data.get('Ms_kNm', 0)) }} kNm</div>
+
+            <h3>7.1 Stability & Sliding Check</h3>
+            <table>
+                <tr>
+                    <th>Item</th>
+                    <th>Value / Result</th>
+                    <th>Status</th>
+                </tr>
+                <tr>
+                    <td>Anchorage Ratio (J)</td>
+                    <td>{{ "%.3f"|format(seismic_data.get('J', 0)) }}</td>
+                    <td>{{ seismic_data.get('Anchorage_Status') }}</td>
+                </tr>
+                <tr>
+                    <td>Annular Plate?</td>
+                    <td colspan="2">{{ seismic_data.get('Annular_Check') }}</td>
+                </tr>
+                <tr>
+                    <td>Sliding Force (V)</td>
+                    <td>{{ "%.2f"|format(seismic_data.get('Base Shear V (kN)', 0)) }} kN</td>
+                    <td>-</td>
+                </tr>
+                <tr>
+                    <td>Sliding Resistance (Vs)</td>
+                    <td>{{ "%.2f"|format(seismic_data.get('Sliding_Res (kN)', 0)) }} kN</td>
+                    <td><span
+                            class="{{ 'status-ok' if 'OK' in seismic_data.get('Sliding_Status') else 'status-fail' }}">{{
+                            seismic_data.get('Sliding_Status') }}</span></td>
+                </tr>
+                <tr>
+                    <td>Sloshing Height (d_max)</td>
+                    <td>{{ "%.3f"|format(seismic_data.get('d_max (m)', 0)) }} m</td>
+                    <td>-</td>
+                </tr>
+            </table>
+
+            <h3>7.2 Seismic Hoop Stress Check (Governing Code)</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Course</th>
+                        <th>Elev. y (m)</th>
+                        <th>t_used (mm)</th>
+                        <th>P_stat (kPa)</th>
+                        <th>P_seis (kPa)</th>
+                        <th>Stress (MPa)</th>
+                        <th>Allow (MPa)</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for check in Seismic_Shell_Check %}
+                    <tr>
+                        <td>{{ check['Course'] }}</td>
+                        <td>{{ "%.2f"|format(check['y (m)']) }}</td>
+                        <td>{{ "%.2f"|format(check['t_used (mm)']) }}</td>
+                        <td>{{ "%.2f"|format(check['P_stat (kPa)']) }}</td>
+                        <td>{{ "%.2f"|format(check['P_dyn (kPa)']) }}</td>
+                        <td>{{ "%.2f"|format(check['Stress (MPa)']) }}</td>
+                        <td>{{ "%.2f"|format(check['Allow (MPa)']) }}</td>
+                        <td><span class="{{ 'status-ok' if check['Status'] == 'OK' else 'status-fail' }}">{{
+                                check['Status']
+                                }}</span></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <h3>7.3 Seismic Design Spectrum</h3>
+            {% if seismic_graph %}
+            <div style="text-align: center; margin: 20px 0;">
+                <img src="data:image/png;base64,{{ seismic_graph }}" alt="Seismic Design Spectrum"
+                    style="max-width: 100%; border: 1px solid #ddd; padding: 5px;">
+            </div>
+            {% else %}
+            <p><em>Graph not available.</em></p>
+            {% endif %}
+
+            {% if standard_comparison %}
+            <h2>Comparison of Standards (API 650 vs KDS 41)</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Parameter</th>
+                        <th>API 650 (ASCE 7)</th>
+                        <th>KDS 41 12/17</th>
+                        <th>Difference (%)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Wind Pressure (kPa)</td>
+                        <td>{{ "%.3f"|format(standard_comparison.get('Wind', {}).get('API_Pressure', 0)) }}</td>
+                        <td>{{ "%.3f"|format(standard_comparison.get('Wind', {}).get('KDS_Pressure', 0)) }}</td>
+                        <td>{{ "%.1f"|format(standard_comparison.get('Wind', {}).get('Diff_Pressure', 0)) }}%</td>
+                    </tr>
+                    <tr>
+                        <td>Wind Moment (kNm)</td>
+                        <td>{{ "%.1f"|format(standard_comparison.get('Wind', {}).get('API_Moment', 0)) }}</td>
+                        <td>{{ "%.1f"|format(standard_comparison.get('Wind', {}).get('KDS_Moment', 0)) }}</td>
+                        <td>{{ "%.1f"|format(standard_comparison.get('Wind', {}).get('Diff_Moment', 0)) }}%</td>
+                    </tr>
+                    <tr>
+                        <td>Seismic Base Shear (kN)</td>
+                        <td>{{ "%.1f"|format(standard_comparison.get('Seismic', {}).get('API_BaseShear', 0)) }}</td>
+                        <td>{{ "%.1f"|format(standard_comparison.get('Seismic', {}).get('KDS_BaseShear', 0)) }}</td>
+                        <td>{{ "%.1f"|format(standard_comparison.get('Seismic', {}).get('Diff_BaseShear', 0)) }}%</td>
+                    </tr>
+                    <tr>
+                        <td>Seismic Overturning Moment (kNm)</td>
+                        <td>{{ "%.1f"|format(standard_comparison.get('Seismic', {}).get('API_Moment', 0)) }}</td>
+                        <td>{{ "%.1f"|format(standard_comparison.get('Seismic', {}).get('KDS_Moment', 0)) }}</td>
+                        <td>{{ "%.1f"|format(standard_comparison.get('Seismic', {}).get('Diff_Moment', 0)) }}%</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p style="font-size: 11px;"><em>* Difference = (KDS - API) / API (%) </em></p>
+            {% endif %}
+
+            <h2>8. Anchor Bolt & Chair Design</h2>
+            <p><em>* Calculations based on Max Uplift from Governing Wind/Seismic Code.</em></p>
+            <p><em>* Designed using Governing Wind/Seismic Loads.</em></p>
+            <table>
+                <tr>
+                    <td>Status</td>
+                    <td><strong>{{ anchor.get('Status', 'N/A') }}</strong></td>
+                </tr>
+                <tr>
+                    <td>Net Uplift Force</td>
+                    <td>{{ "%.1f"|format(anchor.get('Net Uplift Force (kN)', 0)) }} kN</td>
+                </tr>
+                {% if 'Required' in anchor.get('Status', '') %}
+                <tr>
+                    <td>Bolt Detail</td>
+                    <td><strong>{{ anchor.get('Number of Bolts', 0) }}</strong> x M{{ anchor.get('Bolt Diameter (mm)',
+                        0) }}</td>
+                </tr>
+                <tr>
+                    <td>Bolt Area Check</td>
+                    <td>Req: {{ "%.0f"|format(anchor.get('Required Bolt Area (mm2)', 0)) }} mm2</td>
+                </tr>
+                <tr>
+                    <td colspan="2"><strong>Chair Dimensions (Approx):</strong></td>
+                </tr>
+                <tr>
+                    <td>Chair Height (h)</td>
+                    <td>{{ "%.0f"|format(anchor.get('Chair Height (mm)', 0)) }} mm</td>
+                </tr>
+                <tr>
+                    <td>Top Plate Width (a)</td>
+                    <td>{{ "%.0f"|format(anchor.get('Top Plate Width (mm)', 0)) }} mm</td>
+                </tr>
+                <tr>
+                    <td>Top Plate Thk (t)</td>
+                    <td>{{ "%.1f"|format(anchor.get('Top Plate Thk (mm)', 0)) }} mm</td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="2">Self-Anchored. Stability Checks satisfied.</td>
+                </tr>
+                {% endif %}
+            </table>
+
+            <h2>11. Normal and Emergency Venting (API 2000)</h2>
+            <div class="formula-box"
+                style="background-color: #f8f9fa; padding: 10px; margin: 10px 0; font-family: monospace; font-size: 13px;">
+                <strong>Normal Venting (Inbreathing/Outbreathing):</strong><br>
+                Based on Liquid Movement (Pump In/Out) and Thermal effects (Tank Volume).<br>
+                <strong>Emergency Venting (Fire Case):</strong><br>
+                Based on Wetted Surface Area (Heat Input).
+            </div>
+
+            <h3>11.1 Normal Venting Requirements</h3>
+            <table>
+                <tr>
+                    <th>Condition</th>
+                    <th>Due to Liquid (Nm3/h)</th>
+                    <th>Due to Thermal (Nm3/h)</th>
+                    <th>Total Required (Nm3/h)</th>
+                </tr>
+                <tr>
+                    <td>Inbreathing (Vacuum)</td>
+                    <td>{{ "%.2f"|format(venting_data.get('Inbreathing_Liquid_Nm3h', 0)) }}</td>
+                    <td>{{ "%.2f"|format(venting_data.get('Inbreathing_Thermal_Nm3h', 0)) }}</td>
+                    <td><strong>{{ "%.2f"|format(venting_data.get('Total_Inbreathing_Nm3h', 0)) }}</strong></td>
+                </tr>
+                <tr>
+                    <td>Outbreathing (Pressure)</td>
+                    <td>{{ "%.2f"|format(venting_data.get('Outbreathing_Liquid_Nm3h', 0)) }}</td>
+                    <td>{{ "%.2f"|format(venting_data.get('Outbreathing_Thermal_Nm3h', 0)) }}</td>
+                    <td><strong>{{ "%.2f"|format(venting_data.get('Total_Outbreathing_Nm3h', 0)) }}</strong></td>
+                </tr>
+                <tr>
+                    <td><strong>Min. Breather Valve Size</strong></td>
+                    <td colspan="3" style="text-align: center;"><strong>{{ venting_data.get('Min_Normal_Vent_Size',
+                            'N/A') }}</strong> (Approx. Ref Only)</td>
+                </tr>
+            </table>
+
+            <h3>11.2 Emergency Venting (Fire Case)</h3>
+            <div class="summary-item"><span class="label">Wetted Surface Area:</span> {{
+                "%.2f"|format(venting_data.get('Wetted_Area_m2', 0)) }} m2</div>
+            <div class="summary-item"><span class="label">Insulation Factor (F):</span> {{
+                venting_data.get('Insulation_Factor_F', 1.0) }}</div>
+            <div class="summary-item"><span class="label">Required Venting:</span> <strong>{{
+                    "%.0f"|format(venting_data.get('Emergency_Venting_Nm3h', 0)) }} Nm3/h (Air)</strong></div>
+            <div class="summary-item"><span class="label">Min. Emergency Vent Size:</span> <strong>{{
+                    venting_data.get('Min_Emergency_Vent_Size', 'N/A') }}</strong> (Approx. Ref Only)</div>
+
+            <h2>12. Capacities and Weights</h2>
+            <div class="summary-item"><span class="label">Gross Capacity:</span> {{
+                "%.2f"|format(capacities_data.get('Gross Capacity (m3)', 0)) }} m3</div>
+            <div class="summary-item"><span class="label">Net Capacity:</span> {{
+                "%.2f"|format(capacities_data.get('Vol_Net_m3', 0)) }} m3</div>
+            <div class="summary-item"><span class="label">Empty Weight:</span> {{
+                "%.2f"|format(capacities_data.get('Empty Weight (kg)', 0)) }} kg</div>
+            <div class="summary-item"><span class="label">Operation Weight:</span> {{
+                "%.2f"|format(capacities_data.get('Operation Weight (kg)', 0)) }} kg</div>
+
+            <h2>13. MAWP & MAWV Summary</h2>
+            <div class="summary-item"><span class="label">MAWP:</span> {{ mawp_data.get('MAWP', '-') }}</div>
+            <div class="summary-item"><span class="label">MAWV:</span> {{ mawp_data.get('MAWV', '-') }}</div>
+
+            <h2>14. Appurtenances & Nozzle Schedule</h2>
+            <table>
+                <tr>
+                    <th>Mark</th>
+                    <th>Size (NPS)</th>
+                    <th>OD (mm)</th>
+                    <th>Service</th>
+                    <th>Elev (m)</th>
+                    <th>A_req (mm2)</th>
+                    <th>A_avail (mm2)</th>
+                    <th>Status</th>
+                </tr>
+                {% for nozzle in nozzle_data %}
+                <tr>
+                    <td>{{ nozzle.get('Mark', '-') }}</td>
+                    <td>{{ nozzle.get('Size', '-') }}"</td>
+                    <td>{{ "%.1f"|format(nozzle.get('OD_mm', 0)) }}</td>
+                    <td>{{ nozzle.get('Service', '-') }}</td>
+                    <td>{{ "%.3f"|format(nozzle.get('Elevation', 0)) }}</td>
+                    <td>{{ "%.0f"|format(nozzle.get('A_req_mm2', 0)) }}</td>
+                    <td>{{ "%.0f"|format(nozzle.get('A_avail_mm2', 0)) }}</td>
+                    <td><span class="{{ 'status-ok' if 'OK' in nozzle.get('Status', '') else 'status-fail' }}">{{
+                            nozzle.get('Status', '-') }}</span></td>
+                </tr>
+                {% else %}
+                <tr>
+                    <td colspan="8">No nozzles defined.</td>
+                </tr>
+                {% endfor %}
+            </table>
+
+            <footer>
+                Generated by API 650 Tank Design Calculator | {{ date }}
+            </footer>
+
+            <div class="page-break"></div>
+            <h2>15. Diagrams</h2>
+            <div style="display: flex; flex-wrap: wrap; justify-content: space-around;">
+                <div style="margin: 20px; text-align: center;">
+                    {{ shell_svg|safe }}
+                </div>
+                <div style="margin: 20px; text-align: center;">
+                    {{ nozzle_svg|safe }}
+                </div>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; justify-content: space-around;">
+                <div style="margin: 20px; text-align: center;">
+                    <h4>Wind Moment Diagram</h4>
+                    {{ wind_moment_svg|safe }}
+                </div>
+                <div style="margin: 20px; text-align: center;">
+                    <h4>Roof-to-Shell Detail</h4>
+                    {{ roof_detail_svg|safe }}
+                </div>
+            </div>
+    </div>
+
+</body>
+
+</html>
