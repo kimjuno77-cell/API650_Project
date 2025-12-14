@@ -1911,21 +1911,15 @@ with tab4:
         file_name_dl = f"Calc_Report_{safe_project_name}_{ts}.html"
         
         st.divider()
-        st.write("##### Save Report")
+        st.subheader("Download Report")
+
+        # Standard Web Download (Works on Cloud & Local)
+        st.download_button(
+            label="📄 Download HTML Report",
+            data=html_content,
+            file_name=file_name_dl,
+            mime="text/html",
+            key="download_html_btn"
+        )
         
-        # Option: Save directly to Downloads Folder (Localhost Only)
-        if st.button("Save HTML Report to 'Downloads' Folder", key="save_local_btn"):
-            try:
-                import os
-                downloads_path = os.path.join(os.path.expanduser("~"), "Downloads")
-                if not os.path.exists(downloads_path):
-                        downloads_path = os.getcwd()
-                
-                full_path = os.path.join(downloads_path, file_name_dl)
-                full_path = os.path.normpath(full_path)
-                
-                with open(full_path, "w", encoding='utf-8') as f:
-                    f.write(html_content)
-                st.success(f"Report saved to: {full_path}")
-            except Exception as e:
-                st.error(f"Save failed: {e}")
+        st.caption("Click the button above to save the report to your device.")
