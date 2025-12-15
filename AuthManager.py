@@ -21,14 +21,25 @@ class AuthManager:
         
         # Ensure Admin exists (Default)
         if 'admin' not in self.users:
-            # Use Env Var or Default Placeholder (User changed)
-            def_admin_pass = os.environ.get('API650_ADMIN_PASS', 'ChangeMeAdmin!')
+            import streamlit as st
+            # Check Secrets first, then Env, then Default
+            def_admin_pass = 'ChangeMeAdmin!'
+            if hasattr(st, 'secrets') and 'API650_ADMIN_PASS' in st.secrets:
+                def_admin_pass = st.secrets['API650_ADMIN_PASS']
+            elif 'API650_ADMIN_PASS' in os.environ:
+                 def_admin_pass = os.environ['API650_ADMIN_PASS']
+            
             self.create_user('admin', def_admin_pass, role='admin')
         
         # Ensure Default User exists
         if 'user' not in self.users:
             # Expires in 30 days
-            def_user_pass = os.environ.get('API650_USER_PASS', 'ChangeMeUser!')
+            def_user_pass = 'ChangeMeUser!'
+            if hasattr(st, 'secrets') and 'API650_USER_PASS' in st.secrets:
+                def_user_pass = st.secrets['API650_USER_PASS']
+            elif 'API650_USER_PASS' in os.environ:
+                 def_user_pass = os.environ['API650_USER_PASS']
+
             self.create_user('user', def_user_pass, role='user', days_valid=30)
 
     def save_users(self):
