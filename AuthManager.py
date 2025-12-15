@@ -12,6 +12,8 @@ class AuthManager:
 
     def load_users(self):
         """Load users from JSON file. Create default admin if missing."""
+        import streamlit as st
+        
         if os.path.exists(self.auth_file):
             try:
                 with open(self.auth_file, 'r') as f:
@@ -21,7 +23,6 @@ class AuthManager:
         
         # Ensure Admin exists (Default)
         if 'admin' not in self.users:
-            import streamlit as st
             # Check Secrets for Single Admin
             def_admin_pass = 'ChangeMeAdmin!'
             if hasattr(st, 'secrets') and 'API650_ADMIN_PASS' in st.secrets:
