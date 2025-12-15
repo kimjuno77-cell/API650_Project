@@ -22,16 +22,26 @@ class AuthManager:
         # Ensure Admin exists (Default)
         if 'admin' not in self.users:
             import streamlit as st
-            # Check Secrets first, then Env, then Default
+            # Check Secrets for Single Admin
             def_admin_pass = 'ChangeMeAdmin!'
             if hasattr(st, 'secrets') and 'API650_ADMIN_PASS' in st.secrets:
                 def_admin_pass = st.secrets['API650_ADMIN_PASS']
             elif 'API650_ADMIN_PASS' in os.environ:
                  def_admin_pass = os.environ['API650_ADMIN_PASS']
-            
             self.create_user('admin', def_admin_pass, role='admin')
+
+        # Load Additional Users from Secrets [auth_users] section
+        # Format in Secrets:
+        # [auth_users]
+        # new_user1 = "password123"
+        # new_user2 = "password456"
+        if hasattr(st, 'secrets') and 'auth_users' in st.secrets:
+            for u_name, u_pass in st.secrets['auth_users'].items():
+                # Create or Update (Force Sync)
+                # Note: This runs on every app restart, ensuring persistence.
+                self.create_user(u_name, u_pass, role='user', days_valid=90)
         
-        # Ensure Default User exists
+        # Ensure Default User exists (if not loaded from secrets)
         if 'user' not in self.users:
             # Expires in 30 days
             def_user_pass = 'ChangeMeUser!'
