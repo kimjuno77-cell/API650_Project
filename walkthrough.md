@@ -30,6 +30,14 @@ else:
 }
 ```
 
+### 3. 변수 스코프 안전성 확보
+EFRT 모드에서 생성되지 않는 변수(`roof_design`, `struct_data` 등)로 인한 리포트 생성 오류를 방지하기 위해 전역 초기화를 추가했습니다.
+```python
+struct_data = {}  # 초기화 추가
+if roof_type == "External Floating Roof":
+    # ...
+```
+
 ## 검증 (Verification)
 - **EFRT 모드**: 계산 실행 시 더 이상 오류 없이 완료되며, 결과 탭에 부력 안전율 등이 표시되고, 파열성 검사 등 불필요한 항목은 숨겨집니다.
 - **Fixed Roof 모드**: 기존과 동일하게 모든 검사 항목이 정상적으로 표시됩니다.

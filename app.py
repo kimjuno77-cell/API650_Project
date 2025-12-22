@@ -759,6 +759,7 @@ st.session_state['latest_shell_results'] = shell_design.shell_courses
 # 2. Roof Design
 efrt_design_res = None
 roof_design = None
+struct_data = {}
 if roof_type == "External Floating Roof":
     # --- EFRT Design ---
     efrt = EFRTDesign(diameter=D, material_yield=struct_yield, specific_gravity=G)
