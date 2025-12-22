@@ -635,14 +635,12 @@ if "shell_courses_data" in st.session_state and isinstance(st.session_state["she
          # it means the table is stale (from previous session or non-updated state).
          # Force a reset to ensure Input == Output.
          if abs(first_width - std_width) > 0.001:
-              st.warning(f"⚠️ Detected Stale Data (Table: {first_width}m vs Input: {std_width}m). Use 'Auto-Generate' if needed.")
-              # Auto-fix:
-              st.session_state.pop("shell_courses_data", None)
-              # Also clear stale report data to force re-calculation
-              st.session_state.pop("report_data", None)
-              st.session_state.pop("latest_shell_results", None)
-              # Rerun to apply default data immediately
-              st.rerun()
+              st.warning(f"⚠️ Table width ({first_width}m) differs from Input ({std_width}m). Value preserved to avoid data loss. Click 'Auto-Generate' to reset.")
+              # Auto-fix REMOVED to prevent double-entry issue
+              # st.session_state.pop("shell_courses_data", None)
+              # st.session_state.pop("report_data", None)
+              # st.session_state.pop("latest_shell_results", None)
+              # st.rerun()
          else: 
               # Otherwise, load saved data (User might have custom edits)
                saved_df = pd.DataFrame(stale_data)
