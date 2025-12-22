@@ -1479,10 +1479,22 @@ with tab3:
         st.markdown("### Component Design Check")
         
         st.write("**Roof Design**")
-        roof_res = roof_design.results.get('Roof Plate', {})
         st.write(f"- Type: {roof_type}")
-        st.write(f"- Min Thk (Std/Calc): {roof_res.get('Min Thk (Std)',0):.2f} mm")
-        st.write(f"- Status: {roof_res.get('Status', 'N/A')}")
+        
+        if roof_design:
+            # Fixed Roof Display
+            roof_res = roof_design.results.get('Roof Plate', {})
+            st.write(f"- Min Thk (Std/Calc): {roof_res.get('Min Thk (Std)',0):.2f} mm")
+            st.write(f"- Status: {roof_res.get('Status', 'N/A')}")
+        elif efrt_design_res:
+            # EFRT Display
+            e_res = efrt_design_res.results
+            deck_chk = e_res.get('Deck_Thickness_Check', {})
+            st.write(f"- Deck Thk Provided: {deck_chk.get('Provided', 0):.1f} mm")
+            st.write(f"- Deck Status: {deck_chk.get('Status', 'N/A')}")
+            st.write(f"- Buoyancy Safety Factor: {e_res.get('Safety_Factor', 0):.2f}")
+        else:
+            st.write("No Design Results")
         
         st.write("**Bottom Design**")
         bot_res = bottom_design.results.get('Bottom Plate', {})

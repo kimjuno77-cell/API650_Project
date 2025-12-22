@@ -1,29 +1,31 @@
-# Walkthrough - Roof Design 변수 참조 오류 수정
+# Walkthrough - Results 요약 표시 오류 수정 및 EFRT 결과 추가
 
 ## 문제 설명 (Issue)
-"External Floating Roof" 선택 시 계산 후반부 시각화(Visualization) 단계에서 다음과 같은 오류가 발생했습니다.
-`NameError: name 'roof_design' is not defined`
-
-## 원인 분석 (Root Cause)
-`roof_design` 변수는 일반 지붕(Fixed Roof)인 경우에만 생성되는데, 시각화 코드에서는 이 변수의 존재 여부를 확인하지 않고 무조건 참조(`roof_design.t_used`)하려고 했습니다. EFRT일 경우 `roof_design`이 생성되지 않아 오류가 발생했습니다.
+`roof_design` 변수 초기화 문제를 해결한 뒤, 결과 요약(Summary) 섹션에서 다시 `AttributeError`가 발생했습니다.
+`roof_res = roof_design.results.get('Roof Plate', {})`
+이 코드는 EFRT 모드에서도 `roof_design` 객체에 접근하려 했으나, EFRT 모드에서는 해당 객체가 `None`이므로 오류가 발생했습니다.
 
 ## 해결 방법 (Solution)
-1.  계산 로직 시작 전 `roof_design`을 `None`으로 초기화하여 변수 스코프 문제 해결.
-2.  참조하는 부분에서 `roof_design`이 존재하는지 확인하는 안전 장치 추가.
+결과 표시 코드를 Roof Type에 따라 분기 처리했습니다.
+1. `roof_design` 객체가 있으면 (Fixed Roof) -> 기존 결과 표시.
+2. `efrt_design_res` 객체가 있으면 (EFRT) -> EFRT 결과(부력 등) 표시.
 
 ### 코드 변경 (`app.py`)
 ```python
-# 1. 초기화 추가
-roof_design = None
-if roof_type == "External Floating Roof":
-    # ...
+st.write(f"- Type: {roof_type}")
 
-# 2. 안전한 참조 (Safe Access)
-# Before
-t_roof_mm = roof_design.t_used 
-# After
-t_roof_mm = roof_design.t_used if roof_design else 0.0 
+if roof_design:
+    # ... (기존 Fixed Roof 결과)
+    st.write(f"- Status: {roof_res.get('Status', 'N/A')}")
+elif efrt_design_res:
+    # [NEW] EFRT 결과 표시
+    e_res = efrt_design_res.results
+    st.write(f"- Deck Thk: {e_res.get('Deck_Thickness_Check', {}).get('Provided')} mm")
+    st.write(f"- Buoyancy Safety Factor: {e_res.get('Safety_Factor', 0):.2f}")
+else:
+    st.write("No Design Results")
 ```
 
 ## 검증 (Verification)
-- EFRT 모드에서 전체 계산 및 시각화 생성 단계까지 중단 없이 완료되는지 확인.
+- EFRT 모드에서 결과 탭을 볼 때 오류 없이 "Deck Thk", "Safety Factor" 등이 표시되는지 확인.
+- Fixed Roof 모드에서도 기존 결과가 정상적으로 표시되는지 확인.
