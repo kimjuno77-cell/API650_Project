@@ -574,6 +574,8 @@ st.subheader("Shell Thickness Details")
 
 # Standard Plate Width Input & Auto-Calc
 def reset_courses_on_width_change():
+    if "shell_courses_data" in st.session_state and st.session_state["shell_courses_data"]:
+        st.session_state['preserved_shell_material'] = st.session_state["shell_courses_data"][0].get('Material', 'A 283 C')
     st.session_state.pop("shell_courses_data", None)
 
 c_sh1, c_sh2 = st.columns([2, 1])
@@ -581,6 +583,9 @@ std_width = c_sh1.number_input("Standard Plate Width (m)", value=2.438, step=0.0
 # Button still useful for explicit reset, but input change now handles it too
 if c_sh2.button("Auto-Generate Courses", help="Reset shell courses based on height and plate width"):
     # Clear existing data to force regeneration
+    if "shell_courses_data" in st.session_state and st.session_state["shell_courses_data"]:
+        st.session_state['preserved_shell_material'] = st.session_state["shell_courses_data"][0].get('Material', 'A 283 C')
+        
     st.session_state.pop("shell_courses_data", None)
     # Store trigger to use standard width logic below
     st.session_state['force_recalc_width'] = True
@@ -593,6 +598,9 @@ num_courses_est = math.ceil(H / calc_width)
 
 default_data = []
 current_h_calc = 0
+# Use preserved material if available, else default
+default_mat = st.session_state.get('preserved_shell_material', 'A 283 C')
+
 for i in range(num_courses_est):
     w_remain = H - current_h_calc
     width = min(calc_width, w_remain)
@@ -601,7 +609,7 @@ for i in range(num_courses_est):
     
     default_data.append({
         "Course": f"Course {i+1}",
-        "Material": "A 283 C",
+        "Material": default_mat,
         "Width (m)": float(f"{width:.3f}"),
         "Thickness Used (mm)": 0.0,
         "Req Thickness (mm)": 0.0,

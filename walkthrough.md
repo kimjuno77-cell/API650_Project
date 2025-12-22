@@ -1,25 +1,30 @@
-# Walkthrough - Shell Thickness 입력 개선 (일괄 적용)
+# Walkthrough - Shell 재질 유지 기능 개선 (Auto-Generate)
 
 ## 문제 설명 (Issue)
-이전 수정에도 불구하고, 사용자가 값을 입력할 때마다 화면이 "새로고침(Refresh)"되어 불편함을 겪었습니다. 사용자는 여러 값을 수정한 후 한번에 적용(Batch Apply)하는 방식을 요청했습니다.
+사용자가 Shell 재질을 변경한 상태에서 "Auto-Generate Courses" 버튼을 누르거나 "Standard Plate Width"를 변경하면, 재질 설정이 초기값("A 283 C")으로 리셋되는 불편함이 있었습니다.
 
 ## 해결 방법 (Solution)
-Streamlit의 `st.data_editor`는 기본적으로 값이 변경될 때마다 앱을 다시 실행(Rerun)합니다. 이를 방지하기 위해 데이터 에디터를 `st.form` 내부로 이동시켰습니다.
-
-### 변경 사항 (Changes)
-1.  **Form 도입**: Shell Course 입력 테이블을 `st.form`으로 감쌌습니다.
-2.  **일괄 적용 버튼**: 폼 내부에 `st.form_submit_button` ("일괄 적용 (Apply Updates)")을 추가했습니다.
-
-이제 사용자가 테이블에서 여러 셀(두께, 재질 등)을 수정하더라도, **"일괄 적용"** 버튼을 누르기 전까지는 화면이 새로고침되지 않습니다.
+"Auto-Generate"가 실행되기 직전에 기존 테이블의 첫 번째 코스(Course 1)의 재질 정보를 세션 상태(`preserved_shell_material`)에 저장하도록 수정했습니다.
+새로운 데이터가 생성될 때 이 저장된 재질 정보를 기본값으로 사용합니다.
 
 ### 코드 변경 (`app.py`)
+1. **재질 저장**: 코스 데이터 초기화(`pop`) 전에 현재 재질을 백업합니다.
 ```python
-with st.form("shell_course_form"):
-    edited_df = st.data_editor( ... )
-    st.form_submit_button("일괄 적용 (Apply Updates)")
+if "shell_courses_data" in st.session_state:
+    st.session_state['preserved_shell_material'] = st.session_state["shell_courses_data"][0].get('Material', 'A 283 C')
+st.session_state.pop("shell_courses_data", None)
+```
+
+2. **재질 적용**: 새로운 코스 생성 시 백업된 재질을 사용합니다.
+```python
+default_mat = st.session_state.get('preserved_shell_material', 'A 283 C')
+# ...
+default_data.append({
+    # ...
+    "Material": default_mat,
+    # ...
+})
 ```
 
 ## 검증 (Verification)
--   **동작 확인**: 테이블 값을 여러 개 수정해도 화면이 깜빡이지 않음.
--   **데이터 반영**: "일괄 적용" 버튼 클릭 시에만 계산 로직이 실행되고 결과가 업데이트됨.
--   **이중 입력 문제 해소**: 폼 제출 시에만 동기화되므로, 입력 도중 데이터가 초기화되는 문제도 자연스럽게 해결됨.
+- 재질을 "A 36" 등으로 변경 후 "Auto-Generate" 클릭 시, 새로 생성된 코스들의 재질이 "A 36"으로 유지되는지 확인합니다.
