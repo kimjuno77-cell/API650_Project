@@ -758,6 +758,7 @@ st.session_state['latest_shell_results'] = shell_design.shell_courses
 
 # 2. Roof Design
 efrt_design_res = None
+roof_design = None
 if roof_type == "External Floating Roof":
     # --- EFRT Design ---
     efrt = EFRTDesign(diameter=D, material_yield=struct_yield, specific_gravity=G)
@@ -1127,7 +1128,7 @@ with st.expander("Nozzle Schedule & Reinforcement Check (API 650 5.7)", expanded
 
 # --- Visualization Generation ---
 t_top_mm = shell_design.shell_courses[-1]['t_used'] if shell_design.shell_courses else 0
-t_roof_mm = roof_design.t_used 
+t_roof_mm = roof_design.t_used if roof_design else 0.0 
 
 # Generate SVGs
 try:
