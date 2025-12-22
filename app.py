@@ -770,7 +770,10 @@ if roof_type == "External Floating Roof":
     h_in_mm = efrt_params_ui.get('H_inner', 650.0)
     gap_mm = efrt_params_ui.get('Gap_Rim', 200.0)
     
-    efrt.set_geometry(D, h_out_mm, h_in_mm, b_pont_mm, gap_mm)
+    # Correct Method Call
+    n_pontoons_val = efrt_params_ui.get('N_Pontoons', 16)
+    efrt.set_pontoon_geometry(width=b_pont_mm, h_out=h_out_mm, h_in=h_in_mm, n_pontoons=n_pontoons_val)
+    efrt.gap_rim = gap_mm / 1000.0
     
     # Set Thicknesses
     efrt.set_thicknesses(
