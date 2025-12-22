@@ -1507,28 +1507,33 @@ with tab3:
         if ann_res.get('Warning'):
              st.error(f"⚠️ {ann_res['Warning']}")
              
-        st.write("**Annex F (Top Angle)**")
-        ann_f = annex_f.results
-        st.write(f"- Size: {ann_f.get('Top Angle', '-')}")
-        st.write(f"- Junction Area: {ann_f.get('Junction Area (mm2)', 0):.0f} mm2")
-        st.caption(f"Ref: {ann_f.get('Detail', 'Generic')}")
-        
-        # Frangibility Check
-        area_junc = ann_f.get('Junction Area (mm2)', 0)
-        # Weights
-        w_shell_tot = W_shell_kg
-        w_roof_plates_tot, _ = roof_design.calculate_roof_weight()
-        w_roof_struct_tot = struct_data.get('Total_Struct_Weight', 0)
-        
-        frangible_res = roof_design.check_frangibility(w_shell_tot, w_roof_plates_tot, w_roof_struct_tot, area_junc)
-        
-        st.write("**Frangible Roof Check**")
-        st.write(f"- Participating Area: {frangible_res.get('Participating_Area_mm2', 0):.0f} mm2")
-        ft_status = "Frangible" if frangible_res.get('Is_Frangible') else "Not Frangible"
-        st.write(f"- Status: **{ft_status}**")
-        if not frangible_res.get('Is_Frangible'):
-             st.warning(f"⚠️ {frangible_res.get('Warning', 'Check Failed')}")
-             st.error("🚨 Emergency Venting is REQUIRED.")
+        if roof_design:
+            st.write("**Annex F (Top Angle)**")
+            ann_f = annex_f.results
+            st.write(f"- Size: {ann_f.get('Top Angle', '-')}")
+            st.write(f"- Junction Area: {ann_f.get('Junction Area (mm2)', 0):.0f} mm2")
+            st.caption(f"Ref: {ann_f.get('Detail', 'Generic')}")
+            
+            # Frangibility Check
+            area_junc = ann_f.get('Junction Area (mm2)', 0)
+            # Weights
+            w_shell_tot = W_shell_kg
+            w_roof_plates_tot, _ = roof_design.calculate_roof_weight()
+            w_roof_struct_tot = struct_data.get('Total_Struct_Weight', 0)
+            
+            frangible_res = roof_design.check_frangibility(w_shell_tot, w_roof_plates_tot, w_roof_struct_tot, area_junc)
+            
+            st.write("**Frangible Roof Check**")
+            st.write(f"- Participating Area: {frangible_res.get('Participating_Area_mm2', 0):.0f} mm2")
+            ft_status = "Frangible" if frangible_res.get('Is_Frangible') else "Not Frangible"
+            st.write(f"- Status: **{ft_status}**")
+            if not frangible_res.get('Is_Frangible'):
+                 st.warning(f"⚠️ {frangible_res.get('Warning', 'Check Failed')}")
+                 st.error("🚨 Emergency Venting is REQUIRED.")
+        else:
+             # EFRT Case
+             frangible_res = {} # Not applicable
+
 
     st.markdown("### Seismic Results (Annex E - 13th Ed)")
     
@@ -1671,7 +1676,8 @@ with tab3:
         'gov_codes': {'Wind': gov_wind_code, 'Seismic': gov_seismic_code}, # Pass codes at root
         'results': {
             'shell_courses': shell_design.shell_courses,
-            'roof_res': roof_design.results,
+            'roof_res': roof_design.results if roof_design else {},
+            'efrt_res': efrt_design_res.results if efrt_design_res else {},
             'struct_data': struct_data, # Use local var
             'bottom_res': bottom_design.results,
             'seismic_res': gov_seismic_res, # Use Governing Seismic Data
@@ -1679,7 +1685,7 @@ with tab3:
             'venting_res': venting_res, # New API 2000 Data
             'wind_girder_res': wind_girder_res, # New API 650 5.9
             'nozzle_res': nozzle_res, # New Nozzle Schedule
-            'annex_f_res': annex_f.results,
+            'annex_f_res': annex_f.results if 'annex_f' in locals() else {},
             'anchor_res': anchor_design.results,
             'anchor_chair_res': anchor_chair.results,
             'top_member': top_member_res if 'top_member_res' in locals() else {},
