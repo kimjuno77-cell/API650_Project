@@ -1,30 +1,22 @@
-# Walkthrough - Shell 재질 유지 기능 개선 (Auto-Generate)
+# Walkthrough - Structure Material 표시 개선
 
 ## 문제 설명 (Issue)
-사용자가 Shell 재질을 변경한 상태에서 "Auto-Generate Courses" 버튼을 누르거나 "Standard Plate Width"를 변경하면, 재질 설정이 초기값("A 283 C")으로 리셋되는 불편함이 있었습니다.
+"Structure Material Yield (MPa)" 선택 항목이 단순히 숫자(235, 250 등)로만 표시되어, 사용자가 어떤 재질(Grade)인지 직관적으로 알기 어려웠습니다.
 
 ## 해결 방법 (Solution)
-"Auto-Generate"가 실행되기 직전에 기존 테이블의 첫 번째 코스(Course 1)의 재질 정보를 세션 상태(`preserved_shell_material`)에 저장하도록 수정했습니다.
-새로운 데이터가 생성될 때 이 저장된 재질 정보를 기본값으로 사용합니다.
+Streamlit의 `selectbox` 기능 중 `format_func`를 활용하여, 실제 값(숫자)은 유지하되 화면에 표시되는 라벨(Label)만 재질명을 포함하도록 개선했습니다.
 
 ### 코드 변경 (`app.py`)
-1. **재질 저장**: 코스 데이터 초기화(`pop`) 전에 현재 재질을 백업합니다.
 ```python
-if "shell_courses_data" in st.session_state:
-    st.session_state['preserved_shell_material'] = st.session_state["shell_courses_data"][0].get('Material', 'A 283 C')
-st.session_state.pop("shell_courses_data", None)
-```
-
-2. **재질 적용**: 새로운 코스 생성 시 백업된 재질을 사용합니다.
-```python
-default_mat = st.session_state.get('preserved_shell_material', 'A 283 C')
+yield_map = {
+    235: "SS400 / S235 (235 MPa)",
+    250: "ASTM A36 (250 MPa)",
+    345: "ASTM A572-50 / S355 (345 MPa)"
+}
 # ...
-default_data.append({
-    # ...
-    "Material": default_mat,
-    # ...
-})
+st.selectbox(..., options=[235, 250, 345], format_func=format_yield)
 ```
 
 ## 검증 (Verification)
-- 재질을 "A 36" 등으로 변경 후 "Auto-Generate" 클릭 시, 새로 생성된 코스들의 재질이 "A 36"으로 유지되는지 확인합니다.
+- 드롭다운 메뉴에서 "235" 대신 "SS400 / S235 (235 MPa)"와 같이 표시되는지 확인.
+- 선택 후 실제 계산에는 여전히 235.0 (float) 값이 사용되는지 확인 (기존 로직 호환성 유지).

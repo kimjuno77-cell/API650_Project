@@ -302,7 +302,25 @@ with tab1:
         if "Supported" in roof_type:
             st.markdown("---")
             st.write("### Structure Design Inputs")
-            struct_mat_Fy = st.selectbox("Structure Material Yield (MPa)", [235, 250, 345], index=0, key="struct_mat_yield")
+            
+            # Yield Strength Mapping
+            yield_map = {
+                235: "SS400 / S235 (235 MPa)",
+                250: "ASTM A36 (250 MPa)",
+                345: "ASTM A572-50 / S355 (345 MPa)"
+            }
+            
+            # Helper to handle custom values if loaded from JSON
+            def format_yield(val):
+                return yield_map.get(val, f"Custom ({val} MPa)")
+
+            struct_mat_Fy = st.selectbox(
+                "Structure Material Yield (MPa)", 
+                options=[235, 250, 345], 
+                format_func=format_yield,
+                index=0, 
+                key="struct_mat_yield"
+            )
             struct_yield = float(struct_mat_Fy)
         
         # Top Angle & Detail (Annex F / 5.10.2.6)
