@@ -760,7 +760,7 @@ st.session_state['latest_shell_results'] = shell_design.shell_courses
 efrt_design_res = None
 if roof_type == "External Floating Roof":
     # --- EFRT Design ---
-    efrt = EFRTDesign()
+    efrt = EFRTDesign(diameter=D, material_yield=struct_yield, specific_gravity=G)
     
     # Set Geometry (UI Inputs are in mixed units, convert to Design expectations)
     # D is meters. B_pontoon is meters in UI, convert to mm.
