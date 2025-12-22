@@ -776,12 +776,12 @@ if roof_type == "External Floating Roof":
     efrt.gap_rim = gap_mm / 1000.0
     
     # Set Thicknesses
-    efrt.set_thicknesses(
-        t_rim_outer=efrt_params_ui.get('T_Rim', 6.0),
-        t_rim_inner=efrt_params_ui.get('T_Rim', 6.0),
+    # Set Thicknesses
+    efrt.set_thickness(
+        t_rim_out=efrt_params_ui.get('T_Rim', 6.0),
+        t_rim_in=efrt_params_ui.get('T_Rim', 6.0),
         t_pon_top=efrt_params_ui.get('T_Pontoon', 6.0),
         t_pon_btm=efrt_params_ui.get('T_Pontoon', 6.0),
-        t_bulkhead=efrt_params_ui.get('T_Pontoon', 6.0),
         t_deck=efrt_params_ui.get('T_Deck', 5.0)
     )
     
