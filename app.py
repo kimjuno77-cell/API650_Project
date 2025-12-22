@@ -657,23 +657,16 @@ if "shell_courses_data" in st.session_state and isinstance(st.session_state["she
      if len(stale_data) > 0:
          first_width = stale_data[0].get("Width (m)", 0.0)
          
-         # ROBUST FIX: If the first course width in the table doesn't match the Input Box,
-         # it means the table is stale (from previous session or non-updated state).
-         # Force a reset to ensure Input == Output.
+         # ROBUST FIX: Check for mismatch but DO NOT discard data.
          if abs(first_width - std_width) > 0.001:
               st.warning(f"⚠️ Table width ({first_width}m) differs from Input ({std_width}m). Value preserved to avoid data loss. Click 'Auto-Generate' to reset.")
-              # Auto-fix REMOVED to prevent double-entry issue
-              # st.session_state.pop("shell_courses_data", None)
-              # st.session_state.pop("report_data", None)
-              # st.session_state.pop("latest_shell_results", None)
-              # st.rerun()
-         else: 
-              # Otherwise, load saved data (User might have custom edits)
-               saved_df = pd.DataFrame(stale_data)
-               # Ensure new columns exist in saved data
-               if "Req Thickness (mm)" not in saved_df.columns: saved_df["Req Thickness (mm)"] = 0.0
-               if "Rec Thickness (mm)" not in saved_df.columns: saved_df["Rec Thickness (mm)"] = 0.0
-               df_shell_input = saved_df
+         
+         # ALWAYS Load saved data (User might have custom edits)
+         saved_df = pd.DataFrame(stale_data)
+         # Ensure new columns exist in saved data
+         if "Req Thickness (mm)" not in saved_df.columns: saved_df["Req Thickness (mm)"] = 0.0
+         if "Rec Thickness (mm)" not in saved_df.columns: saved_df["Rec Thickness (mm)"] = 0.0
+         df_shell_input = saved_df
      else:
          # Empty list, use default
          pass
