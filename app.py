@@ -1834,147 +1834,147 @@ with tab4:
         template_to_use = "full_report_template.html"
     # Note: Ver.2026 does not use template_name, it generates HTML programmatically
 
-        st.write("Generate professional HTML report.")
+    st.write("Generate professional HTML report.")
         
-        if 'report_data' not in st.session_state:
-            st.warning("⚠️ No calculation results found. Please go to the **Calculations** tab and click **Run Calculations** first.")
-            st.info("The report module relies on the latest calculation data.")
-            html_content = None
+    if 'report_data' not in st.session_state:
+        st.warning("⚠️ No calculation results found. Please go to the **Calculations** tab and click **Run Calculations** first.")
+        st.info("The report module relies on the latest calculation data.")
+        html_content = None
+    else:
+        rd = st.session_state['report_data']
+            
+        # --- STALE DATA CHECK ---
+        if 'weights' not in rd:
+             st.error("⚠️ Data structure is outdated (from previous code version).")
+             st.warning("👉 Please go to '3. Calculation Results' tab and click **'Run Calculations'** again to refresh the data.")
+             st.stop()
+            
+        st.success(f"✅ Report System Updated: Ready to Generate ({report_type})")
+            
+        # Display Summary
+        st.markdown("#### Design Summary")
+        c1, c2, c3 = st.columns(3)
+        with c1:
+            st.metric("Net Capacity", f"{rd['capacities']['Net Capacity (m3)']:.1f} m3")
+        with c2:
+            st.metric("Empty Weight", f"{rd['capacities']['Empty Weight (kg)']:.0f} kg")
+        with c3:
+            st.metric("Structure Weight", f"{rd['results']['struct_data'].get('Total_Struct_Weight', 0):.0f} kg")
+
+        # --- PREPARE EXTENDED DATA (SVGs & Graphs) ---
+        extended_context = {}
+        if 'extended' in rd:
+            extended_context.update(rd['extended'])
+            
+        # Update with fresh SVGs (ensures latest state)
+        extended_context.update({
+            'shell_svg': shell_svg,
+            'nozzle_svg': nozzle_svg,
+            'wind_moment_svg': wind_moment_svg,
+            'roof_detail_svg': roof_detail_svg,
+            'seismic_graph': seismic_graph_b64,
+            'anchor': rd.get('anchor', {}),
+            'annex_f': res.get('annex_f_res', {}),
+            'anchor_chair': res.get('anchor_chair_res', {}),
+            'standard_comparison': rd.get('standard_comparison', {}),
+            'gov_codes': rd.get('gov_codes', {}),
+            'seismic_hoop_res': res.get('seismic_hoop_res', {}),
+            'capacities': rd.get('capacities', {}),
+            'weights': rd.get('weights', {})
+        })
+
+        # --- GENERATE HTML ---
+        if "Ver.2026" in report_type:
+            # NEW ENGINE (Professional 17-Chapter)
+            gen_2026 = ReportGenerator2026(
+                project_info=rd['project_info'],
+                design_data=rd['design_data'],
+                calculation_results=rd['results'],
+                extended_data=extended_context
+            )
+            html_content = gen_2026.generate_html()
+                
         else:
-            rd = st.session_state['report_data']
-            
-            # --- STALE DATA CHECK ---
-            if 'weights' not in rd:
-                 st.error("⚠️ Data structure is outdated (from previous code version).")
-                 st.warning("👉 Please go to '3. Calculation Results' tab and click **'Run Calculations'** again to refresh the data.")
-                 st.stop()
-            
-            st.success(f"✅ Report System Updated: Ready to Generate ({report_type})")
-            
-            # Display Summary
-            st.markdown("#### Design Summary")
-            c1, c2, c3 = st.columns(3)
-            with c1:
-                st.metric("Net Capacity", f"{rd['capacities']['Net Capacity (m3)']:.1f} m3")
-            with c2:
-                st.metric("Empty Weight", f"{rd['capacities']['Empty Weight (kg)']:.0f} kg")
-            with c3:
-                st.metric("Structure Weight", f"{rd['results']['struct_data'].get('Total_Struct_Weight', 0):.0f} kg")
+            # CLASSIC ENGINE
+            html_gen = HTMLReportGenerator(template_name=template_to_use)
+                
+            # Inject Extended Data
+            html_gen.data_context.update(extended_context)
+                
+            # Set Info & Data
+            info = rd['project_info']
+            dd = rd['design_data']
+            html_gen.set_project_info(info['name'], info['designer'])
+            html_gen.set_design_data(dd['D'], dd['H'], dd['G'], dd['P_design'], dd['CA'], dd['CA_roof'], dd['CA_bottom'], dd['Shell_Method'])
+                
+            # Set Results
+            res = rd['results']
+                
+            roof_data_dict = res['roof_res'].get('Roof Plate', {})
+            bottom_data_dict = res['bottom_res'].get('Bottom Plate', {})
+            annular_data_dict = res['bottom_res'].get('Annular Plate', {})
+                
+            wind_data_in = res.get('wind_res', {})
+            if not wind_data_in:
+                p_w_kpa = rd['design_data'].get('P_design', 0) / 100 
+                wind_data_in = {'P_wind_kPa': p_w_kpa} 
 
-            # --- PREPARE EXTENDED DATA (SVGs & Graphs) ---
-            extended_context = {}
-            if 'extended' in rd:
-                extended_context.update(rd['extended'])
-            
-            # Update with fresh SVGs (ensures latest state)
-            extended_context.update({
-                'shell_svg': shell_svg,
-                'nozzle_svg': nozzle_svg,
-                'wind_moment_svg': wind_moment_svg,
-                'roof_detail_svg': roof_detail_svg,
-                'seismic_graph': seismic_graph_b64,
-                'anchor': rd.get('anchor', {}),
-                'annex_f': res.get('annex_f_res', {}),
-                'anchor_chair': res.get('anchor_chair_res', {}),
-                'standard_comparison': rd.get('standard_comparison', {}),
-                'gov_codes': rd.get('gov_codes', {}),
-                'seismic_hoop_res': res.get('seismic_hoop_res', {}),
-                'capacities': rd.get('capacities', {}),
-                'weights': rd.get('weights', {})
-            })
-
-            # --- GENERATE HTML ---
-            if "Ver.2026" in report_type:
-                # NEW ENGINE (Professional 17-Chapter)
-                gen_2026 = ReportGenerator2026(
-                    project_info=rd['project_info'],
-                    design_data=rd['design_data'],
-                    calculation_results=rd['results'],
-                    extended_data=extended_context
-                )
-                html_content = gen_2026.generate_html()
+            html_gen.set_results(
+                W_shell_kg=rd['weights']['W_shell_kg'],
+                W_roof_kg=rd['weights']['W_roof_kg'],
+                net_uplift=rd['anchor'].get('Net Uplift Force (kN)', 0),
+                wind_moment=rd['anchor'].get('Wind Overturning Moment (kN-m)', 0),
+                seismic_moment=rd['anchor'].get('Seismic Overturning Moment (kN-m)', 0),
+                shell_data=res['shell_res'],
+                roof_data=roof_data_dict,
+                bottom_data=bottom_data_dict,
+                annular_data=annular_data_dict,
+                wind_data=wind_data_in,
+                seismic_data={
+                    **res['seismic_res'],
+                    'Base Shear V (kN)': res['seismic_res'].get('Base_Shear_kN', 0),
+                    'Mrw (kNm)': res['seismic_res'].get('Ringwall_Moment_kNm', 0),
+                    'Ms (kNm)': res['seismic_res'].get('Slab_Moment_kNm', 0), 
+                    'Ms_kNm': res['seismic_res'].get('Slab_Moment_kNm', 0),
+                    'J': res['seismic_res'].get('Anchorage_Ratio_J', 0),
+                    'd_max (m)': res['seismic_res'].get('d_max_m', 0),
+                    'Sliding_Res (kN)': res['seismic_res'].get('Sliding_Friction_Res_kN', 0),
+                    'Importance Factor': res['seismic_res'].get('Importance Factor', 1.0),
+                    'Importance_Factor': I_seismic if 'I_seismic' in locals() else res['seismic_res'].get('Importance Factor', 1.0)
+                },
+                nozzle_data=rd['nozzle_data'],
+                wind_girder=rd['wind_girder'],
+                top_angle=rd.get('top_angle', {}),
+                structure=rd['results'].get('struct_data', {}),
+                efrt=res.get('efrt_res', {}),
+                capacity=rd.get('capacities', {}),
+                venting=res.get('venting_res', {}),
+                frangibility=res.get('frangibility_res', {}),
+                roof_detail_svg=rd.get('roof_detail_svg', ""),
+                seismic_graph=rd.get('seismic_graph', ""),
+                anchor=rd.get('anchor', {}),
+                annex_f=res.get('annex_f_res', {}),
+                anchor_chair=res.get('anchor_chair_res', {}),
+                standard_comparison=rd.get('standard_comparison', {}),
+                gov_codes=rd.get('gov_codes', {}),
+                seismic_hoop_res=res.get('seismic_hoop_res', {}),
+                anchor_status=rd['anchor'].get('Status', 'N/A'),
+                anchor_data=rd['anchor'],
+                shell_courses=res['shell_courses'],
+                roof_type=rd['design_data'].get('roof_type', 'Supported Cone Roof'),
+                roof_slope=rd['design_data'].get('roof_slope', 0.0625),
+                struct_data=res['struct_data'],
+                top_member_data=res['top_member'],
+                capacities_data=rd['capacities'],
+                mawp_data=rd['mawp'],
+                venting_data=res.get('venting_res', {}),
+                wind_girder_data=res.get('wind_girder_res', {}),
+                nozzle_data_res=res.get('nozzle_res', []),
+                efrt_data=res.get('efrt_res', {})
+            )
                 
-            else:
-                # CLASSIC ENGINE
-                html_gen = HTMLReportGenerator(template_name=template_to_use)
-                
-                # Inject Extended Data
-                html_gen.data_context.update(extended_context)
-                
-                # Set Info & Data
-                info = rd['project_info']
-                dd = rd['design_data']
-                html_gen.set_project_info(info['name'], info['designer'])
-                html_gen.set_design_data(dd['D'], dd['H'], dd['G'], dd['P_design'], dd['CA'], dd['CA_roof'], dd['CA_bottom'], dd['Shell_Method'])
-                
-                # Set Results
-                res = rd['results']
-                
-                roof_data_dict = res['roof_res'].get('Roof Plate', {})
-                bottom_data_dict = res['bottom_res'].get('Bottom Plate', {})
-                annular_data_dict = res['bottom_res'].get('Annular Plate', {})
-                
-                wind_data_in = res.get('wind_res', {})
-                if not wind_data_in:
-                    p_w_kpa = rd['design_data'].get('P_design', 0) / 100 
-                    wind_data_in = {'P_wind_kPa': p_w_kpa} 
-
-                html_gen.set_results(
-                    W_shell_kg=rd['weights']['W_shell_kg'],
-                    W_roof_kg=rd['weights']['W_roof_kg'],
-                    net_uplift=rd['anchor'].get('Net Uplift Force (kN)', 0),
-                    wind_moment=rd['anchor'].get('Wind Overturning Moment (kN-m)', 0),
-                    seismic_moment=rd['anchor'].get('Seismic Overturning Moment (kN-m)', 0),
-                    shell_data=res['shell_res'],
-                    roof_data=roof_data_dict,
-                    bottom_data=bottom_data_dict,
-                    annular_data=annular_data_dict,
-                    wind_data=wind_data_in,
-                    seismic_data={
-                        **res['seismic_res'],
-                        'Base Shear V (kN)': res['seismic_res'].get('Base_Shear_kN', 0),
-                        'Mrw (kNm)': res['seismic_res'].get('Ringwall_Moment_kNm', 0),
-                        'Ms (kNm)': res['seismic_res'].get('Slab_Moment_kNm', 0), 
-                        'Ms_kNm': res['seismic_res'].get('Slab_Moment_kNm', 0),
-                        'J': res['seismic_res'].get('Anchorage_Ratio_J', 0),
-                        'd_max (m)': res['seismic_res'].get('d_max_m', 0),
-                        'Sliding_Res (kN)': res['seismic_res'].get('Sliding_Friction_Res_kN', 0),
-                        'Importance Factor': res['seismic_res'].get('Importance Factor', 1.0),
-                        'Importance_Factor': I_seismic if 'I_seismic' in locals() else res['seismic_res'].get('Importance Factor', 1.0)
-                    },
-                    nozzle_data=rd['nozzle_data'],
-                    wind_girder=rd['wind_girder'],
-                    top_angle=rd.get('top_angle', {}),
-                    structure=rd['results'].get('struct_data', {}),
-                    efrt=res.get('efrt_res', {}),
-                    capacity=rd.get('capacities', {}),
-                    venting=res.get('venting_res', {}),
-                    frangibility=res.get('frangibility_res', {}),
-                    roof_detail_svg=rd.get('roof_detail_svg', ""),
-                    seismic_graph=rd.get('seismic_graph', ""),
-                    anchor=rd.get('anchor', {}),
-                    annex_f=res.get('annex_f_res', {}),
-                    anchor_chair=res.get('anchor_chair_res', {}),
-                    standard_comparison=rd.get('standard_comparison', {}),
-                    gov_codes=rd.get('gov_codes', {}),
-                    seismic_hoop_res=res.get('seismic_hoop_res', {}),
-                    anchor_status=rd['anchor'].get('Status', 'N/A'),
-                    anchor_data=rd['anchor'],
-                    shell_courses=res['shell_courses'],
-                    roof_type=rd['design_data'].get('roof_type', 'Supported Cone Roof'),
-                    roof_slope=rd['design_data'].get('roof_slope', 0.0625),
-                    struct_data=res['struct_data'],
-                    top_member_data=res['top_member'],
-                    capacities_data=rd['capacities'],
-                    mawp_data=rd['mawp'],
-                    venting_data=res.get('venting_res', {}),
-                    wind_girder_data=res.get('wind_girder_res', {}),
-                    nozzle_data_res=res.get('nozzle_res', []),
-                    efrt_data=res.get('efrt_res', {})
-                )
-                
-                # Generate content (Classic)
-                html_content = html_gen.generate_html()
+            # Generate content (Classic)
+            html_content = html_gen.generate_html()
 
     # Check for content before showing download
     if html_content:
