@@ -1668,6 +1668,7 @@ with tab3:
         },
         'anchor': anchor_design.results,
         'nozzle_data': nozzle_res, # Required for legacy report call
+        'wind_girder': wind_girder_res, # Required for legacy report call
         'capacities': {
             'Gross Capacity (m3)': vol_gross_m3,
             'Net Capacity (m3)': vol_net_m3, # Keep for backward compatibility if any
