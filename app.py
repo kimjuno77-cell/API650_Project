@@ -1827,7 +1827,7 @@ with tab4:
     st.subheader("Download Report")
     
     report_type = st.radio("Select Report Type", 
-                           ["Summary Report", "Full Calculation Report (Detailed 50+ Pages)"], 
+                           ["Summary Report", "Full Calculation Report (Detailed 50+ Pages)", "Ver.2026 (Professional)"], 
                            index=0, horizontal=True)
     
     template_to_use = "report_template.html"
