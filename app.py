@@ -55,7 +55,8 @@ def save_project_to_json():
         "use_kds", 
         "kds_v0", "kds_terrain", "kds_risk_wind", "kds_iw_input",
         "kds_zone_input", "kds_s_input", "kds_soil", "kds_risk_seismic", "kds_ie_input",
-        "shell_courses_data", "std_plate_width"
+        "shell_courses_data", "std_plate_width",
+        "mat_bottom", "use_annular", "ann_width", "ann_thk", "P_external"
     ]
     
     data = {}
