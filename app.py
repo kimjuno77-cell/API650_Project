@@ -1842,6 +1842,7 @@ with tab4:
         html_content = None
     else:
         rd = st.session_state['report_data']
+        res = rd['results']
             
         # --- STALE DATA CHECK ---
         if 'weights' not in rd:
