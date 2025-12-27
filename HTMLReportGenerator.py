@@ -27,7 +27,8 @@ class HTMLReportGenerator:
                     wind_data, seismic_data, roof_type, roof_slope,
                     struct_data=None, top_member_data=None, capacities_data=None, mawp_data=None, 
                     venting_data=None, wind_girder_data=None, nozzle_data=None, anchor_data=None,
-                    shell_svg=None, nozzle_svg=None, efrt_data=None, standard_comparison=None, frangibility=None):
+                    shell_svg=None, nozzle_svg=None, efrt_data=None, standard_comparison=None, frangibility=None,
+                    **kwargs):
         self.data_context.update({
             'W_shell_kg': W_shell_kg,
             'W_roof_kg': W_roof_kg,
@@ -55,6 +56,7 @@ class HTMLReportGenerator:
             'standard_comparison': standard_comparison or {},
             'frangibility': frangibility or {}
         })
+        self.data_context.update(kwargs)
 
     def generate_html(self):
         """
