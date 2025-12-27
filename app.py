@@ -1679,6 +1679,7 @@ with tab3:
         'gov_codes': {'Wind': gov_wind_code, 'Seismic': gov_seismic_code}, # Pass codes at root
         'results': {
             'shell_courses': shell_design.shell_courses,
+            'shell_res': {'Shell Courses': shell_design.shell_courses}, # Mapper for Report_v2026/Classic checks
             'roof_res': roof_design.results if roof_design else {},
             'efrt_res': efrt_design_res.results if efrt_design_res else {},
             'struct_data': struct_data, # Use local var
