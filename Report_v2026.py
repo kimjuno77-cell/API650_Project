@@ -523,17 +523,99 @@ class ReportGenerator2026:
         self._add_chapter("SHELL PLATE DESIGN", html)
 
     def generate_chapter_4_material(self):
-        # Gather unique materials from Shell, Roof, Bottom
-        # For now, just Shell materials summary
+        import Materials
+        d = self.design
+        design_temp = d.get('design_temp', 40)
+        
+        # Build component list with all relevant materials
+        components = [
+            ('Shell',   d.get('mat_shell', '-'),    d.get('CA', 0),       'd.get(\'joint_efficiency\',1.0)',  'API 650 Table 5-2a / Annex S'),
+            ('Roof',    d.get('roof_material', '-'), d.get('CA_roof', 0),  '0.7',                              'API 650 5.10 / Annex S'),
+            ('Bottom',  d.get('mat_bottom', '-'),    d.get('CA_bottom', 0),'0.7',                              'API 650 5.4'),
+            ('Annular', d.get('mat_annular', '-'),   d.get('CA_bottom', 0),'0.7',                              'API 650 5.5 / Annex S'),
+        ]
+        
+        joint_eff = d.get('joint_efficiency', 1.0)
+        
+        rows = ""
+        for comp, mat, ca, _, code_ref in components:
+            if mat == '-' or not mat:
+                rows += f"<tr><td>{comp}</td><td>-</td><td>-</td><td>-</td><td>-</td><td>-</td><td>{ca:.1f}</td><td>-</td></tr>"
+                continue
+            try:
+                props = Materials.get_material_properties(mat, design_temp)
+                derated = Materials.get_derated_Sd(mat, design_temp) if design_temp > 40 else props.get('Sd', 0)
+                fy  = props.get('Fy', '-')
+                fu  = props.get('Fu', '-')
+                sd_ambient = Materials.get_material_properties_base(mat).get('Sd', '-')
+                st  = props.get('St', '-')
+                sd_design = derated
+                
+                # Format status (derated vs ambient)
+                sd_note = f"{sd_design:.0f}" if design_temp > 40 else f"{sd_ambient:.0f}"
+                derated_flag = " ⚠️" if design_temp > 40 and isinstance(sd_design, (int,float)) and isinstance(sd_ambient, (int,float)) and sd_design < sd_ambient else ""
+                
+                rows += f"""<tr>
+                    <td><b>{comp}</b></td>
+                    <td>{mat}</td>
+                    <td>{fy if isinstance(fy, str) else f'{fy:.0f}'}</td>
+                    <td>{fu if isinstance(fu, str) else f'{fu:.0f}'}</td>
+                    <td>{sd_ambient if isinstance(sd_ambient, str) else f'{sd_ambient:.0f}'}</td>
+                    <td>{sd_note}{derated_flag}</td>
+                    <td>{st if isinstance(st, str) else f'{st:.0f}'}</td>
+                    <td>{ca:.1f}</td>
+                </tr>"""
+            except Exception as e:
+                rows += f"<tr><td>{comp}</td><td>{mat}</td><td colspan='5'>Error: {e}</td><td>{ca:.1f}</td></tr>"
+        
+        # Determine applicable standard for shell
+        mat_shell = d.get('mat_shell', '')
+        is_ss = Materials.is_stainless_steel(mat_shell) if mat_shell else False
+        annex_note = "Annex S (Stainless Steel) materials — Sd, St per Table S-1, min. thickness 5mm per Ann. S.3.1.1" if is_ss else "Carbon/Low-Alloy Steel — Sd, St per Table 5-2a"
+        temp_note = f"<br><span style='color:#e53e3e;'>⚠️ Temperature Derating applied: Design Temp = {design_temp:.1f}°C > 40°C (Reference: API 650 Annex M)</span>" if design_temp > 40 else ""
+        
         html = f"""
         <h3>4.1 MATERIAL PROPERTIES (at Design Temp)</h3>
+        <div class='calculation-block'>
+            <b>Applicable Code:</b> {annex_note}{temp_note}<br>
+            <b>Design Temperature:</b> {design_temp:.1f} °C &nbsp;&nbsp; <b>Joint Efficiency (E):</b> {joint_eff:.2f}
+        </div>
         <table>
-            <tr><th>Component</th><th>Material</th><th>Yield (MPa)</th><th>Tensile (MPa)</th><th>Sd (MPa)</th></tr>
-            <tr><td>Shell</td><td>(See Chapter 3)</td><td>-</td><td>-</td><td>-</td></tr>
-            <tr><td>Roof</td><td>{self.design.get('roof_material','-')}</td><td>-</td><td>-</td><td>-</td></tr>
-            <tr><td>Bottom</td><td>{self.design.get('mat_bottom','-')}</td><td>-</td><td>-</td><td>-</td></tr>
+            <tr>
+                <th>Component</th>
+                <th>Material</th>
+                <th>Yield F<sub>y</sub> (MPa)</th>
+                <th>Tensile F<sub>u</sub> (MPa)</th>
+                <th>S<sub>d</sub> Ambient (MPa)</th>
+                <th>S<sub>d</sub> @ Design T (MPa)</th>
+                <th>S<sub>t</sub> (MPa)</th>
+                <th>CA (mm)</th>
+            </tr>
+            {rows}
         </table>
-        <p><i>*Detailed properties per course in calculation appendix.</i></p>
+        <p><i>
+            S<sub>d</sub>: Allowable Design Stress (API 650 Table 5-2a / Table S-1)<br>
+            S<sub>t</sub>: Allowable Hydrostatic Test Stress (API 650 Table 5-2a / Table S-1)<br>
+            F<sub>y</sub>: Specified Minimum Yield Strength &nbsp;&nbsp; F<sub>u</sub>: Specified Minimum Tensile Strength<br>
+            For Annex S (STS304/316): S<sub>d</sub> = 155 MPa, S<sub>t</sub> = 186 MPa, F<sub>y</sub> = 205 MPa (ASME SA-240)<br>
+            Min. thickness: Shell/Roof 5mm per Annex S.3.1.1 / S.3.1.2, Bottom 5mm per API 650 5.4.1
+        </i></p>
+
+        <h3>4.2 MATERIAL SPECIFICATION SUMMARY</h3>
+        <table>
+            <tr><th>Component</th><th>Specification</th><th>Nominal t (mm)</th><th>Min. Required t (mm)</th><th>Code Reference</th></tr>
+            <tr><td>Shell (Bottom Course)</td><td>{d.get('mat_shell','-')}</td>
+                <td>{(self.results.get('shell_res') or {}).get('Shell Courses',[{}]) and (self.results.get('shell_res') or {}).get('Shell Courses',[{'t_used':0}])[0].get('t_used','-')}</td>
+                <td>5 (Annex S)</td><td>API 650 Ann. S.3.1.1</td></tr>
+            <tr><td>Roof Plate</td><td>{d.get('roof_material','-')}</td>
+                <td>{(self.results.get('roof_res') or {}).get('Roof Plate',{}).get('Nominal Thickness','-')}</td>
+                <td>5 (Annex S)</td><td>API 650 Ann. S.3.1.2</td></tr>
+            <tr><td>Bottom Plate</td><td>{d.get('mat_bottom','-')}</td>
+                <td>{(self.results.get('bottom_res') or {}).get('Bottom Plate',{}).get('Nominal Thickness','-')}</td>
+                <td>6 (Gen.) / 5 (Ann. S)</td><td>API 650 5.4.1 / Ann. S.3.1.2</td></tr>
+            <tr><td>Annular Plate</td><td>{d.get('mat_annular', d.get('mat_shell','-'))}</td>
+                <td>-</td><td>As required by 5.5</td><td>API 650 5.5</td></tr>
+        </table>
         """
         self._add_chapter("MATERIAL REQUIREMENTS", html)
 
