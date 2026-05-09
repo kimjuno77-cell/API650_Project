@@ -83,6 +83,55 @@ def load_project_from_json(uploaded_file):
     except Exception as e:
         st.error(f"Error loading file: {e}")
 
+def display_design_warnings(rd):
+    """
+    Check for FAIL conditions in results and display them prominently in the UI.
+    """
+    results = rd.get('results', {})
+    design_data = rd.get('design_data', {})
+    
+    # Header for Failures
+    has_error = False
+    
+    # 1. Shell Thickness Check
+    shell_courses = results.get('shell_courses', [])
+    for c in shell_courses:
+        t_used = c.get('t_used', 0)
+        t_req = c.get('t_req', 0)
+        if t_used < t_req:
+            st.error(f"🚨 **[SHELL FAIL]** Course {c.get('Course')}: Provided {t_used}mm < Required {t_req:.2f}mm. **Please INCREASE thickness in Tab 2.**")
+            has_error = True
+            
+    # 2. Annex F Pressure Check
+    af = results.get('annex_f_res', {})
+    if af:
+        p_design = design_data.get('P_design', 0)
+        p_max = af.get('Max Design Pressure P_max (kPa)', 0)
+        p_design_kpa = (p_design * 9.80665) / 1000.0
+        if p_design_kpa > p_max and p_max > 0:
+            st.error(f"🚨 **[ANNEX F FAIL]** Design Pressure ({p_design_kpa:.3f} kPa) > Max Pressure ({p_max:.3f} kPa). **Increase Top Angle size or add Anchorage.**")
+            has_error = True
+
+    # 3. Anchorage Check
+    anchor = results.get('anchor_res', {})
+    if anchor and anchor.get('Status') == 'Anchors Required' and anchor.get('Number of Bolts') == 0:
+         st.error("🚨 **[ANCHOR FAIL]** Anchorage is REQUIRED but not designed correctly. Check Uplift loads.")
+         has_error = True
+
+    # 4. Annex V Buckling Check
+    p_ext = design_data.get('P_external', 0)
+    if p_ext > 0 and shell_courses:
+        t_top = shell_courses[-1].get('t_used', 6.0)
+        D = design_data.get('D', 0)
+        H = design_data.get('H', 0)
+        N_sq = (445 * (D**3)) / (t_top * (H**2)) if (t_top > 0 and H > 0) else 0
+        if N_sq <= 6:
+             st.warning(f"⚠️ **[ANNEX V WARNING]** N² = {N_sq:.2f} (≤ 6). End Stiffener is REQUIRED per API 650 V.8.2.3.")
+             # Not always a Hard Fail if stiffener is added later, but critical.
+    
+    if not has_error:
+        st.success("✅ Design Integrity Check Passed! (Basic checks OK)")
+
 # --- Authentication & State Management ---
 from AuthManager import AuthManager
 
@@ -254,25 +303,52 @@ with st.container():
     st.header("1. BASIC DESIGN DATA")
     
     if st.button("🔄 Reset to 262-M-TK-101 Defaults", help="Force all inputs to match the Ammonia Tank PDF"):
+        # Geometry
         st.session_state["ID_input"] = 3900.0
         st.session_state["H_input"] = 6600.0
-        st.session_state["HD"] = 6600.0
+        st.session_state["HD"] = 5950.0 # From PDF Design Level
         st.session_state["HT"] = 6600.0
+        st.session_state["HHL"] = 5950.0
+        st.session_state["HLL"] = 110.0
+        
+        # Process
         st.session_state["G"] = 0.96
-        st.session_state["P_design_mm"] = 1500.0
-        st.session_state["P_external_mm"] = 60.0
-        st.session_state["V_wind"] = 28.0 # From KDS spec
+        st.session_state["P_design_mm"] = 1500.0 # 14.71 kPa
+        st.session_state["P_external_mm"] = 60.0  # 0.59 kPa
+        st.session_state["design_temp"] = 55.0
+        st.session_state["mdmt"] = -10.6
+        st.session_state["joint_efficiency"] = 0.7
+        
+        # Materials
+        st.session_state["mat_shell"] = "304"
+        st.session_state["roof_material"] = "304"
+        st.session_state["mat_bottom"] = "304"
+        st.session_state["preserved_shell_material"] = "304"
+        
+        # Roof & Detail
+        st.session_state["roof_type_new"] = "[Type 1] CRT - Cone Roof Tank"
+        st.session_state["roof_slope"] = 0.1667 # 1/6
+        st.session_state["detail_type"] = "Angle (Detail a)"
+        st.session_state["top_angle"] = "L100x100x10" # Closest to 100x100x9
+        
+        # Site
+        st.session_state["V_wind"] = 28.0 
         st.session_state["kds_v0"] = 28.0
         st.session_state["kds_terrain"] = "C"
         st.session_state["kds_soil"] = "S4"
         st.session_state["kds_s"] = 0.22
         st.session_state["kds_ie"] = 1.5
+        
+        # CA
         st.session_state["CA"] = 0.0
         st.session_state["CA_bottom"] = 0.0
         st.session_state["CA_annular"] = 0.0
         st.session_state["CA_roof"] = 0.0
-        st.session_state["joint_efficiency"] = 0.7
-        st.session_state["roof_slope"] = 0.1667
+        
+        # Reset Table
+        st.session_state.pop("shell_courses_data", None)
+        
+        st.success("262-M-TK-101 (Ammonia Tank) Parameters Loaded!")
         st.rerun()
         
     st.subheader("TANK CAPACITY & GEOMETRY")
@@ -643,7 +719,7 @@ num_courses_est = math.ceil(H / calc_width)
 default_data = []
 current_h_calc = 0
 # Use preserved material if available, else default
-default_mat = st.session_state.get('preserved_shell_material', '304')
+default_mat = st.session_state.get('preserved_shell_material', mat_shell)
 
 for i in range(num_courses_est):
     w_remain = H - current_h_calc
@@ -1202,6 +1278,11 @@ with st.expander("7. Venting Design (API 2000)", expanded=False):
 # --- Tab 3: Results ---
 with st.container():
     st.header("3. CALCULATION RESULTS")
+    
+    # --- DESIGN VALIDATION (FAIL ALERT) ---
+    if 'report_data' in st.session_state:
+        display_design_warnings(st.session_state['report_data'])
+    
     st.subheader("Calculation Summary")
 
     # --- Roof Design Alerts (Auto-Correction Feedback) ---

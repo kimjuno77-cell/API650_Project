@@ -66,7 +66,12 @@ class ReportGenerator2026:
         body_html = ""
         
         for ch in self.chapters:
-            toc_html += f"<li><a href='#ch{ch['num']}'>CHAPTER {ch['num']}. {ch['title']}</a><span class='page-num'></span></li>"
+            toc_html += f"""
+            <li class='toc-item'>
+                <a href='#ch{ch['num']}'>CHAPTER {ch['num']}. {ch['title']}</a>
+                <span class='toc-dots'></span>
+                <span class='page-num-placeholder'>Page {ch['num']*2 + 1}</span>
+            </li>"""
             body_html += f"<div id='ch{ch['num']}' class='chapter'>"
             body_html += f"<h1 class='chapter-title'>CHAPTER {ch['num']}. {ch['title']}</h1>"
             body_html += "<hr class='chapter-divider'>"
@@ -138,7 +143,14 @@ class ReportGenerator2026:
         }
         .cover-table td { color: white; border: none; text-align: left; padding: 8px; font-size: 1.1rem; }
         
-        .chapter { padding: 60px 80px; }
+        .toc h2 { text-align: center; color: #2d3748; margin-bottom: 30px; font-weight: 700; }
+        .toc ul { list-style: none; padding: 0; }
+        .toc-item { display: flex; align-items: baseline; margin-bottom: 12px; }
+        .toc-item a { text-decoration: none; color: #2d3748; font-weight: 600; white-space: nowrap; }
+        .toc-dots { flex-grow: 1; border-bottom: 2px dotted #cbd5e0; margin: 0 10px; }
+        .page-num-placeholder { color: #718096; font-weight: 400; font-family: 'Roboto Mono', monospace; }
+        
+        .chapter { padding: 60px 80px; page-break-after: always; }
         .chapter-title { 
             font-size: 2.2rem; 
             color: #2d3748; 
@@ -306,6 +318,14 @@ class ReportGenerator2026:
             <tr>
                 <td>Corrosion Allowance (Bottom):</td><td>{d.get('CA_bottom',0):.1f} mm</td>
                 <td>Shell Design Method:</td><td>{d.get('shell_method','-')}</td>
+            </tr>
+            <tr>
+                <td>Material (Shell):</td><td>{d.get('mat_shell','-')}</td>
+                <td>Material (Roof):</td><td>{d.get('roof_material','-')}</td>
+            </tr>
+            <tr>
+                <td>Material (Bottom):</td><td>{d.get('mat_bottom','-')}</td>
+                <td>Material (Annular):</td><td>{d.get('mat_annular','-')}</td>
             </tr>
             <tr>
                 <td>Roof Type:</td><td colspan="3">{d.get('roof_type','')}</td>
@@ -1338,7 +1358,9 @@ class ReportGenerator2026:
         self._add_chapter("CIVIL INFORMATION LOADING DATA", html)
 
     def generate_chapter_19_external_pressure(self):
-        p_ext_kpa = self.design.get('P_external', 0)
+        p_ext_mmaq = self.design.get('P_external', 0)
+        # Convert mmH2O to kPa for Annex V calculation
+        p_ext_kpa = p_ext_mmaq * 0.00980665
         D = self.design.get('D', 0)
         H = self.design.get('H', 0)
         
