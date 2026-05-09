@@ -1916,7 +1916,7 @@ with st.container():
             info = rd['project_info']
             dd = rd['design_data']
             html_gen.set_project_info(info['name'], info['designer'])
-            html_gen.set_design_data(dd['D'], dd['H'], dd['G'], dd['P_design'], dd['CA'], dd['CA_roof'], dd['CA_bottom'], dd['Shell_Method'])
+            html_gen.set_design_data(dd['D'], dd['H'], dd['G'], dd['P_design'], dd['CA'], dd['CA_roof'], dd['CA_bottom'], dd['shell_method'])
                 
             # Set Results
             res = rd['results']
