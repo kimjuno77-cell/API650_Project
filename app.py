@@ -1076,6 +1076,7 @@ if 'use_kds' in locals() and use_kds:
         gov_seismic_res = seismic_res
         gov_seismic_load_obj = seismic_load
 else:
+    gov_seismic_res = seismic_res
     gov_seismic_load_obj = seismic_load
 
 # --- NEW: Seismic Checks (E.6.1.4, E.6.2.2) ---
@@ -1099,25 +1100,25 @@ final_comp_res = gov_seismic_load_obj.check_longitudinal_compression(t_shell_bot
 annex_v = AnnexVDesign(D, H, shell_courses, P_external, Fy=fy_bot)
 annex_v_res = annex_v.run_design()
 
-    # --- Integrate Seismic Annular Requirement into Bottom Design ---
-    seismic_ann_status = gov_seismic_res.get('Annular_Check', 'Not Required')
-    if "Required" in seismic_ann_status:
-         # Update Bottom Design Result
-         ann_res = bottom_design.results.get('Annular Plate', {})
+# --- Integrate Seismic Annular Requirement into Bottom Design ---
+seismic_ann_status = gov_seismic_res.get('Annular_Check', 'Not Required')
+if "Required" in seismic_ann_status:
+     # Update Bottom Design Result
+     ann_res = bottom_design.results.get('Annular Plate', {})
+     
+     # If already required by Stress, just append reason
+     if ann_res.get('Required?') == 'Yes':
+         if "Seismic" not in ann_res.get('Required?', ''):
+             ann_res['Required?'] += " / Seismic"
+     else:
+         ann_res['Required?'] = "Yes (Seismic)"
          
-         # If already required by Stress, just append reason
-         if ann_res.get('Required?') == 'Yes':
-             if "Seismic" not in ann_res.get('Required?', ''):
-                 ann_res['Required?'] += " / Seismic"
-         else:
-             ann_res['Required?'] = "Yes (Seismic)"
-             
-         # If NOT Applied, Trigger Warning
-         if not ann_res.get('Applied', False):
-             ann_res['Warning'] = f"Annular Plate is REQUIRED by Seismic Stability ({gov_seismic_code}) but is NOT applied."
-             ann_res['Status'] = "MISSING (REQUIRED)"
-             
-         bottom_design.results['Annular Plate'] = ann_res
+     # If NOT Applied, Trigger Warning
+     if not ann_res.get('Applied', False):
+         ann_res['Warning'] = f"Annular Plate is REQUIRED by Seismic Stability ({gov_seismic_code}) but is NOT applied."
+         ann_res['Status'] = "MISSING (REQUIRED)"
+         
+     bottom_design.results['Annular Plate'] = ann_res
 
 
 
