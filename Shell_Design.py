@@ -65,19 +65,17 @@ class ShellDesign:
             
         return t
 
-    def calculate_1ft_thickness(self, H_eff, G, S, CA):
+    def calculate_1ft_thickness(self, H_eff, G, S, CA, use_efficiency=True):
         """
         Calculate thickness using 1-Foot Method (API 650 5.6.3).
         td = (4.9 * D * (H - 0.3) * G) / (Sd * E) + CA
+        tt = (4.9 * D * (H - 0.3)) / St
         """
-        # H_eff is the liquid height at the bottom of the course.
-        # 1-Foot method uses (H - 0.3) where H is the liquid level above the bottom of the course.
-        # So effective design height is max(0, H_eff - 0.3).
-        
         H_design = H_eff - 0.3
         if H_design < 0: H_design = 0
         
-        t = (4.9 * self.D * H_design * G) / (S * self.E) + CA
+        eff = self.E if use_efficiency else 1.0
+        t = (4.9 * self.D * H_design * G) / (S * eff) + CA
         return t
 
     def calculate_shell_weight(self):
@@ -243,7 +241,8 @@ class ShellDesign:
             else:
                 # 1-Foot Method (API 650 5.6.3)
                 td = self.calculate_1ft_thickness(H_eff_d, self.G, Sd, self.CA)
-                tt = self.calculate_1ft_thickness(H_eff_t, 1.0, St, 0.0)
+                # tt = [4.9 * D * (H - 0.3)] / (St) -> Joint efficiency NOT used for test per API 650
+                tt = self.calculate_1ft_thickness(H_eff_t, 1.0, St, 0.0, use_efficiency=False)
             
             # Update prev for next iteration (VDM needs it, 1-Foot doesn't but harmless)
             t_prev_d = td

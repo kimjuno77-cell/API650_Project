@@ -112,6 +112,12 @@ def display_design_warnings(rd):
             st.error(f"🚨 **[ANNEX F FAIL]** Design Pressure ({p_design_kpa:.3f} kPa) > Max Pressure ({p_max:.3f} kPa). **Increase Top Angle size or add Anchorage.**")
             has_error = True
 
+    # 2.5 Seismic Hoop Stress Check
+    seismic_hoop = results.get('seismic_hoop_res', {})
+    if seismic_hoop and seismic_hoop.get('Status') == 'Fail':
+        st.error(f"🚨 **[SEISMIC HOOP FAIL]** Seismic Hoop Stress ({seismic_hoop.get('Stress_MPa',0):.1f} MPa) > Allowable ({seismic_hoop.get('Allow_MPa',0):.1f} MPa). **Increase Bottom Course Thickness!**")
+        has_error = True
+
     # 3. Anchorage Check
     anchor = results.get('anchor_res', {})
     if anchor and anchor.get('Status') == 'Anchors Required' and anchor.get('Number of Bolts') == 0:

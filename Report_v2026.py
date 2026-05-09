@@ -449,9 +449,27 @@ class ReportGenerator2026:
         is_vdm = 'VDM' in method_name or 'Variable' in method_name
         
         P_i = self.design.get('P_design', 0) * 0.00980665  # mmAq -> kPa
+        
+        # Determine Applied Annexes for Shell
+        applied_logic = []
+        if P_i > 2.5: applied_logic.append("Annex F (Internal Pressure) - Adjusted H_eff")
+        if any('304' in str(c.get('Material','')) or '316' in str(c.get('Material','')) for c in courses):
+            applied_logic.append("Annex S (Stainless Steel) - Specific Stresses & Min Thk")
+        if self.design.get('design_temp', 40) > 93:
+            applied_logic.append("Annex M (High Temperature) - Yield/Stress Derating")
+        if method_name.lower() == 'annex_a':
+            applied_logic.append("Annex A (Small Tanks) - Simplified Design Method")
+
+        logic_html = ""
+        if applied_logic:
+            logic_html = "<div class='warning-box'><b>Applied Design Logic:</b><ul>"
+            for lg in applied_logic:
+                logic_html += f"<li>✅ {lg}</li>"
+            logic_html += "</ul></div>"
 
         html = f"""
         <h3>3.1 INPUT SUMMARY</h3>
+        {logic_html}
         <table>
             <tr><th colspan="5" class="section-header">Shell Course Input Data</th></tr>
             <tr><th>Course</th><th>Course Height (m)</th><th>H (m)</th><th>t used (mm)</th><th>CA (mm)</th></tr>
@@ -472,11 +490,15 @@ class ReportGenerator2026:
         """
         for c in courses:
             t_use = c.get('t_used', c.get('t_use', 0))
+            t_req = c.get('t_req', 0)
+            status_color = "#e53e3e" if t_use < t_req - 0.01 else "inherit"
+            status_weight = "700" if t_use < t_req - 0.01 else "400"
+            
             html += f"""<tr>
                 <td>{c.get('Course','-')}</td><td>{c.get('Material','-')}</td>
                 <td>{c.get('Sd',0):.0f}</td><td>{c.get('St',0):.0f}</td>
                 <td>{c.get('td',0):.2f}</td><td>{c.get('tt',0):.2f}</td>
-                <td>5</td><td><b>{t_use}</b></td>
+                <td>5</td><td style='color:{status_color}; font-weight:{status_weight};'><b>{t_use}</b></td>
             </tr>"""
         html += "</table>"
 
