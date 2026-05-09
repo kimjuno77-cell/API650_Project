@@ -1231,8 +1231,8 @@ class ReportGenerator2026:
         M = L + WL_line
         Q = DL_line + LL_line
         R = Q + WL_line
-        V = DL_line - UP_test_line
-        W = V + WL_50_line
+        V_val = DL_line - UP_test_line
+        W_val = V_val + WL_50_line
         AB = DL_line + LL_line + Seismic_line
         
         # W2 Calculations
