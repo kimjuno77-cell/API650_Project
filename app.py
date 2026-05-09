@@ -253,13 +253,30 @@ with st.sidebar:
 with st.container():
     st.header("1. BASIC DESIGN DATA")
     
+    if st.button("🔄 Reset to 262-M-TK-101 Defaults", help="Force all inputs to match the reference PDF specifications"):
+        st.session_state["ID_input"] = 28500.0
+        st.session_state["H_input"] = 16500.0
+        st.session_state["HD"] = 15500.0
+        st.session_state["HT"] = 16500.0
+        st.session_state["HHL"] = 15500.0
+        st.session_state["V_wind"] = 45.0
+        st.session_state["SDS"] = 0.50
+        st.session_state["SD1"] = 0.22
+        st.session_state["roof_slope"] = 0.0625
+        st.session_state["CA"] = 2.0
+        st.session_state["CA_bottom"] = 2.0
+        st.session_state["CA_annular"] = 2.0
+        st.session_state["CA_roof"] = 0.0
+        st.session_state["joint_efficiency"] = 1.0
+        st.rerun()
+        
     st.subheader("TANK CAPACITY & GEOMETRY")
     col_geom, col_cap = st.columns(2)
     
     with col_geom:
         tank_roof_type = st.selectbox("Tank Roof Type", ["[Type 1] CRT - Cone Roof Tank", "[Type 2] DRT - Dome Roof Tank", "[Type 3] IFRT - Internal Floating Roof Tank", "[Type 4] EFRT - External Floating Roof Tank"], index=0, key="roof_type_new")
-        ID_input = st.number_input("Inside Diameter (D) [mm]", value=28500.0, step=100.0, key="ID_input")
-        H_input = st.number_input("Tank Height (H) [mm]", value=16500.0, step=100.0, key="H_input")
+        ID_input = st.number_input("Inside Diameter (D) [mm]", value=28500.0, step=100.0, key="ID_input", help="Reference: 262-M-TK-101")
+        H_input = st.number_input("Tank Height (H) [mm]", value=16500.0, step=100.0, key="H_input", help="Reference: 262-M-TK-101")
         HD = st.number_input("Design Liquid Level (HD) [mm]", value=15500.0, step=100.0, key="HD")
         HT = st.number_input("Test Liquid Level (HT) [mm]", value=16500.0, step=100.0, key="HT")
         HHL = st.number_input("Max. Liquid Level (HHL) [mm]", value=15500.0, step=100.0, key="HHL")
@@ -329,12 +346,25 @@ with st.container():
     # Advanced Roof Inputs (mapping to legacy variables)
     with st.expander("Advanced Roof Settings", expanded=False):
         # Map back to old variables so that calculation code doesn't break
-        roof_type = "Supported Cone Roof"
-        if "DRT" in tank_roof_type: roof_type = "Self-Supported Dome Roof"
-        elif "IFRT" in tank_roof_type: roof_type = "Supported Cone Roof" # IFRT structural is like CRT inside
-        elif "EFRT" in tank_roof_type: roof_type = "External Floating Roof"
+        roof_slope = st.number_input("Roof Slope (Rise/Run)", value=0.0625, format="%.4f", step=0.0001, key="roof_slope", help="1/16 = 0.0625, 1/5 = 0.2000")
         
-        roof_slope = st.number_input("Roof Slope (Rise/Run)", value=0.1667, format="%.4f", step=0.01, key="roof_slope")
+        # Self-Supported vs Supported Logic Check
+        theta_rad = math.atan(roof_slope)
+        t_req_self = (D) / (4.8 * math.sin(theta_rad)) if math.sin(theta_rad) > 0 else 999
+        
+        if "CRT" in tank_roof_type:
+            if t_req_self > 13.0:
+                st.warning(f"⚠️ Self-Supported check failed (Req: {t_req_self:.1f}mm > 13mm). Supported Roof logic will be applied.")
+                st.info("💡 Tip: Increase slope to max 1/5 (0.2) to try for Self-Supported, otherwise use Structural Supports.")
+                roof_type = "Supported Cone Roof"
+            else:
+                st.success(f"✅ Self-Supported check passed (Req: {t_req_self:.1f}mm <= 13mm).")
+                roof_type = "Self-Supported Cone Roof"
+        elif "DRT" in tank_roof_type:
+            roof_type = "Self-Supported Dome Roof"
+        else:
+            roof_type = "Supported Cone Roof"
+            
         dome_radius_input = D
         struct_yield = 235.0
         
@@ -368,12 +398,12 @@ with st.container():
     col_mat1, col_mat2 = st.columns(2)
     with col_mat1:
         st.subheader("Corrosion Allowance (CA)")
-        CA = st.number_input("Shell CA [mm]", value=1.5, step=0.5, key="CA")
-        CA_bottom = st.number_input("Bottom CA [mm]", value=3.0, step=0.5, key="CA_bottom")
-        CA_annular = st.number_input("Annular CA [mm]", value=3.0, step=0.5, key="CA_annular")
-        CA_roof = st.number_input("Roof CA [mm]", value=1.5, step=0.5, key="CA_roof")
+        CA = st.number_input("Shell CA [mm]", value=2.0, step=0.5, key="CA")
+        CA_bottom = st.number_input("Bottom CA [mm]", value=2.0, step=0.5, key="CA_bottom")
+        CA_annular = st.number_input("Annular CA [mm]", value=2.0, step=0.5, key="CA_annular")
+        CA_roof = st.number_input("Roof CA [mm]", value=0.0, step=0.5, key="CA_roof")
         CA_anchor_bolt = st.number_input("Anchor Bolt CA [mm]", value=3.0, step=0.5, key="CA_anchor_bolt")
-        joint_efficiency = st.number_input("Tank Joint Efficiency (E)", value=0.85, min_value=0.5, max_value=1.0, step=0.05, key="joint_efficiency")
+        joint_efficiency = st.number_input("Tank Joint Efficiency (E)", value=1.00, min_value=0.5, max_value=1.0, step=0.05, key="joint_efficiency")
 
     with col_mat2:
         st.subheader("Material Selection")
