@@ -1080,10 +1080,10 @@ else:
     gov_seismic_load_obj = seismic_load
 
 # --- NEW: Seismic Checks (E.6.1.4, E.6.2.2) ---
-t_shell_bot_mm = shell_courses[0].get('t_used', 6.0)
-Sd_first = shell_courses[0].get('Sd', 137.0)
+t_shell_bot_mm = shell_design.shell_courses[0].get('t_used', 6.0)
+Sd_first = shell_design.shell_courses[0].get('Sd', 137.0)
 import Materials
-mat_bot = shell_courses[0].get('Material', 'A 283 C')
+mat_bot = shell_design.shell_courses[0].get('Material', 'A 283 C')
 fy_bot = Materials.get_material_properties_base(mat_bot).get('Fy', 205.0)
 
 # 1. Seismic Hoop Stress (E.6.1.4)
@@ -1097,7 +1097,7 @@ final_comp_res = gov_seismic_load_obj.check_longitudinal_compression(t_shell_bot
 
 # --- NEW: Annex V (External Pressure) Check ---
 # P_external is in mmH2O from UI
-annex_v = AnnexVDesign(D, H, shell_courses, P_external, Fy=fy_bot)
+annex_v = AnnexVDesign(D, H, shell_design.shell_courses, P_external, Fy=fy_bot)
 annex_v_res = annex_v.run_design()
 
 # --- Integrate Seismic Annular Requirement into Bottom Design ---
