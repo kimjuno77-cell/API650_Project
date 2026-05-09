@@ -1375,12 +1375,3 @@ class ReportGenerator2026:
             """
         
         self._add_chapter("ANNEX V (EXTERNAL PRESSURE)", html)
-            <tr><th colspan="2" class="section-header">External Pressure Parameters</th></tr>
-            <tr><td>Design External Pressure (P_ext)</td><td>{p_ext_mmaq:.1f} mmH2O ({p_ext_kpa:.3f} kPa)</td></tr>
-            <tr><td>Nominal Tank Diameter (D)</td><td>{D:.3f} m</td></tr>
-            <tr><td>Tank Height (H)</td><td>{H:.3f} m</td></tr>
-            <tr><td>Min Shell Thickness (t_smin)</td><td>{t_smin:.1f} mm</td></tr>
-            <tr><td>Calculated N²</td><td><b>{N_sq:.3f}</b></td></tr>
-        </table>
-        """
-        self._add_chapter("ANNEX V (EXTERNAL PRESSURE)", html)
