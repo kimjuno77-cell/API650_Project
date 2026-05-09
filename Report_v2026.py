@@ -471,21 +471,28 @@ class ReportGenerator2026:
             
             for c in courses:
                 H_d = c.get('H_eff_d', 0)
-                H_t = c.get('H_eff_t', H_d)  # Test effective height
+                H_t = c.get('H_eff_t', H_d)
                 Sd = c.get('Sd', 0)
                 St = c.get('St', 0)
                 td = c.get('td', 0)
                 tt = c.get('tt', 0)
-                # Recalculate H_eff for display matching PDF: H = base_H + P_i/(9.8*G)
+                
+                # Recalculate H_eff for display matching PDF
                 base_H = c.get('H_base', H_d - P_i / (9.8 * G) if G > 0 else H_d)
-                P_i_kpa = P_i
-                H_eff_display = base_H + P_i_kpa / (9.8 * G) if G > 0 else H_d
-                H_t_display  = base_H + 1.25 * P_i_kpa / (9.8 * 1.0)
-                html += f"<b>[Course {c.get('Course')}]</b><br>"
-                html += f"<code>H = {base_H:.3f} + {P_i_kpa:.2f} / (9.8 * {G:.2f}) = <b>{H_eff_display:.4f} m</b></code><br>"
-                html += f"<code>t<sub>d</sub> = 4.9 * {D:.3f} * ({H_eff_display:.4f} - 0.3) * {G:.2f} / ({Sd:.1f} * {E:.2f}) + {CA:.1f} = <b>{td:.2f} mm</b></code><br>"
-                html += f"<code>H_t = {base_H:.3f} + 1.25 * {P_i_kpa:.2f} / (9.8 * 1.0) = {H_t_display:.4f} m</code><br>"
-                html += f"<code>t<sub>t</sub> = 4.9 * {D:.3f} * ({H_t_display:.4f} - 0.3) / ({St:.1f} * {E:.2f}) = <b>{tt:.2f} mm</b></code><br><br>"
+                H_eff_display = base_H + P_i / (9.8 * G) if G > 0 else H_d
+                H_t_display  = base_H + 1.25 * P_i / (9.8 * 1.0)
+                
+                html += f"""
+                <div class='calculation-block'>
+                    <b>[Course {c.get('Course')}]</b><br>
+                    - Effective Design Height, H<sub>eff</sub> = {base_H:.3f} + {P_i:.2f} / (9.8 * {G:.2f}) = <b>{H_eff_display:.3f} m</b><br>
+                    - Required Thickness (Design), t<sub>d</sub> = [4.9 * D * (H_eff - 0.3) * G] / (Sd * E) + CA<br>
+                    <code>t<sub>d</sub> = [4.9 * {D:.3f} * ({H_eff_display:.3f} - 0.3) * {G:.2f}] / ({Sd:.1f} * {E:.2f}) + {CA:.1f} = <b>{td:.2f} mm</b></code><br>
+                    - Effective Test Height, H<sub>t</sub> = {base_H:.3f} + 1.25 * {P_i:.2f} / (9.8 * 1.0) = <b>{H_t_display:.3f} m</b><br>
+                    - Required Thickness (Test), t<sub>t</sub> = [4.9 * D * (H_t - 0.3)] / (St * E)<br>
+                    <code>t<sub>t</sub> = [4.9 * {D:.3f} * ({H_t_display:.3f} - 0.3)] / ({St:.1f} * {E:.2f}) = <b>{tt:.2f} mm</b></code><br>
+                </div>
+                """
 
 
         elif courses and is_vdm:
@@ -630,11 +637,21 @@ class ReportGenerator2026:
             
         html = f"""
         <h3>5.1 BOTTOM PLATE THICKNESS</h3>
-        <div style='background-color:#f8f9fa; padding:10px; margin-bottom:15px; border-left:4px solid #2c3e50;'>
+        <div class='calculation-block'>
             <b>API 650 5.4.1 Bottom Plate Requirements</b><br>
             All bottom plates shall have a corroded thickness of not less than 6 mm (0.236 in.).<br>
-            <code>t_min = 6.0 + CA = 6.0 + {self.design.get('CA_bottom', 0):.1f} = {6.0 + self.design.get('CA_bottom', 0):.1f} mm</code>
+            <code>t_min = 6.0 + CA = 6.0 + {self.design.get('CA_bottom', 0):.1f} = {6.0 + self.design.get('CA_bottom', 0):.1f} mm</code><br>
+            Provided Thickness: <b>{bott_res.get('Used Thk (mm)', 6)} mm</b>
         </div>
+        
+        <h3>5.2 BOTTOM PLATE WELDING (LAP JOINT)</h3>
+        <div class='calculation-block'>
+            <b>API 650 5.1.5.4.1 Lap-Welded Bottom Joints</b><br>
+            Minimum Lap Width = max(5 * t_plate, 25 mm)<br>
+            <code>Lap = max(5 * {bott_res.get('Used Thk (mm)', 6)}, 25) = {max(5 * bott_res.get('Used Thk (mm)', 6), 25):.0f} mm</code><br>
+            Design Lap Width: <b>30 mm</b> (Standard Practice)
+        </div>
+        
         <table>
             <tr><th>Parameter</th><th>Value</th></tr>
             {rows}
@@ -665,13 +682,23 @@ class ReportGenerator2026:
             stress = (4.9 * D * (H_d - 0.3) * G) / t_prov if t_prov > 0 else 0
             
             html = f"""
-            <h3>6.1 ANNULAR PLATE CHECK</h3>
-            <div style='background-color:#f8f9fa; padding:10px; margin-bottom:15px; border-left:4px solid #2c3e50;'>
+            <h3>6.1 ANNULAR PLATE REQUIREMENT</h3>
+            <div class='calculation-block'>
                 <b>API 650 5.5 Annular Bottom Plates</b><br>
                 Product Stress in 1st Shell Course: <code>Stress = (4.9 * D * (H - 0.3) * G) / t_provided</code><br>
-                <code>Stress = (4.9 * {D:.3f} * ({H_d:.3f} - 0.3) * {G:.3f}) / {t_prov:.2f} = {stress:.1f} MPa</code><br>
-                Annular plate required thickness is derived from Table 5.1 based on First Course Product Stress and First Course Thickness.
+                <code>Stress = (4.9 * {D:.3f} * ({H_d:.3f} - 0.3) * {G:.3f}) / {t_prov:.2f} = {stress:.1f} MPa</code><br><br>
+                Required thickness based on Table 5.1 and First Course Stresses.
             </div>
+
+            <h3>6.2 ANNULAR PLATE DIMENSIONS & PROJECTION</h3>
+            <div class='calculation-block'>
+                <b>API 650 5.5.2 Annular Plate Projection</b><br>
+                The radial width of the annular plate shall not be less than 600 mm (24 in.).<br>
+                Minimum Projection outside shell: <b>50 mm (2 in.)</b><br>
+                Actual Width: <b>{ann_res.get('Width (mm)', 600):.0f} mm</b><br>
+                Actual Projection: <b>{ann_res.get('Width (mm)', 600) - 200:.0f} mm</b> (Assumed default)
+            </div>
+
             <table>
                 <tr><th>Parameter</th><th>Value</th></tr>
                 {rows}
@@ -715,25 +742,27 @@ class ReportGenerator2026:
         inter = wg_res.get('Intermediate Stiffener', {})
         html += "<h3>7.2 INTERMEDIATE WIND GIRDERS</h3>"
         req = inter.get('Required?', 'No')
-        html += f"<p>Required: <b>{req}</b></p>"
         
         if req == 'Yes':
             H1 = inter.get('H1_max', 0)
             t = inter.get('t_top', 0)
-            V = self.design.get('V_wind', 0)
-            V_mph = V * 3.6 / 1.609 # approx
+            V = self.design.get('V_wind', 45)
+            V_mph = V * 3.6 / 1.609 
+            
             html += f"""
-            <div style='background-color:#f8f9fa; padding:10px; margin-bottom:15px; border-left:4px solid #2c3e50;'>
+            <div class='calculation-block'>
                 <b>API 650 5.9.7.1 Intermediate Wind Girder Max Unstiffened Height (H1)</b><br>
                 <code>H1 = 9.47 * t * sqrt((t / D)^3) * (190 / V)^2</code><br>
-                <code>H1 = 9.47 * {t:.1f} * sqrt(({t:.1f} / {D:.3f})^3) * (190 / {V_mph:.1f})^2 = {H1:.3f} m</code>
+                <code>H1 = 9.47 * {t:.1f} * sqrt(({t:.1f} / {D:.3f})^3) * (190 / {V_mph:.1f})^2 = <b>{H1:.3f} m</b></code>
             </div>
             <table>
                 <tr><td>Transformed Height (H_tr):</td><td>{inter.get('H_tr',0):.3f} m</td></tr>
                 <tr><td>Max Unstiffened Height (H1):</td><td>{H1:.3f} m</td></tr>
-                <tr><td>Number of Stiffeners:</td><td>{inter.get('Count',0)}</td></tr>
+                <tr><td>Number of Stiffeners:</td><td>{inter.get('Count',0)} EA</td></tr>
             </table>
             """
+        else:
+             html += f"<p>Intermediate Wind Girder is <b>Not Required</b> (Max unstiffened height {inter.get('H1_max',0):.2f}m exceeds transformed shell height {inter.get('H_tr',0):.2f}m).</p>"
             
         self._add_chapter("WIND GIRDER DESIGN", html)
 
@@ -1032,13 +1061,39 @@ class ReportGenerator2026:
                 <tr><td>Total Base Shear (V)</td><td>{V:.2f}</td><td>kN</td><td>-</td></tr>
                 <tr><td>Ringwall Moment (Mrw)</td><td>{Mrw:.2f}</td><td>kN-m</td><td>-</td></tr>
                 <tr><td>Anchorage Ratio (J)</td><td>{seismic.get('Anchorage_Ratio_J', 0):.3f}</td><td>-</td><td><b>{seismic.get('Anchorage_Status','-')}</b></td></tr>
-                <tr><td>Sliding Check</td><td>{seismic.get('Sliding_Status','-')}</td><td>-</td><td>Friction Res: {seismic.get('Sliding_Friction_Res_kN',0):.1f} kN</td></tr>
             </table>
-            """
 
+            <h3>12.4 SEISMIC HOOP STRESS CHECK (API 650 E.6.1.4)</h3>
+            
+            """
+            
+            hoop = self.results.get('seismic_hoop_res', {})
+            if hoop:
+                html += f"""
+                <div class="calculation-block">
+                    <b>Hoop Stress Calculation:</b><br>
+                    Stress, sigma_s = 4.9 * D * (H_eff - 0.3) * G / t + (4.9 * D * H_eff) / t * sqrt( (Ai*Wi)^2 + (Ac*Wc)^2 ) / W<br>
+                    Calculated Stress: <b>{hoop.get('Stress_MPa', 0):.2f} MPa</b><br>
+                    Allowable Stress: <b>{hoop.get('Allow_MPa', 0):.2f} MPa</b><br>
+                    Status: <b class="{'result-pass' if hoop.get('Status') == 'OK' else 'result-fail'}">{hoop.get('Status','-')}</b>
+                </div>
+                """
+            
+            html += "<h3>12.5 SEISMIC LONGITUDINAL COMPRESSION (API 650 E.6.2.2)</h3>"
+            comp = self.results.get('seismic_comp_res', {})
+            if comp:
+                html += f"""
+                <div class="calculation-block">
+                    <b>Compression Stress calculation:</b><br>
+                    Max Compression, sigma_c = (wt_shell + wt_roof) / (2000 * pi * R * t) + (1.27 * Ms) / (D^2 * t)<br>
+                    Calculated Stress: <b>{comp.get('Stress_MPa', 0):.2f} MPa</b><br>
+                    Allowable Stress (Fa): <b>{comp.get('Allow_MPa', 0):.2f} MPa</b><br>
+                    Status: <b class="{'result-pass' if comp.get('Status') == 'OK' else 'result-fail'}">{comp.get('Status','-')}</b>
+                </div>
+                """
             
             if graph:
-                html += f'<h3>12.5 DESIGN SPECTRUM GRAPH</h3><img src="data:image/png;base64,{graph}" style="max-width:80%; margin: 20px auto; display:block; border: 1px solid #ddd;" />'
+                html += f'<h3>12.6 DESIGN SPECTRUM GRAPH</h3><img src="data:image/png;base64,{graph}" style="max-width:80%; margin: 20px auto; display:block; border: 1px solid #ddd;" />'
 
             
         self._add_chapter("SEISMIC DESIGN OF STORAGE TANK", html)
@@ -1173,6 +1228,55 @@ class ReportGenerator2026:
         </table>
         """
         self._add_chapter("LOADING DATA", html)
+
+    def generate_chapter_19_external_pressure(self):
+        v_res = self.results.get('annex_v_res', {})
+        if not v_res:
+            html = "<p>Annex V External Pressure check not applicable (Pe = 0).</p>"
+        else:
+            P_ext = v_res.get('P_ext_kPa', 0)
+            Pe = v_res.get('Pe_kPa', 0)
+            Pa = v_res.get('Pa_kPa', 0)
+            N2 = v_res.get('N_sq', 0)
+            t_min = v_res.get('t_min_mm', 0)
+            
+            html = f"""
+            <h3>19.1 DESIGN CONDITIONS & MATERIAL</h3>
+            <table>
+                <tr><td>Design External Pressure (Pe)</td><td>{P_ext:.3f} kPa</td></tr>
+                <tr><td>Minimum Shell Thickness used (t_min)</td><td>{t_min:.2f} mm</td></tr>
+                <tr><td>Modulus of Elasticity (E)</td><td>193,000 MPa (Annex S)</td></tr>
+            </table>
+
+            <h3>19.2 UNSTIFFENED TANK BUCKLING (API 650 V.8.1)</h3>
+            <div class='calculation-block'>
+                <b>V.8.1.1 Elastic Buckling Pressure (Pe):</b><br>
+                <code>Pe = [2.42 * E / (1 - mu^2)^0.75] * [(t/D)^2.5 / (L/D - 0.45(t/D)^0.5)]</code><br>
+                <code>Pe = <b>{Pe:.3f} kPa</b></code><br><br>
+                
+                <b>V.8.1.2 Allowable External Pressure (Pa):</b><br>
+                <code>Pa = Pe / 3.0 = {Pe:.3f} / 3 = <b>{Pa:.3f} kPa</b></code><br>
+                Result: Pa ({Pa:.3f} kPa) {'&ge;' if Pa >= P_ext else '<'} Pe ({P_ext:.3f} kPa) &rarr; <b>{v_res.get('Status')}</b>
+            </div>
+
+            <h3>19.3 BOTTOM STIFFENER REGION (API 650 V.8.2.3)</h3>
+            <div class='calculation-block'>
+                <code>N² = (445 * D³) / (t * H²)</code><br>
+                <code>N² = (445 * {v_res.get('D_m',0):.2f}³) / ({t_min} * {v_res.get('H_m',0):.2f}²) = <b>{N2:.1f}</b></code>
+            </div>
+            """
+            
+            if v_res.get('Status') == 'FAIL':
+                html += f"""
+                <h3>19.4 INTERMEDIATE STIFFENER REQUIREMENT</h3>
+                <div class='calculation-block'>
+                    Since Pa < Pe, intermediate stiffeners are required.<br>
+                    Maximum Spacing (L_max): <b>{v_res.get('L_max_m', 0):.2f} m</b><br>
+                    Required Number of Rings: <b>{v_res.get('Num_Rings', 0)} EA</b>
+                </div>
+                """
+                
+        self._add_chapter("EXTERNAL PRESSURE DESIGN (ANNEX V)", html)
 
     def generate_chapter_16_weight_summary(self):
         w = self.extended.get('weights', {})

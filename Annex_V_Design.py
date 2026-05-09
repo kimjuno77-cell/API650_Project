@@ -20,7 +20,9 @@ class AnnexVDesign:
         self.P_ext_kpa = (P_ext_mmH2O * 9.80665) / 1000.0
         self.E = E
         self.Fy = Fy
-        self.results = {}
+        self.results = {
+            'Checks': {}
+        }
 
     def calculate_pa_unstiffened(self, t_mm, L_m):
         """
@@ -58,43 +60,37 @@ class AnnexVDesign:
         """
         if not self.courses: return {}
         
-        # Use top course thickness for unstiffened check (conservative)
-        t_top = self.courses[-1].get('t_used', 5.0)
-        
-        Pe, Pa = self.calculate_pa_unstiffened(t_top, self.H)
+        # Governing Case: Unstiffened Shell
+        t_min_shell = min([c['t_used'] for c in self.courses])
+        Pe, Pa = self.calculate_pa_unstiffened(t_min_shell, self.H)
         
         # V.8.2.3 Bottom Stiffener Region (N^2 check)
         # N^2 = (445 * D^3) / (t * H^2)
-        N_sq = (445.0 * (self.D**3)) / (t_top * (self.H**2))
+        N_sq = (445.0 * (self.D**3)) / (t_min_shell * (self.H**2)) if t_min_shell > 0 and self.H > 0 else 0
         
         status = "OK" if Pa >= self.P_ext_kpa else "FAIL"
         
         self.results = {
-            'Design External Pressure (kPa)': self.P_ext_kpa,
-            'Elastic Buckling Pressure Pe (kPa)': Pe,
-            'Allowable External Pressure Pa (kPa)': Pa,
-            'Bottom Stiffener Factor N2': N_sq,
+            'P_ext_kPa': self.P_ext_kpa,
+            'Pe_kPa': Pe,
+            'Pa_kPa': Pa,
+            'N_sq': N_sq,
             'Status': status,
-            'Top Course Thickness (mm)': t_top
+            't_min_mm': t_min_shell,
+            'H_m': self.H,
+            'D_m': self.D
         }
         
-        # Stiffener Rings Spacing (Simplified V.10)
         if status == "FAIL":
-            # Determine Spacing L such that Pa >= P_ext
-            # Solving Pe(L) = 3 * P_ext
-            # 3 * P_ext = coeff * t_D^2.5 / (L/D - 0.45*sqrt(t_D))
-            # L/D - 0.45*sqrt(t_D) = coeff * t_D^2.5 / (3 * P_ext)
-            # L = D * [ (coeff * t_D^2.5 / (3 * P_ext)) + 0.45*sqrt(t_D) ]
-            
-            t_D = t_top / (self.D * 1000.0)
+            t_D = t_min_shell / (self.D * 1000.0)
             coeff = 2.42 * self.E / (0.91**0.75)
-            
             if self.P_ext_kpa > 0:
                 L_max = self.D * ( (coeff * (t_D**2.5) / (3.0 * self.P_ext_kpa)) + 0.45 * math.sqrt(t_D) )
-                self.results['Max Stiffener Spacing L (m)'] = L_max
-                self.results['Required Number of Rings'] = math.ceil(self.H / L_max) - 1
+                num_rings = math.ceil(self.H / L_max) - 1
+                self.results['L_max_m'] = L_max
+                self.results['Num_Rings'] = max(0, int(num_rings))
             else:
-                self.results['Max Stiffener Spacing L (m)'] = self.H
-                self.results['Required Number of Rings'] = 0
+                self.results['L_max_m'] = self.H
+                self.results['Num_Rings'] = 0
 
         return self.results
