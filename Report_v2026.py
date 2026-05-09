@@ -84,7 +84,7 @@ class ReportGenerator2026:
         <body>
             <div class='cover-page'>
                 <h1>API 650 STORAGE TANK DESIGN CALCULATION</h1>
-                <h2>PROJECT: API-650 TANK PROJECT (28.5M ID x 16.5M H)</h2>
+                <h2>PROJECT: HRSG AMMONIA STORAGE TANK (262-M-TK-101)</h2>
                 <h3>(Professional Engineering Report - Ver.2026)</h3>
                 <br>
                 <table class='cover-table'>

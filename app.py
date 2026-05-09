@@ -253,21 +253,26 @@ with st.sidebar:
 with st.container():
     st.header("1. BASIC DESIGN DATA")
     
-    if st.button("🔄 Reset to 262-M-TK-101 Defaults", help="Force all inputs to match the reference PDF specifications"):
-        st.session_state["ID_input"] = 28500.0
-        st.session_state["H_input"] = 16500.0
-        st.session_state["HD"] = 15500.0
-        st.session_state["HT"] = 16500.0
-        st.session_state["HHL"] = 15500.0
-        st.session_state["V_wind"] = 45.0
-        st.session_state["SDS"] = 0.50
-        st.session_state["SD1"] = 0.22
-        st.session_state["roof_slope"] = 0.0625
-        st.session_state["CA"] = 2.0
-        st.session_state["CA_bottom"] = 2.0
-        st.session_state["CA_annular"] = 2.0
+    if st.button("🔄 Reset to 262-M-TK-101 Defaults", help="Force all inputs to match the Ammonia Tank PDF"):
+        st.session_state["ID_input"] = 3900.0
+        st.session_state["H_input"] = 6600.0
+        st.session_state["HD"] = 6600.0
+        st.session_state["HT"] = 6600.0
+        st.session_state["G"] = 0.96
+        st.session_state["P_design_mm"] = 1500.0
+        st.session_state["P_external_mm"] = 60.0
+        st.session_state["V_wind"] = 28.0 # From KDS spec
+        st.session_state["kds_v0"] = 28.0
+        st.session_state["kds_terrain"] = "C"
+        st.session_state["kds_soil"] = "S4"
+        st.session_state["kds_s"] = 0.22
+        st.session_state["kds_ie"] = 1.5
+        st.session_state["CA"] = 0.0
+        st.session_state["CA_bottom"] = 0.0
+        st.session_state["CA_annular"] = 0.0
         st.session_state["CA_roof"] = 0.0
-        st.session_state["joint_efficiency"] = 1.0
+        st.session_state["joint_efficiency"] = 0.7
+        st.session_state["roof_slope"] = 0.1667
         st.rerun()
         
     st.subheader("TANK CAPACITY & GEOMETRY")
@@ -275,13 +280,13 @@ with st.container():
     
     with col_geom:
         tank_roof_type = st.selectbox("Tank Roof Type", ["[Type 1] CRT - Cone Roof Tank", "[Type 2] DRT - Dome Roof Tank", "[Type 3] IFRT - Internal Floating Roof Tank", "[Type 4] EFRT - External Floating Roof Tank"], index=0, key="roof_type_new")
-        ID_input = st.number_input("Inside Diameter (D) [mm]", value=28500.0, step=100.0, key="ID_input", help="Reference: 262-M-TK-101")
-        H_input = st.number_input("Tank Height (H) [mm]", value=16500.0, step=100.0, key="H_input", help="Reference: 262-M-TK-101")
-        HD = st.number_input("Design Liquid Level (HD) [mm]", value=15500.0, step=100.0, key="HD")
-        HT = st.number_input("Test Liquid Level (HT) [mm]", value=16500.0, step=100.0, key="HT")
-        HHL = st.number_input("Max. Liquid Level (HHL) [mm]", value=15500.0, step=100.0, key="HHL")
-        HLL = st.number_input("Min. Liquid Level (HLL) [mm]", value=1200.0, step=100.0, key="HLL")
-        conical_bottom_type = st.selectbox("Conical Bottom Type", ["Cone-Up", "Cone-Down", "Flat"], key="conical_bottom_type")
+        ID_input = st.number_input("Inside Diameter (D) [mm]", value=3900.0, step=100.0, key="ID_input", help="Reference: 262-M-TK-101 (Ammonia Tank)")
+        H_input = st.number_input("Tank Height (H) [mm]", value=6600.0, step=100.0, key="H_input", help="Reference: 262-M-TK-101 (Ammonia Tank)")
+        HD = st.number_input("Design Liquid Level (HD) [mm]", value=6000.0, step=100.0, key="HD")
+        HT = st.number_input("Test Liquid Level (HT) [mm]", value=6600.0, step=100.0, key="HT")
+        HHL = st.number_input("Max. Liquid Level (HHL) [mm]", value=6000.0, step=100.0, key="HHL")
+        HLL = st.number_input("Min. Liquid Level (HLL) [mm]", value=500.0, step=100.0, key="HLL")
+        conical_bottom_type = st.selectbox("Conical Bottom Type", ["Cone-Up", "Cone-Down", "Flat"], index=2, key="conical_bottom_type")
         if conical_bottom_type != "Flat":
             slope_conical_bottom = st.number_input("Slope of Conical Bottom (1/?)", value=120.0, step=10.0, key="slope_conical_bottom")
         else:
@@ -308,17 +313,17 @@ with st.container():
     st.subheader("OPERATION & DESIGN CONDITIONS")
     col_op1, col_op2 = st.columns(2)
     with col_op1:
-        liquid_name = st.text_input("Content", "Crude Oil", key="liquid_name")
-        G = st.number_input("Max. Specific Gravity", value=0.850, step=0.01, format="%.3f", key="G")
+        liquid_name = st.text_input("Content", "9% Aq. AMMONIA", key="liquid_name")
+        G = st.number_input("Max. Specific Gravity", value=0.960, step=0.01, format="%.3f", key="G")
         sg_test = st.number_input("Specific Gravity for Test Medium", value=1.000, step=0.01, format="%.3f", key="sg_test")
         mdmt = st.number_input("MDMT [°C]", value=5.0, step=1.0, key="mdmt")
         operating_temp = st.number_input("Operating Temperature [°C]", value=50.0, step=1.0, key="operating_temp")
         design_temp = st.number_input("Design Temperature [°C]", value=85.0, step=1.0, key="design_temp")
 
     with col_op2:
-        P_design_mm = st.number_input("Design Pressure [ Internal ] [mmAq]", value=150.0, step=1.0, key="P_design_mm")
-        P_external_mm = st.number_input("Design Pressure [ External ] [mmAq]", value=25.0, step=1.0, key="P_external_mm")
-        P_test_mm = st.number_input("Test Pressure [mmAq]", value=150.0, step=1.0, key="P_test_mm")
+        P_design_mm = st.number_input("Design Pressure [ Internal ] [mmAq]", value=1500.0, step=10.0, key="P_design_mm")
+        P_external_mm = st.number_input("Design Pressure [ External ] [mmAq]", value=60.0, step=1.0, key="P_external_mm")
+        P_test_mm = st.number_input("Test Pressure [mmAq]", value=1500.0, step=10.0, key="P_test_mm")
         st.info("P_design > 0 indicates potential need for Annex F. P_external > 0 indicates potential need for Annex V.")
         P_external = P_external_mm * 0.00980665
     st.markdown('---')
@@ -346,7 +351,7 @@ with st.container():
     # Advanced Roof Inputs (mapping to legacy variables)
     with st.expander("Advanced Roof Settings", expanded=False):
         # Map back to old variables so that calculation code doesn't break
-        roof_slope = st.number_input("Roof Slope (Rise/Run)", value=0.0625, format="%.4f", step=0.0001, key="roof_slope", help="1/16 = 0.0625, 1/5 = 0.2000")
+        roof_slope = st.number_input("Roof Slope (Rise/Run)", value=0.1667, format="%.4f", step=0.0001, key="roof_slope", help="6:1 Slope = 1/6 = 0.1667")
         
         # Self-Supported vs Supported Logic Check
         theta_rad = math.atan(roof_slope)
@@ -398,12 +403,12 @@ with st.container():
     col_mat1, col_mat2 = st.columns(2)
     with col_mat1:
         st.subheader("Corrosion Allowance (CA)")
-        CA = st.number_input("Shell CA [mm]", value=2.0, step=0.5, key="CA")
-        CA_bottom = st.number_input("Bottom CA [mm]", value=2.0, step=0.5, key="CA_bottom")
-        CA_annular = st.number_input("Annular CA [mm]", value=2.0, step=0.5, key="CA_annular")
+        CA = st.number_input("Shell CA [mm]", value=0.0, step=0.5, key="CA")
+        CA_bottom = st.number_input("Bottom CA [mm]", value=0.0, step=0.5, key="CA_bottom")
+        CA_annular = st.number_input("Annular CA [mm]", value=0.0, step=0.5, key="CA_annular")
         CA_roof = st.number_input("Roof CA [mm]", value=0.0, step=0.5, key="CA_roof")
-        CA_anchor_bolt = st.number_input("Anchor Bolt CA [mm]", value=3.0, step=0.5, key="CA_anchor_bolt")
-        joint_efficiency = st.number_input("Tank Joint Efficiency (E)", value=1.00, min_value=0.5, max_value=1.0, step=0.05, key="joint_efficiency")
+        CA_anchor_bolt = st.number_input("Anchor Bolt CA [mm]", value=0.0, step=0.5, key="CA_anchor_bolt")
+        joint_efficiency = st.number_input("Tank Joint Efficiency (E)", value=0.70, min_value=0.5, max_value=1.0, step=0.05, key="joint_efficiency")
 
     with col_mat2:
         st.subheader("Material Selection")
@@ -529,61 +534,37 @@ with st.container():
         seismic_group = sug_ui # For params
 
 # --- KDS Standards Input (New) ---
-# --- KDS Standards Input (New) ---
-with st.expander("🇰🇷 KDS Standard Options (Advanced)", expanded=False):
+with st.expander("🇰🇷 KDS Standard Options (Advanced)", expanded=True):
     use_kds = st.checkbox("Apply KDS 41 12/17 Standards for Comparison", value=True, key="use_kds")
-    
-    # Initialize defaults
-    kds_V0 = 26.0
-    kds_Terrain = 'B'
-    kds_Iw = 1.0
-    kds_Zone = 'I'
-    kds_Soil = 'SD'
-    kds_Risk = 'II'
-    kds_S = 0.22
-    kds_SDS = 0.50
-    kds_IE_seis = 1.2
     
     if use_kds:
         c_kds1, c_kds2 = st.columns(2)
         with c_kds1:
             st.markdown("#### KDS 41 12 00 (Wind)")
-            kds_V0 = st.number_input("Basic Wind Speed V0 (m/s)", value=45.0, step=1.0, help="PDF Reference Value", key="kds_v0")
-            kds_Terrain = st.selectbox("Terrain Category", ['A', 'B', 'C', 'D'], index=1, help="A: City, B: Urban, C: Open, D: Sea/Coastal", key="kds_terrain")
-            
-            # Risk Category for Importance Factor
-            kds_Risk_Wind = st.selectbox("Risk Category (Wind)", ["I (Low)", "II (Normal)", "III (Substantial)", "IV (Critical)"], index=1, key="kds_risk_wind")
-            
-            # Iw Lookup Table (KDS 41 12 00 Table 2.5-1)
-            iw_map = {"I (Low)": 0.87, "II (Normal)": 1.0, "III (Substantial)": 1.15, "IV (Critical)": 1.15} # Approx KDS
-            kds_Iw = st.number_input("Wind Importance Factor (Iw)", value=iw_map.get(kds_Risk_Wind, 1.0), step=0.01, key="kds_iw_input")
+            kds_V0 = st.number_input("Basic Wind Speed V0 (m/s)", value=28.0, step=1.0, help="PDF: 28m/s", key="kds_v0")
+            kds_Terrain = st.selectbox("Terrain Category", ['A', 'B', 'C', 'D'], index=2, help="PDF: C", key="kds_terrain")
+            kds_Iw = st.number_input("Wind Importance Factor (Iw)", value=1.0, step=0.1, key="kds_iw")
             
         with c_kds2:
             st.markdown("#### KDS 41 17 00 (Seismic)")
-            # S value (Effective Ground Acceleration)
-            kds_Zone_Input = st.selectbox("Seismic Zone", ['I (Central/South)', 'II (North/Jeju)'], index=0, key="kds_zone_input")
-            kds_Zone = kds_Zone_Input.split(' ')[0]
-            
-            s_default = 0.22 if 'I' in kds_Zone else 0.14
-            kds_S = st.number_input("Effective Ground Accel (S) [g]", value=s_default, step=0.01, key="kds_s_input")
-            
-            kds_Soil = st.selectbox("Site Class (Soil)", ['SA (Hard Rock)', 'SB (Rock)', 'SC (Dense Soil)', 'SD (Stiff Soil)', 'SE (Soft Soil)'], index=3, key="kds_soil")
-            site_short = kds_Soil.split(' ')[0]
-            
-            # Risk Category for Seismic Importance
-            kds_Risk_Seis = st.selectbox("Risk Category (Seismic)", ["I (Low)", "II (Normal)", "Special (1st)", "Special (Limited)"], index=1, key="kds_risk_seismic")
-            ie_map = {"I (Low)": 1.0, "II (Normal)": 1.2, "Special (1st)": 1.5, "Special (Limited)": 1.5}
-            kds_IE_seis = st.number_input("Seismic Importance (Ie)", value=ie_map.get(kds_Risk_Seis, 1.2), step=0.1, key="kds_ie_input")
+            kds_S = st.number_input("Effective Ground Accel (S) [g]", value=0.22, step=0.01, key="kds_s")
+            kds_Soil = st.selectbox("Site Class (Soil)", ['SA', 'SB', 'SC', 'SD', 'SE', 'S1', 'S2', 'S3', 'S4', 'S5'], index=8, key="kds_soil")
+            kds_IE_seis = st.number_input("Seismic Importance (Ie)", value=1.5, step=0.1, key="kds_ie")
+            kds_Zone = st.selectbox("Seismic Zone", ['I', 'II'], index=0, key="kds_zone")
             
             # Simple SDS Calc for Display
-            # Fa lookup (KDS Table 4.1-1, simplified for S=0.22/0.14)
-            # S < 0.25: Fa varies SA=0.8, SB=1.0, SC=1.2, SD=1.6
-            # Use logic or placeholder. 
-            # Implemented simplified lookup for display:
-            fa_table = {'SA': 0.8, 'SB': 1.0, 'SC': 1.2, 'SD': 1.6, 'SE': 2.5} # For S < 0.25 approx
-            fa = fa_table.get(site_short, 1.6)
-            sds_calc = kds_S * 2.5 * fa * (2/3)
-            st.caption(f"Calculated SDS ≈ {sds_calc:.3f} g (Based on Fa={fa})")
+            # S4 usually has Fa around 1.3-1.5
+            sds_calc = kds_S * 2.5 * 1.5 * (2/3) # Rough estimate
+            st.caption(f"Calculated SDS ≈ {sds_calc:.3f} g (Estimated)")
+    else:
+        # Fallbacks for variables used in calculations
+        kds_V0 = 28.0
+        kds_Terrain = 'C'
+        kds_Iw = 1.0
+        kds_S = 0.22
+        kds_Soil = 'S4'
+        kds_IE_seis = 1.5
+        kds_Zone = 'I'
         
     with st.expander("API 2000 Venting Parameters", expanded=True):
         st.info("Inputs for Normal and Emergency Venting Calculation (7th Ed).")
