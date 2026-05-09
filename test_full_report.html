@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API 650 Tank Design Report</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 20mm;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            color: #333;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #fff;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        header {
+            border-bottom: 2px solid #0056b3;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .report-title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #0056b3;
+            margin: 0;
+        }
+
+        .meta-info {
+            font-size: 14px;
+            color: #666;
+            margin-top: 10px;
+        }
+
+        /* Sections */
+        h1,
+        h2,
+        h3 {
+            color: #2c3e50;
+        }
+
+        h2 {
+            border-left: 5px solid #0056b3;
+            padding-left: 10px;
+            margin-top: 40px;
+            background-color: #f8f9fa;
+            padding: 10px;
+        }
+
+        h3 {
+            margin-top: 25px;
+            color: #444;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            color: #333;
+            font-weight: bold;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        /* Cards/Summary */
+        .summary-box {
+            background-color: #eef2f5;
+            padding: 20px;
+            border-radius: 5px;
+            border: 1px solid #d1d9e6;
+            margin-bottom: 20px;
+        }
+
+        .summary-item {
+            margin-bottom: 10px;
+        }
+
+        .label {
+            font-weight: bold;
+            display: inline-block;
+            width: 180px;
+        }
+
+        /* Footer */
+        footer {
+            margin-top: 50px;
+            font-size: 12px;
+            color: #999;
+            text-align: center;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+
+        .status-ok {
+            color: green;
+            font-weight: bold;
+        }
+
+        .status-fail {
+            color: red;
+            font-weight: bold;
+        }
+
+        @media print {
+            body {
+                background-color: white;
+            }
+
+            .container {
+                max-width: 100%;
+                width: 100%;
+            }
+
+            h2 {
+                page-break-before: always;
+            }
+
+            h2:first-of-type {
+                page-break-before: avoid;
+            }
+
+            .detailed-calc {
+                page-break-inside: avoid;
+            }
+        }
+
+        /* Detailed Report Specifics */
+        .formula-box {
+            background-color: #f8f9fa;
+            padding: 15px;
+            margin: 15px 0;
+            border-left: 4px solid #007bff;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .calc-step {
+            margin-left: 20px;
+            padding: 5px 0;
+            border-bottom: 1px dashed #eee;
+            font-family: monospace;
+            font-size: 13px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <header>
+            <div class="report-title">API 650 Storage Tank Design Report</div>
+            <div class="meta-info">
+                <div><strong>Project:</strong> Test Project</div>
+                <div><strong>Designer:</strong> Tester</div>
+                <div><strong>Date:</strong> 2025-12-14 18:23</div>
+                <div><strong>Design Code:</strong> API 650 13th Edition (2020)</div>
+                <div class="summary-item"><span class="label">Applicable Annexes:</span> Annex F</div>
+                <hr>
+                <div class="summary-item"><span class="label">Inside Diameter (ID):</span> 30.000 m
+                </div>
+                <div class="summary-item"><span class="label">Nominal Diameter (D):</span> 30.010 m</div>
+                <div class="summary-item"><span class="label">Outside Diameter (OD):</span> 30.020 m
+                </div>
+                <div class="summary-item"><span class="label">Shell Height:</span> 20 m</div>
+                <div class="summary-item"><span class="label">Max Liq. Level:</span> 19.5 m</div>
+                <div class="summary-item"><span class="label">Min Liq. Level:</span> 0.5 m</div>
+                <div class="summary-item"><span class="label">Stored Liquid:</span> Water</div>
+                <div class="summary-item"><span class="label">S.G of Contents:</span> 0.9</div>
+                <div class="summary-item"><span class="label">S.G of Hydrotest:</span> 1.0</div>
+                <div class="summary-item"><span class="label">Design Temperature:</span> 50 ¨¬C</div>
+                <div class="summary-item"><span class="label">MDMT:</span> -20 ¨¬C</div>
+                <div class="summary-item"><span class="label">Tank Joint Efficiency:</span> 0.85</div>
+                <div class="summary-item"><span class="label">Design Pressure:</span> 100 mmH2O</div>
+                <hr>
+                <div class="summary-item"><span class="label">Snow Load:</span> 0 kPa
+                </div>
+                <div class="summary-item"><span class="label">Roof Live Load:</span> 0
+                    kPa</div>
+                <div class="summary-item"><span class="label">Add. Roof Dead Load:</span> 0 kPa</div>
+            </div>
+
+            <h2>2. Roof Design Details</h2>
+            <table>
+                <tr>
+                    <td>Type</td>
+                    <td>Cone</td>
+                </tr>
+                <tr>
+                    <td>Slope</td>
+                    <td>0.062</td>
+                </tr>
+                <tr>
+                    <td>Material</td>
+                    <td>A36</td>
+                </tr>
+                <tr>
+                    <td>Corrosion Allowance (CA)</td>
+                    <td>2 mm</td>
+                </tr>
+                <tr>
+                <tr>
+                    <td>Required Thickness</td>
+                    <td>5.00 mm</td>
+                </tr>
+                <tr>
+                    <td>Used Thickness</td>
+                    <td>6.00 mm</td>
+                </tr>
+                <tr>
+                    <td>Status</td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                <tr>
+                    <td>Total Roof Weight</td>
+                    <td>20000.00 kg</td>
+                </tr>
+            </table>
+
+            
+
+            
+
+            <h2>4. Shell Design (Detailed Calculation)</h2>
+            <div class="summary-item"><span class="label">Method Applied:</span> <strong>1-Foot</strong>
+            </div>
+            <div class="formula-box">
+                <strong>One-Foot Method Formulas (API 650 5.6.3.2):</strong><br>
+                Design Thickness (td) = (4.9 * D * (H - 0.3) * G) / (Sd * E) + CA<br>
+                Hydrotest Thickness (tt) = (4.9 * D * (H - 0.3) * 1.0) / (St * E)<br>
+                <em>Note: H in formula is height from bottom of course to liquid level.</em>
+            </div>
+
+            
+            <div class="detailed-calc"
+                style="background-color: #fff; border: 1px solid #eee; margin-bottom: 20px; padding: 10px;">
+                <h4 style="margin: 0 0 10px 0; border-bottom: 1px solid #ccc;">Course 1 (Material:
+                    A36)</h4>
+                <div class="calc-step">
+                    <strong>Parameters:</strong>
+                    Width = 2.400 m |
+                    H_liq = 10.000 m |
+                    Sd = 160.0 MPa |
+                    St = 180.0 MPa
+                </div>
+                <div class="calc-step">
+                    <strong>Design Thickness (td):</strong><br>
+                    td = (4.9 * 30 * (10.000 - 0.3) * 0.9) / (160.0 * 0.85) + 3<br>
+                    td = <strong>12.50 mm</strong>
+                </div>
+                <div class="calc-step">
+                    <strong>Hydrotest Thickness (tt):</strong><br>
+                    tt = (4.9 * 30 * (12.000 - 0.3) * 1.0) / (180.0 * 0.85)<br>
+                    tt = <strong>10.00 mm</strong>
+                </div>
+                <div class="calc-step">
+                    <strong>Selection:</strong>
+                    Req: 12.50 mm |
+                    Used: <strong>14.00 mm</strong>
+                    <span class="status-ok">[OK]</span>
+                </div>
+            </div>
+            
+            <div class="detailed-calc"
+                style="background-color: #fff; border: 1px solid #eee; margin-bottom: 20px; padding: 10px;">
+                <h4 style="margin: 0 0 10px 0; border-bottom: 1px solid #ccc;">Course 2 (Material:
+                    A36)</h4>
+                <div class="calc-step">
+                    <strong>Parameters:</strong>
+                    Width = 2.400 m |
+                    H_liq = 7.600 m |
+                    Sd = 160.0 MPa |
+                    St = 180.0 MPa
+                </div>
+                <div class="calc-step">
+                    <strong>Design Thickness (td):</strong><br>
+                    td = (4.9 * 30 * (7.600 - 0.3) * 0.9) / (160.0 * 0.85) + 3<br>
+                    td = <strong>9.50 mm</strong>
+                </div>
+                <div class="calc-step">
+                    <strong>Hydrotest Thickness (tt):</strong><br>
+                    tt = (4.9 * 30 * (9.600 - 0.3) * 1.0) / (180.0 * 0.85)<br>
+                    tt = <strong>8.00 mm</strong>
+                </div>
+                <div class="calc-step">
+                    <strong>Selection:</strong>
+                    Req: 9.50 mm |
+                    Used: <strong>10.00 mm</strong>
+                    <span class="status-ok">[OK]</span>
+                </div>
+            </div>
+            
+
+            <div class="summary-item"><span class="label">Total Shell Weight:</span> 50000.00
+                kg
+            </div>
+
+            <h2>5. Bottom Design</h2>
+            <table>
+                <tr>
+                    <td>Material</td>
+                    <td>-</td>
+                </tr>
+                <tr>
+                    <td>Corrosion Allowance</td>
+                    <td>6 mm</td>
+                </tr>
+                <tr>
+                    <td>Required Thickness</td>
+                    <td>6.00 mm</td>
+                </tr>
+                <tr>
+                    <td>Annular Plate?</td>
+                    <td>No</td>
+                </tr>
+                <tr>
+                    <td>Note</td>
+                    <td>-</td>
+                </tr>
+            </table>
+
+            <h2>6. Wind Moment (Detailed Calculation)</h2>
+            <div class="summary-item"><span class="label">Governing Code:</span> <strong>API 650</strong>
+            </div>
+            <div class="formula-box">
+                <strong>Wind Pressure (ASCE 7 / API 650):</strong><br>
+                qz = 0.613 * Kz * Kzt * Kd * V^2 * I (N/m2)<br>
+                P = qz * G * Cf (Design Wind Pressure)
+            </div>
+
+            <div class="detailed-calc" style="background-color: #fff; padding: 10px; border: 1px solid #eee;">
+                <div class="calc-step">
+                    <strong>1. Parameters:</strong><br>
+                    V = 45 m/s (3-sec gust)<br>
+                    Kz = 1.04 (Exposure Coeff)<br>
+                    Kzt = 1.0 (Topographic Factor)<br>
+                    Kd = 0.85 (Directionality)<br>
+                    G = 0.85 (Gust Effect)<br>
+                    I = 1.0 (Importance)
+                </div>
+                <div class="calc-step">
+                    <strong>2. Velocity Pressure (qz):</strong><br>
+                    qz = 0.613 * 1.04 * 1.0 * 0.85 * (45)^2 * 1.0<br>
+                    qz (Strength) = ... N/m2
+                </div>
+                <div class="calc-step">
+                    <strong>3. Design Pressure (P):</strong><br>
+                    P (ASD) = qz * G * Cf * 0.6 (ASD Factor)<br>
+                    P = <strong>1.200 kPa</strong>
+                </div>
+                <div class="calc-step">
+                    <strong>4. Overturning Moment (Mw):</strong><br>
+                    Area = 600.0 m2 (D x H)<br>
+                    Arm = 10.0 m (H/2)<br>
+                    Mw = P * Area * Arm = <strong>5000.0 kNm</strong>
+                </div>
+            </div>
+
+            <div class="page-break"></div>
+
+            <h2>7. Seismic Design (Detailed Calculation)</h2>
+            <div class="summary-item"><span class="label">Governing Code:</span> <strong>KDS 41</strong></div>
+
+            <div class="formula-box">
+                <strong>Base Shear (API 650 Annex E):</strong> V = sqrt(Vi^2 + Vc^2) (SRSS)<br>
+                Vi = Ai * (Ws + Wr + Wi + Wp_imp)<br>
+                Vc = Ac * Wc<br>
+                Ai = SDS * (I / Rwi), Ac = SD1 * (I / Rwc) * (1/Tc)
+            </div>
+
+            <div class="detailed-calc" style="background-color: #fff; padding: 10px; border: 1px solid #eee;">
+                <div class="calc-step">
+                    <strong>1. Design Spectral Acceleration:</strong><br>
+                    SDS = 0.500, SD1 = 0.300<br>
+                    Importance (I) = 1.25
+                </div>
+                <div class="calc-step">
+                    <strong>2. Effective Weights:</strong><br>
+                    W_shell = 50000 kg<br>
+                    W_roof = 20000 kg<br>
+                    W_impulsive (Wi) = 500000 kg<br>
+                    W_convective (Wc) = 400000 kg
+                </div>
+                <div class="calc-step">
+                    <strong>3. Hydrodynamic Forces:</strong><br>
+                    Base Shear (V) = <strong>800.0
+                        kN</strong><br>
+                    Overturning Moment (Mrw) = <strong>6000.0
+                        kNm</strong>
+                </div>
+            </div>
+            <div class="summary-item"><span class="label">Design SD1:</span> 0.300 g
+            </div>
+            <div class="summary-item"><span class="label">T_L:</span> - sec</div>
+            <hr>
+            <div class="summary-item"><span class="label">Seismic Base Shear (V):</span> 800.00 kN</div>
+            <div class="summary-item"><span class="label">Ringwall Moment (Mrw):</span> 6000.00 kNm</div>
+            <div class="summary-item"><span class="label">Slab Moment (Ms):</span> 5500.00 kNm</div>
+
+            <h3>7.1 Stability & Sliding Check</h3>
+            <table>
+                <tr>
+                    <th>Item</th>
+                    <th>Value / Result</th>
+                    <th>Status</th>
+                </tr>
+                <tr>
+                    <td>Anchorage Ratio (J)</td>
+                    <td>0.600</td>
+                    <td>Self-Anchored</td>
+                </tr>
+                <tr>
+                    <td>Annular Plate?</td>
+                    <td colspan="2">None</td>
+                </tr>
+                <tr>
+                    <td>Sliding Force (V)</td>
+                    <td>800.00 kN</td>
+                    <td>-</td>
+                </tr>
+                <tr>
+                    <td>Sliding Resistance (Vs)</td>
+                    <td>1000.00 kN</td>
+                    <td><span
+                            class="status-ok">OK</span></td>
+                </tr>
+                <tr>
+                    <td>Sloshing Height (d_max)</td>
+                    <td>0.000 m</td>
+                    <td>-</td>
+                </tr>
+            </table>
+
+            <h3>7.2 Seismic Hoop Stress Check (Governing Code)</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Course</th>
+                        <th>Elev. y (m)</th>
+                        <th>t_used (mm)</th>
+                        <th>P_stat (kPa)</th>
+                        <th>P_seis (kPa)</th>
+                        <th>Stress (MPa)</th>
+                        <th>Allow (MPa)</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                    <tr>
+                        <td>1</td>
+                        <td>0.00</td>
+                        <td>14.00</td>
+                        <td>190.00</td>
+                        <td>20.00</td>
+                        <td>140.00</td>
+                        <td>160.00</td>
+                        <td><span class="status-ok">OK</span></td>
+                    </tr>
+                    
+                </tbody>
+            </table>
+
+            <h3>7.3 Seismic Design Spectrum</h3>
+            
+            <p><em>Graph not available.</em></p>
+            
+
+            
+            <h2>Comparison of Standards (API 650 vs KDS 41)</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Parameter</th>
+                        <th>API 650 (ASCE 7)</th>
+                        <th>KDS 41 12/17</th>
+                        <th>Difference (%)</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>Wind Pressure (kPa)</td>
+                        <td>0.000</td>
+                        <td>0.000</td>
+                        <td>0.0%</td>
+                    </tr>
+                    <tr>
+                        <td>Wind Moment (kNm)</td>
+                        <td>0.0</td>
+                        <td>0.0</td>
+                        <td>0.0%</td>
+                    </tr>
+                    <tr>
+                        <td>Seismic Base Shear (kN)</td>
+                        <td>0.0</td>
+                        <td>0.0</td>
+                        <td>0.0%</td>
+                    </tr>
+                    <tr>
+                        <td>Seismic Overturning Moment (kNm)</td>
+                        <td>0.0</td>
+                        <td>0.0</td>
+                        <td>0.0%</td>
+                    </tr>
+                </tbody>
+            </table>
+            <p style="font-size: 11px;"><em>* Difference = (KDS - API) / API (%) </em></p>
+            
+
+            <h2>8. Anchor Bolt & Chair Design</h2>
+            <p><em>* Calculations based on Max Uplift from Governing Wind/Seismic Code.</em></p>
+            <p><em>* Designed using Governing Wind/Seismic Loads.</em></p>
+            <table>
+                <tr>
+                    <td>Status</td>
+                    <td><strong>Required</strong></td>
+                </tr>
+                <tr>
+                    <td>Net Uplift Force</td>
+                    <td>100.0 kN</td>
+                </tr>
+                
+                <tr>
+                    <td>Bolt Detail</td>
+                    <td><strong>8</strong> x M24</td>
+                </tr>
+                <tr>
+                    <td>Bolt Area Check</td>
+                    <td>Req: 0 mm2</td>
+                </tr>
+                <tr>
+                    <td colspan="2"><strong>Chair Dimensions (Approx):</strong></td>
+                </tr>
+                <tr>
+                    <td>Chair Height (h)</td>
+                    <td>0 mm</td>
+                </tr>
+                <tr>
+                    <td>Top Plate Width (a)</td>
+                    <td>0 mm</td>
+                </tr>
+                <tr>
+                    <td>Top Plate Thk (t)</td>
+                    <td>0.0 mm</td>
+                </tr>
+                
+            </table>
+
+            <h2>11. Normal and Emergency Venting (API 2000)</h2>
+            <div class="formula-box"
+                style="background-color: #f8f9fa; padding: 10px; margin: 10px 0; font-family: monospace; font-size: 13px;">
+                <strong>Normal Venting (Inbreathing/Outbreathing):</strong><br>
+                Based on Liquid Movement (Pump In/Out) and Thermal effects (Tank Volume).<br>
+                <strong>Emergency Venting (Fire Case):</strong><br>
+                Based on Wetted Surface Area (Heat Input).
+            </div>
+
+            <h3>11.1 Normal Venting Requirements</h3>
+            <table>
+                <tr>
+                    <th>Condition</th>
+                    <th>Due to Liquid (Nm3/h)</th>
+                    <th>Due to Thermal (Nm3/h)</th>
+                    <th>Total Required (Nm3/h)</th>
+                </tr>
+                <tr>
+                    <td>Inbreathing (Vacuum)</td>
+                    <td>0.00</td>
+                    <td>0.00</td>
+                    <td><strong>0.00</strong></td>
+                </tr>
+                <tr>
+                    <td>Outbreathing (Pressure)</td>
+                    <td>0.00</td>
+                    <td>0.00</td>
+                    <td><strong>0.00</strong></td>
+                </tr>
+            </table>
+
+            <h3>11.2 Emergency Venting (Fire Case)</h3>
+            <div class="summary-item"><span class="label">Wetted Surface Area:</span> 0.00 m2</div>
+            <div class="summary-item"><span class="label">Insulation Factor (F):</span> 1.0</div>
+            <div class="summary-item"><span class="label">Required Venting:</span> <strong>0 Nm3/h (Air)</strong></div>
+
+            <h2>12. Capacities and Weights</h2>
+            <div class="summary-item"><span class="label">Gross Capacity:</span> 0.00 m3</div>
+            <div class="summary-item"><span class="label">Net Capacity:</span> 0.00 m3</div>
+            <div class="summary-item"><span class="label">Empty Weight:</span> 0.00 kg</div>
+            <div class="summary-item"><span class="label">Operation Weight:</span> 0.00 kg</div>
+
+            <h2>13. MAWP & MAWV Summary</h2>
+            <div class="summary-item"><span class="label">MAWP:</span> -</div>
+            <div class="summary-item"><span class="label">MAWV:</span> -</div>
+
+            <h2>14. Appurtenances & Nozzle Schedule</h2>
+            <table>
+                <tr>
+                    <th>Mark</th>
+                    <th>Size (NPS)</th>
+                    <th>OD (mm)</th>
+                    <th>Service</th>
+                    <th>Elev (m)</th>
+                    <th>A_req (mm2)</th>
+                    <th>A_avail (mm2)</th>
+                    <th>Status</th>
+                </tr>
+                
+                <tr>
+                    <td colspan="8">No nozzles defined.</td>
+                </tr>
+                
+            </table>
+
+            <footer>
+                Generated by API 650 Tank Design Calculator | 2025-12-14 18:23
+            </footer>
+
+            <div class="page-break"></div>
+            <h2>15. Diagrams</h2>
+            <div style="display: flex; flex-wrap: wrap; justify-content: space-around;">
+                <div style="margin: 20px; text-align: center;">
+                    
+                </div>
+                <div style="margin: 20px; text-align: center;">
+                    
+                </div>
+            </div>
+            <div style="display: flex; flex-wrap: wrap; justify-content: space-around;">
+                <div style="margin: 20px; text-align: center;">
+                    <h4>Wind Moment Diagram</h4>
+                    
+                </div>
+                <div style="margin: 20px; text-align: center;">
+                    <h4>Roof-to-Shell Detail</h4>
+                    
+                </div>
+            </div>
+    </div>
+
+</body>
+
+</html>

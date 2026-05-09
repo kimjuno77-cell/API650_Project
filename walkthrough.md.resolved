@@ -1,0 +1,33 @@
+# Walkthrough - API 650 Tank Design Calculator (Phase 2)
+
+## Phase 2: Advanced Design Features & Refinement
+
+### 1. Visualization Implementation
+- **Goal**: Generate and display dynamic sketches for Shell Course Stackup and Nozzle Orientation.
+- **Challenge**: Initial implementation resulted in invisible diagrams in the HTML report due to variable scope and execution order issues.
+- **Solution**: 
+    - Moved SVG generation logic inside **Tab 3 (Calculation Results)** for better UI flow.
+    - Implemented a **Fallback Logic** in the report generation block that strictly regenerates SVGs if they are missing or stale, ensuring they always appear in the final report.
+
+### 2. Annex Logic Implementation (S, X, A)
+- **Annex S (Stainless Steel) & Annex X (Duplex)**:
+    - Updated [Materials.py](file:///g:/%EB%8B%A4%EB%A5%B8%20%EC%BB%B4%ED%93%A8%ED%84%B0/%EB%82%B4%20%EB%85%B8%ED%8A%B8%EB%B6%81/API650_Project/Materials.py) to include Duplex grades (e.g., 2205).
+    - Implemented temperature-dependent allowable stress interpolation (De-rating) based on API 650 Tables S-2a and X-2a.
+- **Annex A (Small Tanks)**:
+    - Added logic to [Shell_Design.py](file:///g:/%EB%8B%A4%EB%A5%B8%20%EC%BB%B4%ED%93%A8%ED%84%B0/%EB%82%B4%20%EB%85%B8%ED%8A%B8%EB%B6%81/API650_Project/Shell_Design.py) to flag a warning/failure if the calculated thickness exceeds the 12.5mm limit specified in Annex A.
+
+### 3. Bug Fixes
+- **Syntax Errors**: Resolved multiple syntax errors introduced during rapid iteration:
+    - Duplicate argument `p_test` in [app.py](file:///g:/%EB%8B%A4%EB%A5%B8%20%EC%BB%B4%ED%93%A8%ED%84%B0/%EB%82%B4%20%EB%85%B8%ED%8A%B8%EB%B6%81/API650_Project/app.py).
+    - Malformed dictionary in [Shell_Design.py](file:///g:/%EB%8B%A4%EB%A5%B8%20%EC%BB%B4%ED%93%A8%ED%84%B0/%EB%82%B4%20%EB%85%B8%ED%8A%B8%EB%B6%81/API650_Project/Shell_Design.py).
+    - Duplicate dictionary definition and stray markdown in [Materials.py](file:///g:/%EB%8B%A4%EB%A5%B8%20%EC%BB%B4%ED%93%A8%ED%84%B0/%EB%82%B4%20%EB%85%B8%ED%8A%B8%EB%B6%81/API650_Project/Materials.py).
+- **NameError**: Fixed missing `bottom_data_dict` variable in report generation.
+
+### 4. Verification
+- Validated that the HTML report now correctly displays:
+    - Shell Course Stackup Diagram.
+    - Nozzle Orientation Diagram.
+    - Correct Material properties including Duplex.
+    - Status flags for Annex A limitations.
+
+The application is now robust, feature-rich, and ready for deployment.

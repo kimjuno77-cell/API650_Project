@@ -1,0 +1,66 @@
+# Implementation Plan - Phase 2: Professional Enhancements
+
+## Goal
+Elevate the API 650 Tank Design Calculator from a basic design tool to a professional-grade engineering suite. This involves implementing missing API chapters, enhancing calculation rigor, and improving user experience.
+
+## User Review Required
+> [!IMPORTANT]
+> This phase involves significant code expansion. New modules will be created for Venting and Nozzles. Existing modules (Roof, Shell) will be refactored to support advanced types.
+
+## Proposed Changes
+
+### 1. Venting Design (API 2000)
+**Current Status:** Placeholder in Report.
+**Plan:**
+- Create `Venting_Design.py`.
+- Implement API 2000 7th Ed logic for:
+    - Normal Venting (Inbreathing/Outbreathing) based on liquid movement and thermal effects.
+    - Emergency Venting (Fire Case).
+- Integrate into [app.py](file:///g:/%EB%8B%A4%EB%A5%B8%20%EC%BB%B4%ED%93%A8%ED%84%B0/%EB%82%B4%20%EB%85%B8%ED%8A%B8%EB%B6%81/API650_Project/app.py) UI (new Tab or Sub-section).
+- Add results to Report.
+
+### 2. Advanced Roof Design
+**Current Status:** Only "Supported Cone Roof".
+**Plan:**
+- Update [Roof_Design.py](file:///g:/%EB%8B%A4%EB%A5%B8%20%EC%BB%B4%ED%93%A8%ED%84%B0/%EB%82%B4%20%EB%85%B8%ED%8A%B8%EB%B6%81/API650_Project/Roof_Design.py) to support:
+    - **Self-Supported Cone Roof** (API 650 5.10.5)
+    - **Self-Supported Dome/Umbrella Roof** (API 650 5.10.6)
+- Add inputs for specific geometry (Radius of curvature, etc.).
+- Update BOM generation for these types.
+
+### 3. Wind Girder Design (Top & Intermediate)
+**Current Status:** Basic Top Angle check.
+**Plan:**
+- Create `Wind_Girder_Design.py` or enhance [Shell_Design.py](file:///g:/%EB%8B%A4%EB%A5%B8%20%EC%BB%B4%ED%93%A8%ED%84%B0/%EB%82%B4%20%EB%85%B8%ED%8A%B8%EB%B6%81/API650_Project/Shell_Design.py).
+- Calculate transformed shell height to determine if Intermediate Wind Girders are required (API 650 5.9).
+- Design the section properties (Section Modulus) for required girders.
+
+### 4. Nozzle & Manhole Design (API 650 5.7)
+**Current Status:** None.
+**Plan:**
+- Create UI for defining Nozzle Bill of Material (List of nozzles: Size, Elevation, Service).
+- Perform generic reinforcement Area Check (A_required vs A_available).
+- Generate a "Nozzle Schedule" table in the report.
+
+### 5. Shell Design Enhancements
+**Current Status:** 1-Foot Method implemented. VDM exists in code but verified if accessible.
+**Plan:**
+- Verify/Expose **Variable Design Point Method** (VDM) in UI.
+- Add **Annex S (Stainless Steel)** and **Annex X (Duplex)** specific stress logic if not fully covered.
+- Add **Annex A (Small Tanks)** logic (optional logic).
+
+### 6. Visualization & UI
+**Current Status:** SVG for Roof.
+**Plan:**
+- Add **Shell Course Stackup Diagram** (SVG).
+- Add **Nozzle Location Map** (SVG).
+- Improve Report Layout (CSS).
+
+## Verification Plan
+
+### Automated Tests
+- Create `test_venting.py` to verify API 2000 calcs against standard examples.
+- Create `test_advanced_roof.py`.
+
+### Manual Verification
+- Generate Report and check against manual Excel sheets or known examples.

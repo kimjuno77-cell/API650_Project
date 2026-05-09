@@ -1,0 +1,45 @@
+# Task: Review API 650 Calculation Files
+
+- [x] Survey current directory for API 650 files <!-- id: 0 -->
+- [x] Read and analyze code content <!-- id: 1 -->
+- [x] Identify completion status and missing components <!-- id: 2 -->
+- [x] Check for necessary revisions <!-- id: 3 -->
+- [x] Report findings and propose next steps <!-- id: 4 -->
+- [x] Implement Report Generator (Output to file) <!-- id: 5 -->
+- [x] Refine Bottom/Roof Design inputs (CA, Weights) <!-- id: 6 -->
+- [x] Verify functionality (Via Static Analysis) <!-- id: 7 -->
+- [x] Debug Roof Design errors and robustness <!-- id: 8 -->
+- [x] Debug Roof Design errors and robustness <!-- id: 8 -->
+- [x] Analyze Target Output format (.doc/.xls) <!-- id: 9 -->
+- [x] Develop Input UI (Geometry, Materials, Loads) <!-- id: 32 -->
+- [x] Integrate Calculation Logic into App <!-- id: 33 -->
+- [x] Implement Visual Dashboard & Reporting <!-- id: 34 -->
+- [x] Implement Bottom Plate Design Logic <!-- id: 35 -->
+- [x] Update Roof Design for Self-Supported Cone <!-- id: 36 -->
+- [x] Implement Shell Method Selection (1-Foot/VDPM/Annex A) <!-- id: 37 -->
+- [x] Update Streamlit UI with new Options <!-- id: 38 -->
+- [x] Implement HTML Report Generator (Jinja2) <!-- id: 39 -->
+- [x] Design Professional HTML Template (CSS/Layout) <!-- id: 40 -->
+- [x] Integrate HTML Download in Streamlit App <!-- id: 41 -->
+- [x] Bind Streamlit Widgets to Session State Keys <!-- id: 42 -->
+- [x] Implement JSON Export (Save Input) <!-- id: 43 -->
+- [x] Implement JSON Import (Load Input) <!-- id: 44 -->
+- [x] Remove Excel Report Generation UI <!-- id: 45 -->
+- [x] Update HTML Report Template with New Sections (TOC) <!-- id: 46 -->
+- [x] Implement Top Member Design (Compression Ring) <!-- id: 47 -->
+- [x] Implement Tank Capacity Calculation <!-- id: 48 -->
+- [x] Implement MAWP/MAWV Inputs <!-- id: 49 -->
+- [ ] Implement Anchor Chair Design (Placeholder/Basic) <!-- id: 50 -->
+- [x] Implement Venting Design (Placeholder/API 2000) <!-- id: 51 -->
+- [x] Update Shell Design to use Joint Efficiency (E) <!-- id: 52 -->
+- [x] Add Extended Inputs to Streamlit UI (Temp, E, Loads) <!-- id: 53 -->
+- [x] Update Report to Display Extended Inputs <!-- id: 54 -->
+- [x] Add 'Use Annular Plate' Option & Calculation <!-- id: 55 -->
+- [x] Implement API 650 Validation Warnings <!-- id: 56 -->
+- [x] Implement Anchor Chair Design (Detailed) <!-- id: 57 -->
+- [x] Implement Annex F & Uplift Load Table <!-- id: 60 -->
+- [x] Implement Applicable Annexes Selection <!-- id: 61 -->
+- [x] Implement Appurtenances / Nozzle List <!-- id: 58 -->
+- [x] Implement Normal/Emergency Venting (API 2000) <!-- id: 59 -->
+- [x] Implement Wind Girder (Intermediate) <!-- id: 62 -->
+- [x] Implement Visualization (SVG Diagrams) <!-- id: 63 -->

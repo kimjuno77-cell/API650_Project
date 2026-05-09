@@ -1,0 +1,41 @@
+# .gitignore
+# Ignore reference documents and data dumps
+*.pdf
+*.xls
+*.xlsx
+*.doc
+*.htm
+*.txt
+*.png
+*.jpg
+*.jpeg
+
+# Ignore Python cache and environment files
+__pycache__/
+*.pyc
+.env
+venv/
+env/
+
+# Ignore local database and session files
+users.db
+auth.json
+.last_session.json
+
+# Ignore temporary/backup python scripts used for refactoring
+app_*.py
+verify_*.py
+debug_*.py
+dump_*.py
+fix_*.py
+test_*.py
+patch_*.py
+locate_*.py
+inspect_*.py
+extract_*.py
+
+# Ignore scratch folder
+scratch/
+
+# Ignore API 650 specific report folders
+*_files/

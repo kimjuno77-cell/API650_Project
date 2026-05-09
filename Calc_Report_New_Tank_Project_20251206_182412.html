@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API 650 Tank Design Report</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 20mm;
+        }
+
+        body {
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            color: #333;
+            line-height: 1.6;
+            margin: 0;
+            padding: 0;
+            background-color: #fff;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        /* Header */
+        header {
+            border-bottom: 2px solid #0056b3;
+            padding-bottom: 20px;
+            margin-bottom: 30px;
+        }
+
+        .report-title {
+            font-size: 28px;
+            font-weight: bold;
+            color: #0056b3;
+            margin: 0;
+        }
+
+        .meta-info {
+            font-size: 14px;
+            color: #666;
+            margin-top: 10px;
+        }
+
+        /* Sections */
+        h1,
+        h2,
+        h3 {
+            color: #2c3e50;
+        }
+
+        h2 {
+            border-left: 5px solid #0056b3;
+            padding-left: 10px;
+            margin-top: 40px;
+            background-color: #f8f9fa;
+            padding: 10px;
+        }
+
+        h3 {
+            margin-top: 25px;
+            color: #444;
+            border-bottom: 1px solid #eee;
+            padding-bottom: 5px;
+        }
+
+        /* Tables */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-size: 14px;
+        }
+
+        th,
+        td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f2f2f2;
+            color: #333;
+            font-weight: bold;
+        }
+
+        tr:nth-child(even) {
+            background-color: #f9f9f9;
+        }
+
+        /* Cards/Summary */
+        .summary-box {
+            background-color: #eef2f5;
+            padding: 20px;
+            border-radius: 5px;
+            border: 1px solid #d1d9e6;
+            margin-bottom: 20px;
+        }
+
+        .summary-item {
+            margin-bottom: 10px;
+        }
+
+        .label {
+            font-weight: bold;
+            display: inline-block;
+            width: 180px;
+        }
+
+        /* Footer */
+        footer {
+            margin-top: 50px;
+            font-size: 12px;
+            color: #999;
+            text-align: center;
+            border-top: 1px solid #eee;
+            padding-top: 20px;
+        }
+
+        .status-ok {
+            color: green;
+            font-weight: bold;
+        }
+
+        .status-fail {
+            color: red;
+            font-weight: bold;
+        }
+
+        /* Print */
+        @media print {
+            body {
+                background-color: white;
+            }
+
+            .container {
+                max-width: 100%;
+                width: 100%;
+            }
+
+            h2 {
+                page-break-before: always;
+            }
+
+            h2:first-of-type {
+                page-break-before: avoid;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <header>
+            <div class="report-title">API 650 Storage Tank Design Report</div>
+            <div class="meta-info">
+                <div><strong>Project:</strong> New Tank Project</div>
+                <div><strong>Designer:</strong> Engineer</div>
+                <div><strong>Date:</strong> 2025-12-06 18:24</div>
+                <div><strong>Design Code:</strong> API 650 13th Edition (2020)</div>
+                <div class="summary-item"><span class="label">Applicable Annexes:</span> Annex L (Data Sheet), Annex F (Internal Pressure)</div>
+                <hr>
+                <div class="summary-item"><span class="label">Inside Diameter (ID):</span> 31.000 m
+                </div>
+                <div class="summary-item"><span class="label">Nominal Diameter (D):</span> 31.020 m</div>
+                <div class="summary-item"><span class="label">Outside Diameter (OD):</span> 31.040 m
+                </div>
+                <div class="summary-item"><span class="label">Shell Height:</span> 20.0 m</div>
+                <div class="summary-item"><span class="label">Max Liq. Level:</span> 19.0 m</div>
+                <div class="summary-item"><span class="label">Min Liq. Level:</span> 1.2 m</div>
+                <div class="summary-item"><span class="label">Stored Liquid:</span> Water / Crude Oil</div>
+                <div class="summary-item"><span class="label">S.G of Contents:</span> 0.664</div>
+                <div class="summary-item"><span class="label">S.G of Hydrotest:</span> 1.0</div>
+                <div class="summary-item"><span class="label">Design Temperature:</span> 65.0 ºC</div>
+                <div class="summary-item"><span class="label">MDMT:</span> -18.0 ºC</div>
+                <div class="summary-item"><span class="label">Tank Joint Efficiency:</span> 1.00</div>
+                <div class="summary-item"><span class="label">Design Pressure:</span> 250.0 mmH2O</div>
+                <hr>
+                <div class="summary-item"><span class="label">Snow Load:</span> 0.0 kPa
+                </div>
+                <div class="summary-item"><span class="label">Roof Live Load:</span> 1.2
+                    kPa</div>
+                <div class="summary-item"><span class="label">Add. Roof Dead Load:</span> 0 kPa</div>
+            </div>
+
+            <h2>2. Roof Design Details</h2>
+            <table>
+                <tr>
+                    <td>Type</td>
+                    <td>Supported Cone Roof</td>
+                </tr>
+                <tr>
+                    <td>Slope</td>
+                    <td>0.062</td>
+                </tr>
+                <tr>
+                    <td>Material</td>
+                    <td>A 36</td>
+                </tr>
+                <tr>
+                    <td>Corrosion Allowance (CA)</td>
+                    <td>0.0 mm</td>
+                </tr>
+                <tr>
+                <tr>
+                    <td>Required Thickness</td>
+                    <td>5.00 mm</td>
+                </tr>
+                <tr>
+                    <td>Used Thickness</td>
+                    <td>6.00 mm</td>
+                </tr>
+                <tr>
+                    <td>Status</td>
+                    <td class="status-ok">OK</td>
+                </tr>
+                <tr>
+                    <td>Total Roof Weight</td>
+                    <td>35618.92 kg</td>
+                </tr>
+            </table>
+
+            
+            <h3>Roof Structure Design & BOM</h3>
+            <div style="margin-bottom: 15px; text-align: center;">
+                
+                <div style="display: inline-block; border: 1px solid #ccc; padding: 10px;">
+                    <svg width="600" height="600" xmlns="http://www.w3.org/2000/svg">
+<circle cx="300" cy="300" r="250.0" stroke="black" stroke-width="2" fill="none"/>
+<line x1="300" y1="300" x2="550.0" y2="300.0" stroke="#666" stroke-width="1"/>
+<line x1="300" y1="300" x2="548.0286753286194" y2="331.33330839107606" stroke="#666" stroke-width="1"/>
+<line x1="300" y1="300" x2="542.1457902821578" y2="362.1724717912137" stroke="#666" stroke-width="1"/>
+<line x1="300" y1="300" x2="532.4441214720629" y2="392.03113817116946" stroke="#666" stroke-width="1"/>
+<line x1="300" y1="300" x2="519.0766700109659" y2="420.4384185254288" stroke="#666" stroke-width="1"/>
+<line x1="300" y1="300" x2="502.25424859373686" y2="446.9463130731183" stroke="#666" stroke-width="1"/>
+<line x1="300" y1="300" x2="482.24215685535285" y2="471.1367764821722" stroke="#666" stroke-width="1"/>
+<line x1="300" y1="300" x2="459.35599743717245" y2="492.62831069394736" stroke="#666" stroke-width="1"/>
+<line x1="300" y1="300" x2="433.95669874474913" y2="511.0819813755038" stroke="#666" stroke-width="1"/>
+<line x1="300" y1="300" x2="406.44482289126813" y2="526.2067631165049" stroke="#666" stroke-width="1"/>
+<line x1="300" y1="300" x2="377.25424859373686" y2="537.7641290737884" stroke="#666" stroke-width="1"/>
+<line x1="300" y1="300" x2="346.8453286464312" y2="545.5718126821721" stroke="#666" stroke-width="1"/>
+<line x1="300" y1="300" x2="315.6976298823284" y2="549.506682107068" stroke="#666" stroke-width="1"/>
+<line x1="300" y1="300" x2="284.30237011767167" y2="549.506682107068" stroke="#666" stroke-width="1"/>
+<line x1="300" y1="300" x2="253.15467135356886" y2="545.5718126821722" stroke="#666" stroke-width="1"/>
+<line x1="300" y1="300" x2="222.74575140626322" y2="537.7641290737884" stroke="#666" stroke-width="1"/>
+<line x1="300" y1="300" x2="193.5551771087318" y2="526.2067631165048" stroke="#666" stroke-width="1"/>
+<line x1="300" y1="300" x2="166.04330125525078" y2="511.08198137550374" stroke="#666" stroke-width="1"/>
+<line x1="300" y1="300" x2="140.64400256282755" y2="492.62831069394736" stroke="#666" stroke-width="1"/>
+<line x1="300" y1="300" x2="117.75784314464715" y2="471.1367764821722" stroke="#666" stroke-width="1"/>
+<line x1="300" y1="300" x2="97.74575140626317" y2="446.9463130731183" stroke="#666" stroke-width="1"/>
+<line x1="300" y1="300" x2="80.9233299890341" y2="420.4384185254288" stroke="#666" stroke-width="1"/>
+<line x1="300" y1="300" x2="67.55587852793715" y2="392.0311381711695" stroke="#666" stroke-width="1"/>
+<line x1="300" y1="300" x2="57.85420971784225" y2="362.1724717912138" stroke="#666" stroke-width="1"/>
+<line x1="300" y1="300" x2="51.97132467138056" y2="331.3333083910761" stroke="#666" stroke-width="1"/>
+<line x1="300" y1="300" x2="50.0" y2="300.00000000000006" stroke="#666" stroke-width="1"/>
+<line x1="300" y1="300" x2="51.97132467138053" y2="268.66669160892394" stroke="#666" stroke-width="1"/>
+<line x1="300" y1="300" x2="57.854209717842195" y2="237.82752820878636" stroke="#666" stroke-width="1"/>
+<line x1="300" y1="300" x2="67.55587852793712" y2="207.96886182883054" stroke="#666" stroke-width="1"/>
+<line x1="300" y1="300" x2="80.9233299890341" y2="179.56158147457114" stroke="#666" stroke-width="1"/>
+<line x1="300" y1="300" x2="97.74575140626305" y2="153.05368692688182" stroke="#666" stroke-width="1"/>
+<line x1="300" y1="300" x2="117.75784314464704" y2="128.8632235178279" stroke="#666" stroke-width="1"/>
+<line x1="300" y1="300" x2="140.6440025628276" y2="107.37168930605267" stroke="#666" stroke-width="1"/>
+<line x1="300" y1="300" x2="166.04330125525092" y2="88.91801862449617" stroke="#666" stroke-width="1"/>
+<line x1="300" y1="300" x2="193.55517710873195" y2="73.79323688349504" stroke="#666" stroke-width="1"/>
+<line x1="300" y1="300" x2="222.7457514062631" y2="62.23587092621162" stroke="#666" stroke-width="1"/>
+<line x1="300" y1="300" x2="253.15467135356886" y2="54.42818731782782" stroke="#666" stroke-width="1"/>
+<line x1="300" y1="300" x2="284.30237011767167" y2="50.49331789293211" stroke="#666" stroke-width="1"/>
+<line x1="300" y1="300" x2="315.6976298823282" y2="50.49331789293211" stroke="#666" stroke-width="1"/>
+<line x1="300" y1="300" x2="346.8453286464311" y2="54.42818731782782" stroke="#666" stroke-width="1"/>
+<line x1="300" y1="300" x2="377.2542485937368" y2="62.23587092621159" stroke="#666" stroke-width="1"/>
+<line x1="300" y1="300" x2="406.44482289126796" y2="73.79323688349501" stroke="#666" stroke-width="1"/>
+<line x1="300" y1="300" x2="433.9566987447492" y2="88.91801862449626" stroke="#666" stroke-width="1"/>
+<line x1="300" y1="300" x2="459.35599743717233" y2="107.37168930605262" stroke="#666" stroke-width="1"/>
+<line x1="300" y1="300" x2="482.24215685535285" y2="128.86322351782778" stroke="#666" stroke-width="1"/>
+<line x1="300" y1="300" x2="502.25424859373686" y2="153.05368692688165" stroke="#666" stroke-width="1"/>
+<line x1="300" y1="300" x2="519.0766700109658" y2="179.56158147457097" stroke="#666" stroke-width="1"/>
+<line x1="300" y1="300" x2="532.4441214720629" y2="207.96886182883054" stroke="#666" stroke-width="1"/>
+<line x1="300" y1="300" x2="542.1457902821578" y2="237.82752820878616" stroke="#666" stroke-width="1"/>
+<line x1="300" y1="300" x2="548.0286753286194" y2="268.6666916089238" stroke="#666" stroke-width="1"/>
+<circle cx="300" cy="300" r="125.0" stroke="#d9534f" stroke-width="2" fill="none" stroke-dasharray="5,5"/>
+<rect x="421.0" y="296.0" width="8" height="8" fill="#d9534f"/>
+<rect x="397.12712429686843" y="369.47315653655915" width="8" height="8" fill="#d9534f"/>
+<rect x="334.62712429686843" y="414.8820645368942" width="8" height="8" fill="#d9534f"/>
+<rect x="257.37287570313157" y="414.8820645368942" width="8" height="8" fill="#d9534f"/>
+<rect x="194.87287570313157" y="369.47315653655915" width="8" height="8" fill="#d9534f"/>
+<rect x="171.0" y="296.0" width="8" height="8" fill="#d9534f"/>
+<rect x="194.87287570313157" y="222.52684346344085" width="8" height="8" fill="#d9534f"/>
+<rect x="257.37287570313157" y="177.11793546310582" width="8" height="8" fill="#d9534f"/>
+<rect x="334.6271242968684" y="177.1179354631058" width="8" height="8" fill="#d9534f"/>
+<rect x="397.12712429686843" y="222.52684346344083" width="8" height="8" fill="#d9534f"/>
+<line x1="425.0" y1="300.0" x2="401.12712429686843" y2="373.47315653655915" stroke="#d9534f" stroke-width="2"/>
+<line x1="401.12712429686843" y1="373.47315653655915" x2="338.62712429686843" y2="418.8820645368942" stroke="#d9534f" stroke-width="2"/>
+<line x1="338.62712429686843" y1="418.8820645368942" x2="261.37287570313157" y2="418.8820645368942" stroke="#d9534f" stroke-width="2"/>
+<line x1="261.37287570313157" y1="418.8820645368942" x2="198.87287570313157" y2="373.47315653655915" stroke="#d9534f" stroke-width="2"/>
+<line x1="198.87287570313157" y1="373.47315653655915" x2="175.0" y2="300.0" stroke="#d9534f" stroke-width="2"/>
+<line x1="175.0" y1="300.0" x2="198.87287570313157" y2="226.52684346344085" stroke="#d9534f" stroke-width="2"/>
+<line x1="198.87287570313157" y1="226.52684346344085" x2="261.37287570313157" y2="181.11793546310582" stroke="#d9534f" stroke-width="2"/>
+<line x1="261.37287570313157" y1="181.11793546310582" x2="338.6271242968684" y2="181.1179354631058" stroke="#d9534f" stroke-width="2"/>
+<line x1="338.6271242968684" y1="181.1179354631058" x2="401.12712429686843" y2="226.52684346344083" stroke="#d9534f" stroke-width="2"/>
+<line x1="401.12712429686843" y1="226.52684346344083" x2="425.0" y2="300.0" stroke="#d9534f" stroke-width="2"/>
+<rect x="294.0" y="294.0" width="12" height="12" fill="black"/>
+</svg>
+                </div>
+                
+            </div>
+
+            <table class="bom-table" style="width:100%; border-collapse: collapse; font-size: 13px;">
+                <tr style="background-color: #f2f2f2;">
+                    <th style="border: 1px solid #ddd; padding: 5px;">Item</th>
+                    <th style="border: 1px solid #ddd; padding: 5px;">Profile / Description</th>
+                    <th style="border: 1px solid #ddd; padding: 5px;">Qty</th>
+                    <th style="border: 1px solid #ddd; padding: 5px;">Unit Len (m)</th>
+                    <th style="border: 1px solid #ddd; padding: 5px;">Unit Wt (kg/m)</th>
+                    <th style="border: 1px solid #ddd; padding: 5px;">Total Wt (kg)</th>
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #ddd; padding: 5px;">Rafters</td>
+                    <td style="border: 1px solid #ddd; padding: 5px;">IPE 200</td>
+                    <td style="border: 1px solid #ddd; padding: 5px;">50</td>
+                    <td style="border: 1px solid #ddd; padding: 5px;">15.50</td>
+                    <td style="border: 1px solid #ddd; padding: 5px;">22.4</td>
+                    <td style="border: 1px solid #ddd; padding: 5px;">17360.0</td>
+                </tr>
+                
+                <tr>
+                    <td style="border: 1px solid #ddd; padding: 5px;">Girders</td>
+                    <td style="border: 1px solid #ddd; padding: 5px;">IPE 240</td>
+                    <td style="border: 1px solid #ddd; padding: 5px;">10</td>
+                    <td style="border: 1px solid #ddd; padding: 5px;">4.87</td>
+                    <td style="border: 1px solid #ddd; padding: 5px;">30.7</td>
+                    <td style="border: 1px solid #ddd; padding: 5px;">1494.9</td>
+                </tr>
+                <tr>
+                    <td style="border: 1px solid #ddd; padding: 5px;">Ring Columns</td>
+                    <td style="border: 1px solid #ddd; padding: 5px;">Pipe 12in Sch40</td>
+                    <td style="border: 1px solid #ddd; padding: 5px;">10</td>
+                    <td style="border: 1px solid #ddd; padding: 5px;">20.00</td>
+                    <td style="border: 1px solid #ddd; padding: 5px;">73.8</td>
+                    <td style="border: 1px solid #ddd; padding: 5px;">14760.0</td>
+                </tr>
+                
+                <tr>
+                    <td style="border: 1px solid #ddd; padding: 5px;">Center Column</td>
+                    <td style="border: 1px solid #ddd; padding: 5px;">Pipe 12in Sch40</td>
+                    <td style="border: 1px solid #ddd; padding: 5px;">1</td>
+                    <td style="border: 1px solid #ddd; padding: 5px;">20.00</td>
+                    <td style="border: 1px solid #ddd; padding: 5px;">73.8</td>
+                    <td style="border: 1px solid #ddd; padding: 5px;">1476.0</td>
+                </tr>
+                <tr style="font-weight: bold; background-color: #f9f9f9;">
+                    <td colspan="5" style="border: 1px solid #ddd; padding: 5px; text-align: right;">Total Structure
+                        Weight (incl. 10% misc):</td>
+                    <td style="border: 1px solid #ddd; padding: 5px;">38600.0 kg</td>
+                </tr>
+            </table>
+            
+
+            <h2>4. Shell Design</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Course</th>
+                        <th>Material</th>
+                        <th>Width (m)</th>
+                        <th>H_eff_d (m)</th>
+                        <th>H_eff_t (m)</th>
+                        <th>td (mm)</th>
+                        <th>tt (mm)</th>
+                        <th>Req (mm)</th>
+                        <th>Rec (mm)</th>
+                        <th>Used (mm)</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                    <tr>
+                        <td>Course 1</td>
+                        <td>A 283 C</td>
+                        <td>2.418</td>
+                        <td>19.377</td>
+                        <td>20.300</td>
+                        <td>15.54</td>
+                        <td>19.73</td>
+                        <td>19.73</td>
+                        <td>20</td>
+                        <td>20.00</td>
+                        <td><span class="status-ok">OK</span></td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Course 2</td>
+                        <td>A 283 C</td>
+                        <td>2.418</td>
+                        <td>16.959</td>
+                        <td>17.882</td>
+                        <td>13.76</td>
+                        <td>17.34</td>
+                        <td>17.34</td>
+                        <td>18</td>
+                        <td>18.00</td>
+                        <td><span class="status-ok">OK</span></td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Course 3</td>
+                        <td>A 283 C</td>
+                        <td>2.418</td>
+                        <td>14.541</td>
+                        <td>15.464</td>
+                        <td>11.98</td>
+                        <td>14.96</td>
+                        <td>14.96</td>
+                        <td>15</td>
+                        <td>15.00</td>
+                        <td><span class="status-ok">OK</span></td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Course 4</td>
+                        <td>A 283 C</td>
+                        <td>2.418</td>
+                        <td>12.123</td>
+                        <td>13.046</td>
+                        <td>10.20</td>
+                        <td>12.57</td>
+                        <td>12.57</td>
+                        <td>13</td>
+                        <td>13.00</td>
+                        <td><span class="status-ok">OK</span></td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Course 5</td>
+                        <td>A 283 C</td>
+                        <td>2.418</td>
+                        <td>9.705</td>
+                        <td>10.628</td>
+                        <td>8.42</td>
+                        <td>10.19</td>
+                        <td>10.19</td>
+                        <td>11</td>
+                        <td>11.00</td>
+                        <td><span class="status-ok">OK</span></td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Course 6</td>
+                        <td>A 283 C</td>
+                        <td>2.418</td>
+                        <td>7.287</td>
+                        <td>8.210</td>
+                        <td>6.64</td>
+                        <td>7.80</td>
+                        <td>7.80</td>
+                        <td>8</td>
+                        <td>8.00</td>
+                        <td><span class="status-ok">OK</span></td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Course 7</td>
+                        <td>A 283 C</td>
+                        <td>2.418</td>
+                        <td>4.869</td>
+                        <td>5.792</td>
+                        <td>4.86</td>
+                        <td>5.42</td>
+                        <td>6.00</td>
+                        <td>6</td>
+                        <td>6.00</td>
+                        <td><span class="status-ok">OK</span></td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Course 8</td>
+                        <td>A 283 C</td>
+                        <td>2.418</td>
+                        <td>2.451</td>
+                        <td>3.374</td>
+                        <td>3.08</td>
+                        <td>3.03</td>
+                        <td>6.00</td>
+                        <td>6</td>
+                        <td>6.00</td>
+                        <td><span class="status-ok">OK</span></td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Course 9</td>
+                        <td>A 283 C</td>
+                        <td>0.476</td>
+                        <td>0.033</td>
+                        <td>0.956</td>
+                        <td>1.50</td>
+                        <td>0.65</td>
+                        <td>6.00</td>
+                        <td>6</td>
+                        <td>6.00</td>
+                        <td><span class="status-ok">OK</span></td>
+                    </tr>
+                    
+                </tbody>
+            </table>
+
+            <div class="notes-box" style="font-size: 12px; color: #555; border-top: 1px solid #ccc; padding-top: 5px;">
+                <strong>Notes & Abbreviations:</strong>
+                <ul>
+                    <li><strong>H_eff_d</strong>: Effective Design Liquid Level (from bottom of course) [m]</li>
+                    <li><strong>H_eff_t</strong>: Effective Hydrotest Liquid Level (from bottom of course) [m]</li>
+                    <li><strong>td</strong>: Calculated Design Thickness (including CA) [mm]</li>
+                    <li><strong>tt</strong>: Calculated Hydrotest Thickness [mm]</li>
+                    <li><strong>Req</strong>: Governing Minimum Required Thickness (Max of td, tt, Seismic, or
+                        Min-Code)
+                        [mm]</li>
+                    <li><strong>E</strong>: Tank Joint Efficiency (Applied to Allowable Stresses)</li>
+                </ul>
+            </div>
+
+            <div class="summary-item"><span class="label">Total Shell Weight:</span> 181577.81
+                kg
+            </div>
+
+            <h2>5. Bottom Design</h2>
+            <table>
+                <tr>
+                    <td>Material</td>
+                    <td>A 283 C</td>
+                </tr>
+                <tr>
+                    <td>Corrosion Allowance</td>
+                    <td>0.0 mm</td>
+                </tr>
+                <tr>
+                    <td>Required Thickness</td>
+                    <td>6.00 mm</td>
+                </tr>
+                <tr>
+                    <td>Annular Plate?</td>
+                    <td>No</td>
+                </tr>
+                <tr>
+                    <td>Note</td>
+                    <td>Minimum 6mm + CA (API 650 5.4.1)</td>
+                </tr>
+            </table>
+
+            <h2>6. Wind Moment</h2>
+            <div class="formula-box"
+                style="background-color: #f8f9fa; padding: 10px; margin: 10px 0; font-family: monospace; font-size: 13px;">
+                <strong>Wind Pressure (ASCE 7):</strong><br>
+                p = 0.613 * Kz * Kzt * Kd * V^2 * I * G (N/m2)<br>
+                <strong>Overturning Moment:</strong><br>
+                Mw = P_wind * Projected_Area * (H/2)
+            </div>
+            <div class="summary-item"><span class="label">Wind Load Basis:</span> ASCE 7-05 / API 650</div>
+            <div class="summary-item"><span class="label">3-Sec Gust Speed (V):</span> 65.0
+                m/s
+            </div>
+            <div class="summary-item"><span class="label">Importance Factor (Iw):</span> 1.0 (Default)</div>
+            <div class="summary-item"><span class="label">Design Pressure (Pws):</span> 0.63 kPa</div>
+            <div class="summary-item"><span class="label">Overturning Moment:</span> 3889.94 kNm</div>
+
+            <h3>6.1 Intermediate Wind Girders (API 650 5.9.7)</h3>
+            <table>
+                <tr>
+                    <th>Parameter</th>
+                    <th>Value / Result</th>
+                </tr>
+                <tr>
+                    <td>Transformed Height (H_tr)</td>
+                    <td>7.89 m</td>
+                </tr>
+                <tr>
+                    <td>Max Unstiffened Height (H1)</td>
+                    <td>3.19 m</td>
+                </tr>
+                <tr>
+                    <td>Status</td>
+                    <td><strong>Required (2 Girders)</strong></td>
+                </tr>
+                
+                <tr>
+                    <td>Quantity Required</td>
+                    <td>2</td>
+                </tr>
+                <tr>
+                    <td>Min Section Modulus (Z)</td>
+                    <td>273.50 cm3</td>
+                </tr>
+                
+            </table>
+
+            <h2>7. Seismic Design</h2>
+            <div class="formula-box"
+                style="background-color: #f8f9fa; padding: 10px; margin: 10px 0; font-family: monospace; font-size: 13px;">
+                <strong>Seismic Base Shear (API 650 Annex E):</strong><br>
+                V = S_a * (W_shell + W_roof + W_product) / R<br>
+                Where S_a = 2.5 * Q * Fa * Ss or SDS (Depending on T)<br>
+                <strong>Ringwall Moment (Mrw):</strong><br>
+                Mrw = sqrt( [Ai(Wi*Xi + Ws*Xs + Wr*Xr)]^2 + [Ac(Wc*Xc)]^2 )<br>
+                <strong>Slab Moment (Ms):</strong><br>
+                Ms = sqrt( [Ai(Wi*Xis + Ws*Xs + Wr*Xr)]^2 + [Ac(Wc*Xcs)]^2 )
+            </div>
+            <div class="summary-item"><span class="label">Seismic Use Group:</span> SUG I (Normal)
+            </div>
+            <div class="summary-item"><span class="label">Site Class:</span> D
+            </div>
+            <div class="summary-item"><span class="label">Importance Factor (I):</span> 1.0</div>
+            <div class="summary-item"><span class="label">Input Method:</span> Mapped Acceleration (Ss, S1)
+            </div>
+
+            
+
+            
+
+            <div class="summary-item"><span class="label">Design SDS:</span> 0.000 g
+            </div>
+            <div class="summary-item"><span class="label">Design SD1:</span> 0.000 g
+            </div>
+            <div class="summary-item"><span class="label">T_L:</span> 4.0 sec</div>
+            <hr>
+            <div class="summary-item"><span class="label">Seismic Base Shear (V):</span> 66.02 kN</div>
+            <div class="summary-item"><span class="label">Ringwall Moment (Mrw):</span> 504.04 kNm</div>
+            <div class="summary-item"><span class="label">Slab Moment (Ms):</span> 504.04 kNm</div>
+
+            <h3>7.1 Stability & Sliding Check</h3>
+            <table>
+                <tr>
+                    <th>Item</th>
+                    <th>Value / Result</th>
+                    <th>Status</th>
+                </tr>
+                <tr>
+                    <td>Anchorage Ratio (J)</td>
+                    <td>0.024</td>
+                    <td>Self-Anchored (Stable)</td>
+                </tr>
+                <tr>
+                    <td>Annular Plate?</td>
+                    <td colspan="2">Not Required</td>
+                </tr>
+                <tr>
+                    <td>Sliding Force (V)</td>
+                    <td>66.02 kN</td>
+                    <td>-</td>
+                </tr>
+                <tr>
+                    <td>Sliding Resistance (Vs)</td>
+                    <td>40183.76 kN</td>
+                    <td><span
+                            class="status-ok">OK</span></td>
+                </tr>
+                <tr>
+                    <td>Sloshing Height (d_max)</td>
+                    <td>0.000 m</td>
+                    <td>-</td>
+                </tr>
+            </table>
+
+            <h3>7.2 Seismic Hoop Stress Check (API 650 E.6.2.4)</h3>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Course</th>
+                        <th>Elev. y (m)</th>
+                        <th>t_used (mm)</th>
+                        <th>P_stat (kPa)</th>
+                        <th>P_seis (kPa)</th>
+                        <th>Stress (MPa)</th>
+                        <th>Allow (MPa)</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                    <tr>
+                        <td>Course 1</td>
+                        <td>0.00</td>
+                        <td>20.00</td>
+                        <td>123.72</td>
+                        <td>0.12</td>
+                        <td>95.98</td>
+                        <td>182.62</td>
+                        <td><span class="status-ok">OK</span></td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Course 2</td>
+                        <td>2.42</td>
+                        <td>18.00</td>
+                        <td>107.98</td>
+                        <td>0.11</td>
+                        <td>93.07</td>
+                        <td>182.62</td>
+                        <td><span class="status-ok">OK</span></td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Course 3</td>
+                        <td>4.84</td>
+                        <td>15.00</td>
+                        <td>92.23</td>
+                        <td>0.09</td>
+                        <td>95.40</td>
+                        <td>182.62</td>
+                        <td><span class="status-ok">OK</span></td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Course 4</td>
+                        <td>7.25</td>
+                        <td>13.00</td>
+                        <td>76.49</td>
+                        <td>0.08</td>
+                        <td>91.29</td>
+                        <td>182.62</td>
+                        <td><span class="status-ok">OK</span></td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Course 5</td>
+                        <td>9.67</td>
+                        <td>11.00</td>
+                        <td>60.74</td>
+                        <td>0.06</td>
+                        <td>85.67</td>
+                        <td>182.62</td>
+                        <td><span class="status-ok">OK</span></td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Course 6</td>
+                        <td>12.09</td>
+                        <td>8.00</td>
+                        <td>45.00</td>
+                        <td>0.04</td>
+                        <td>87.27</td>
+                        <td>182.62</td>
+                        <td><span class="status-ok">OK</span></td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Course 7</td>
+                        <td>14.51</td>
+                        <td>6.00</td>
+                        <td>29.25</td>
+                        <td>0.03</td>
+                        <td>75.64</td>
+                        <td>182.62</td>
+                        <td><span class="status-ok">OK</span></td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Course 8</td>
+                        <td>16.93</td>
+                        <td>6.00</td>
+                        <td>13.51</td>
+                        <td>0.01</td>
+                        <td>34.92</td>
+                        <td>182.62</td>
+                        <td><span class="status-ok">OK</span></td>
+                    </tr>
+                    
+                    <tr>
+                        <td>Course 9</td>
+                        <td>19.34</td>
+                        <td>6.00</td>
+                        <td>0.00</td>
+                        <td>0.00</td>
+                        <td>0.01</td>
+                        <td>182.62</td>
+                        <td><span class="status-ok">OK</span></td>
+                    </tr>
+                    
+                </tbody>
+            </table>
+
+            <h2>11. Normal and Emergency Venting (API 2000)</h2>
+            <div class="formula-box"
+                style="background-color: #f8f9fa; padding: 10px; margin: 10px 0; font-family: monospace; font-size: 13px;">
+                <strong>Normal Venting (Inbreathing/Outbreathing):</strong><br>
+                Based on Liquid Movement (Pump In/Out) and Thermal effects (Tank Volume).<br>
+                <strong>Emergency Venting (Fire Case):</strong><br>
+                Based on Wetted Surface Area (Heat Input).
+            </div>
+
+            <h3>11.1 Normal Venting Requirements</h3>
+            <table>
+                <tr>
+                    <th>Condition</th>
+                    <th>Due to Liquid (Nm3/h)</th>
+                    <th>Due to Thermal (Nm3/h)</th>
+                    <th>Total Required (Nm3/h)</th>
+                </tr>
+                <tr>
+                    <td>Inbreathing (Vacuum)</td>
+                    <td>94.00</td>
+                    <td>1138.53</td>
+                    <td><strong>1232.53</strong></td>
+                </tr>
+                <tr>
+                    <td>Outbreathing (Pressure)</td>
+                    <td>101.00</td>
+                    <td>738.92</td>
+                    <td><strong>839.92</strong></td>
+                </tr>
+            </table>
+
+            <h3>11.2 Emergency Venting (Fire Case)</h3>
+            <div class="summary-item"><span class="label">Wetted Surface Area:</span> 890.14 m2</div>
+            <div class="summary-item"><span class="label">Insulation Factor (F):</span> 1.0</div>
+            <div class="summary-item"><span class="label">Required Venting:</span> <strong>58119 Nm3/h (Air)</strong></div>
+
+            <h2>12. Capacities and Weights</h2>
+            <div class="summary-item"><span class="label">Gross Capacity:</span> 15095.35 m3</div>
+            <div class="summary-item"><span class="label">Net Capacity:</span> 13434.86 m3</div>
+            <div class="summary-item"><span class="label">Empty Weight:</span> 252746.28 kg</div>
+            <div class="summary-item"><span class="label">Operation Weight:</span> 9173495.91 kg</div>
+
+            <h2>13. MAWP & MAWV Summary</h2>
+            <div class="summary-item"><span class="label">MAWP:</span> 250.0 mmH2O</div>
+            <div class="summary-item"><span class="label">MAWV:</span> 25 mmH2O (std)</div>
+
+            <h2>14. Appurtenances & Nozzle Schedule</h2>
+            <table>
+                <tr>
+                    <th>Mark</th>
+                    <th>Size (NPS)</th>
+                    <th>OD (mm)</th>
+                    <th>Service / Description</th>
+                    <th>Elevation (m)</th>
+                    <th>Remarks</th>
+                </tr>
+                
+                <tr>
+                    <td>N1</td>
+                    <td>24"</td>
+                    <td>610.0</td>
+                    <td>Shell Manway</td>
+                    <td>0.900</td>
+                    <td>Standard</td>
+                </tr>
+                
+                <tr>
+                    <td>N2</td>
+                    <td>10"</td>
+                    <td>273.0</td>
+                    <td>Inlet</td>
+                    <td>1.500</td>
+                    <td></td>
+                </tr>
+                
+                <tr>
+                    <td>N3</td>
+                    <td>10"</td>
+                    <td>273.0</td>
+                    <td>Outlet</td>
+                    <td>0.500</td>
+                    <td></td>
+                </tr>
+                
+                <tr>
+                    <td>N4</td>
+                    <td>4"</td>
+                    <td>114.3</td>
+                    <td>Drain</td>
+                    <td>0.200</td>
+                    <td></td>
+                </tr>
+                
+                <tr>
+                    <td>R1</td>
+                    <td>24"</td>
+                    <td>610.0</td>
+                    <td>Roof Manway</td>
+                    <td>20.000</td>
+                    <td></td>
+                </tr>
+                
+                <tr>
+                    <td>V1</td>
+                    <td>8"</td>
+                    <td>219.1</td>
+                    <td>Gooseneck Vent</td>
+                    <td>20.000</td>
+                    <td></td>
+                </tr>
+                
+            </table>
+
+            <footer>
+                Generated by API 650 Tank Design Calculator | 2025-12-06 18:24
+            </footer>
+
+            <div class="page-break"></div>
+            <h2>15. Diagrams</h2>
+            <div style="display: flex; flex-wrap: wrap; justify-content: space-around;">
+                <div style="margin: 20px; text-align: center;">
+                    <h4>Shell Course Stackup</h4>
+                    <svg width="300" height="400" xmlns="http://www.w3.org/2000/svg"><style>.text { font-family: Arial; font-size: 12px; } .dim { font-size: 10px; fill: gray; }</style><line x1="20" y1="380" x2="280" y2="380" stroke="black" stroke-width="2" /><rect x="75.0" y="336.08072653884966" width="150" height="43.919273461150354" fill="#e3f2fd" stroke="#1565c0" stroke-width="1" /><text x="150.0" y="362.0403632694248" text-anchor="middle" class="text" fill="black">Course 1</text><text x="235.0" y="362.0403632694248" text-anchor="start" class="dim">t=20mm</text><text x="65.0" y="362.0403632694248" text-anchor="end" class="dim">H=2.418m</text><rect x="75.0" y="292.1614530776993" width="150" height="43.919273461150354" fill="#e3f2fd" stroke="#1565c0" stroke-width="1" /><text x="150.0" y="318.12108980827446" text-anchor="middle" class="text" fill="black">Course 2</text><text x="235.0" y="318.12108980827446" text-anchor="start" class="dim">t=18mm</text><text x="65.0" y="318.12108980827446" text-anchor="end" class="dim">H=2.418m</text><rect x="75.0" y="248.24217961654898" width="150" height="43.919273461150354" fill="#e3f2fd" stroke="#1565c0" stroke-width="1" /><text x="150.0" y="274.2018163471241" text-anchor="middle" class="text" fill="black">Course 3</text><text x="235.0" y="274.2018163471241" text-anchor="start" class="dim">t=15mm</text><text x="65.0" y="274.2018163471241" text-anchor="end" class="dim">H=2.418m</text><rect x="75.0" y="204.32290615539864" width="150" height="43.919273461150354" fill="#e3f2fd" stroke="#1565c0" stroke-width="1" /><text x="150.0" y="230.2825428859738" text-anchor="middle" class="text" fill="black">Course 4</text><text x="235.0" y="230.2825428859738" text-anchor="start" class="dim">t=13mm</text><text x="65.0" y="230.2825428859738" text-anchor="end" class="dim">H=2.418m</text><rect x="75.0" y="160.4036326942483" width="150" height="43.919273461150354" fill="#e3f2fd" stroke="#1565c0" stroke-width="1" /><text x="150.0" y="186.36326942482347" text-anchor="middle" class="text" fill="black">Course 5</text><text x="235.0" y="186.36326942482347" text-anchor="start" class="dim">t=11mm</text><text x="65.0" y="186.36326942482347" text-anchor="end" class="dim">H=2.418m</text><rect x="75.0" y="116.48435923309795" width="150" height="43.919273461150354" fill="#e3f2fd" stroke="#1565c0" stroke-width="1" /><text x="150.0" y="142.44399596367313" text-anchor="middle" class="text" fill="black">Course 6</text><text x="235.0" y="142.44399596367313" text-anchor="start" class="dim">t=8mm</text><text x="65.0" y="142.44399596367313" text-anchor="end" class="dim">H=2.418m</text><rect x="75.0" y="72.5650857719476" width="150" height="43.919273461150354" fill="#e3f2fd" stroke="#1565c0" stroke-width="1" /><text x="150.0" y="98.52472250252276" text-anchor="middle" class="text" fill="black">Course 7</text><text x="235.0" y="98.52472250252276" text-anchor="start" class="dim">t=6mm</text><text x="65.0" y="98.52472250252276" text-anchor="end" class="dim">H=2.418m</text><rect x="75.0" y="28.64581231079724" width="150" height="43.919273461150354" fill="#e3f2fd" stroke="#1565c0" stroke-width="1" /><text x="150.0" y="54.60544904137242" text-anchor="middle" class="text" fill="black">Course 8</text><text x="235.0" y="54.60544904137242" text-anchor="start" class="dim">t=6mm</text><text x="65.0" y="54.60544904137242" text-anchor="end" class="dim">H=2.418m</text><rect x="75.0" y="20.000000000000064" width="150" height="8.645812310797174" fill="#e3f2fd" stroke="#1565c0" stroke-width="1" /><text x="150.0" y="28.322906155398652" text-anchor="middle" class="text" fill="black">Course 9</text><text x="235.0" y="28.322906155398652" text-anchor="start" class="dim">t=6mm</text><text x="65.0" y="28.322906155398652" text-anchor="end" class="dim">H=0.476m</text><text x="150.0" y="20" text-anchor="middle" font-weight="bold" class="text">Shell Course Stackup</text></svg>
+                </div>
+                <div style="margin: 20px; text-align: center;">
+                    <h4>Nozzle Orientation</h4>
+                    <svg width="400" height="400" xmlns="http://www.w3.org/2000/svg"><style>.mark { font-family: Arial; font-size: 11px; font-weight: bold; } .angle { font-size: 9px; fill: gray; }</style><circle cx="200.0" cy="200.0" r="170.0" fill="none" stroke="black" stroke-width="2" /><circle cx="200.0" cy="200.0" r="2" fill="black" /><line x1="200.0" y1="200.0" x2="200.0" y2="30.0" stroke="red" stroke-width="1" stroke-dasharray="4" /><circle cx="200.0" cy="30.0" r="4" fill="red" /><text x="200.0" y="5.0" text-anchor="middle" class="mark">N1 (0°)</text><line x1="200.0" y1="200.0" x2="370.0" y2="200.0" stroke="red" stroke-width="1" stroke-dasharray="4" /><circle cx="370.0" cy="200.0" r="4" fill="red" /><text x="395.0" y="200.0" text-anchor="middle" class="mark">N2 (90°)</text><line x1="200.0" y1="200.0" x2="30.0" y2="200.00000000000003" stroke="red" stroke-width="1" stroke-dasharray="4" /><circle cx="30.0" cy="200.00000000000003" r="4" fill="red" /><text x="5.0" y="200.00000000000003" text-anchor="middle" class="mark">N3 (270°)</text><line x1="200.0" y1="200.0" x2="200.0" y2="370.0" stroke="red" stroke-width="1" stroke-dasharray="4" /><circle cx="200.0" cy="370.0" r="4" fill="red" /><text x="200.0" y="395.0" text-anchor="middle" class="mark">N4 (180°)</text><line x1="200.0" y1="200.0" x2="320.2081528017131" y2="79.79184719828692" stroke="red" stroke-width="1" stroke-dasharray="4" /><circle cx="320.2081528017131" cy="79.79184719828692" r="4" fill="red" /><text x="337.88582233137674" y="62.11417766862323" text-anchor="middle" class="mark">R1 (45°)</text><line x1="200.0" y1="200.0" x2="79.79184719828693" y2="320.2081528017131" stroke="red" stroke-width="1" stroke-dasharray="4" /><circle cx="79.79184719828693" cy="320.2081528017131" r="4" fill="red" /><text x="62.114177668623256" y="337.88582233137674" text-anchor="middle" class="mark">V1 (225°)</text><text x="200.0" y="390" text-anchor="middle" class="text" font-weight="bold">Nozzle Orientation (0° North, CW)</text></svg>
+                </div>
+            </div>
+    </div>
+
+</body>
+
+</html>
