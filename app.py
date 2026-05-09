@@ -1762,6 +1762,7 @@ with st.container():
     if any('304' in m or '316' in m for m in mats_used): applied_annexes.append("Annex S (Stainless Steel)")
     if any('2205' in m for m in mats_used): applied_annexes.append("Annex X (Duplex Stainless)")
     if any('5083' in m or '6061' in m for m in mats_used): applied_annexes.append("Annex AL (Aluminum)")
+    purchaser_annexes = [] # Removed from UI to minimize inputs, default to empty
     for ann in purchaser_annexes:
         short_name = ann.split(' ')[0] + ' ' + ann.split(' ')[1]
         is_dup = False
