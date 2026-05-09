@@ -380,7 +380,7 @@ with st.container():
         mat_shell = st.selectbox("Shell Plate", all_materials, index=all_materials.index("A283M-C") if "A283M-C" in all_materials else 0, key="mat_shell")
         mat_bottom = st.selectbox("Bottom Plate", all_materials, index=all_materials.index("A283M-C") if "A283M-C" in all_materials else 0, key="mat_bottom")
         mat_annular = st.selectbox("Annular Plate", all_materials, index=all_materials.index("A283M-C") if "A283M-C" in all_materials else 0, key="mat_annular")
-        mat_roof = st.selectbox("Roof Plate", all_materials, index=all_materials.index("A283M-C") if "A283M-C" in all_materials else 0, key="mat_roof")
+        roof_material = st.selectbox("Roof Plate", all_materials, index=all_materials.index("A283M-C") if "A283M-C" in all_materials else 0, key="roof_material")
         use_annular = st.checkbox("Use Annular Plate?", value=True, key="use_annular")
         ann_width_input = 600.0
         ann_thk_input = 8.0
