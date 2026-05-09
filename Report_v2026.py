@@ -84,7 +84,8 @@ class ReportGenerator2026:
         <body>
             <div class='cover-page'>
                 <h1>API 650 STORAGE TANK DESIGN CALCULATION</h1>
-                <h2>(Ver.2026 Professional Edition)</h2>
+                <h2>PROJECT: API-650 TANK PROJECT (28.5M ID x 16.5M H)</h2>
+                <h3>(Professional Engineering Report - Ver.2026)</h3>
                 <br>
                 <table class='cover-table'>
                     <tr><td>PROJECT:</td><td>{self.project_info.get('project_name', '')}</td></tr>
@@ -857,6 +858,7 @@ class ReportGenerator2026:
             S1 = seismic.get('S1_input', 0)
             SDS = seismic.get('SDS', 0)
             SD1 = seismic.get('SD1', 0)
+            seis_method = seismic.get('Method', 'Mapped')
             I = seismic.get('Importance Factor', 1.0)
             Rwi = 3.5 
             Rwc = 2.0
@@ -872,45 +874,41 @@ class ReportGenerator2026:
             ds = seismic.get('Sloshing_Wave_Height_m', 0)
             
             html = f"""
-            <h3>12.1 SEISMIC DESIGN PARAMETERS</h3>
-            <table>
-                <tr><th colspan="4" class="section-header">Site Ground Motion (API 650 E.4)</th></tr>
-                <tr><td>Mapped Spectral Accel (Ss)</td><td>{Ss:.3f} g</td><td>Mapped Spectral Accel (S1)</td><td>{S1:.3f} g</td></tr>
-                <tr><td>Design Spectral Accel (SDS)</td><td>{SDS:.3f} g</td><td>Design Spectral Accel (SD1)</td><td>{SD1:.3f} g</td></tr>
-                <tr><td>Site Class</td><td>{seismic.get('Site Class','D')}</td><td>Importance Factor (I)</td><td>{I}</td></tr>
-            </table>
-
-            <h3>12.2 EFFECTIVE MASS DISTRIBUTION (API 650 E.6.1)</h3>
-            <div style='background-color:#f8f9fa; padding:10px; margin-bottom:15px; border-left:4px solid #2c3e50;'>
-                Shell Weight (Ws): {Ws:.0f} kg<br>
-                Roof Weight (Wr): {Wr:.0f} kg<br>
-                Total Product Weight (Wp): {Wp:.0f} kg<br><br>
-                <b>Effective Liquid Weight</b><br>
-                Impulsive Mass (Wi): <b>{Wi:.0f} kg</b><br>
-                Convective Mass (Wc): <b>{Wc:.0f} kg</b>
+            <h3>12.1 SEISMIC DESIGN PARAMETERS (API 650 ANNEX E)</h3>
+            <div style='background-color:#f8fafc; padding:20px; border-radius:8px; border:1px solid #e2e8f0;'>
+                <table style="border:none; margin:0;">
+                    <tr><td>Seismic Use Group (SUG):</td><td>{seismic.get('Use Group','I')}</td><td>Importance Factor (I):</td><td>{I}</td></tr>
+                    <tr><td>Site Class:</td><td>{seismic.get('Site Class','D')}</td><td>Design Method:</td><td>{seis_method}</td></tr>
+                    <tr><td>SDS (Short Period):</td><td>{SDS:.3f} g</td><td>SD1 (1-Sec Period):</td><td>{SD1:.3f} g</td></tr>
+                </table>
             </div>
 
-            <h3>12.3 BASE SHEAR & OVERTURNING MOMENT</h3>
-            <table>
-                <tr><th>Component</th><th>Spectral Accel (Ai/Ac)</th><th>Mass (kg)</th><th>Shear (kN)</th></tr>
-                <tr><td>Impulsive</td><td>{Ai:.4f}</td><td>{Wi:.0f}</td><td>{seismic.get('Impulsive Base Shear (kN)', Ai*Wi*9.81/1000):.1f}</td></tr>
-                <tr><td>Convective</td><td>{Ac:.4f}</td><td>{Wc:.0f}</td><td>{seismic.get('Convective Base Shear (kN)', Ac*Wc*9.81/1000):.1f}</td></tr>
-                <tr style='font-weight:bold; background:#eee;'><td>TOTAL (RSS)</td><td>-</td><td>-</td><td>{V:.1f}</td></tr>
-            </table>
-            
-            <h3>12.4 SLOSHING & STABILITY</h3>
-            <div style='background-color:#f8f9fa; padding:10px; margin-bottom:15px; border-left:4px solid #2c3e50;'>
-                <b>Sloshing Wave Height (delta_s)</b><br>
-                <code>delta_s = 0.5 * D * Af = 0.5 * {D:.3f} * {Ac/I*Rwc:.4f} = {ds:.3f} m</code><br><br>
-                <b>Anchorage Ratio (J)</b><br>
-                <code>J = Mrw / (D^2 * [wt(1-0.4Av) + wa]) = {seismic.get('Anchorage_Ratio_J', 0):.3f}</code>
+            <h3>12.2 EFFECTIVE MASS & DYNAMIC COEFFICIENTS</h3>
+            <div class="calculation-block">
+                <b>1. Effective Weights</b><br>
+                - Total Liquid Weight (W): {Wp:.2f} kg<br>
+                - Impulsive Weight (Wi): {Wi:.2f} kg ({Wi/Wp*100 if Wp else 0:.1f}% of W)<br>
+                - Convective Weight (Wc): {Wc:.2f} kg ({Wc/Wp*100 if Wp else 0:.1f}% of W)<br><br>
+                
+                <b>2. Dynamic Coefficients</b><br>
+                - Impulsive Accel (Ai): {Ai:.4f} g<br>
+                - Convective Accel (Ac): {Ac:.4f} g<br>
+                - Convective Period (Tc): {seismic.get('Tc_s',0):.2f} sec<br>
+                - Sloshing Wave Height (delta_s): {ds:.3f} m
             </div>
+
+            <h3>12.3 STABILITY & MOMENT SUMMARY</h3>
             <table>
-                <tr><td>Ringwall Moment (Mrw):</td><td>{Mrw:.1f} kNm</td></tr>
-                <tr><td>Anchorage Ratio (J):</td><td>{seismic.get('Anchorage_Ratio_J', 0):.3f}</td></tr>
-                <tr><td>Stability Status:</td><td class="{'result-pass' if seismic.get('Anchorage_Status') != 'Anchorage Required' else 'result-fail'}"><b>{seismic.get('Anchorage_Status', 'OK')}</b></td></tr>
+                <tr style="background:#2d3748; color:white;">
+                    <th>Parameter</th><th>Value</th><th>Unit</th><th>API 650 Status</th>
+                </tr>
+                <tr><td>Total Base Shear (V)</td><td>{V:.2f}</td><td>kN</td><td>-</td></tr>
+                <tr><td>Ringwall Moment (Mrw)</td><td>{Mrw:.2f}</td><td>kN-m</td><td>-</td></tr>
+                <tr><td>Anchorage Ratio (J)</td><td>{seismic.get('Anchorage_Ratio_J', 0):.3f}</td><td>-</td><td><b>{seismic.get('Anchorage_Status','-')}</b></td></tr>
+                <tr><td>Sliding Check</td><td>{seismic.get('Sliding_Status','-')}</td><td>-</td><td>Friction Res: {seismic.get('Sliding_Friction_Res_kN',0):.1f} kN</td></tr>
             </table>
             """
+
             
             if graph:
                 html += f'<h3>12.5 DESIGN SPECTRUM GRAPH</h3><img src="data:image/png;base64,{graph}" style="max-width:80%; margin: 20px auto; display:block; border: 1px solid #ddd;" />'
@@ -1073,7 +1071,11 @@ class ReportGenerator2026:
             </tr>
         """
         # Roof
-        html += c_row("Tank Roof", w_roof, 0, 0, 0, 3.14159 * (D/2)**2)
+        w_ins_roof = 0
+        if self.design.get('insulation_opt', 1.0) < 1.0:
+             # If insulation exists, estimate roof insulation weight (approx 50kg/m2)
+             w_ins_roof = 3.14159 * (D/2)**2 * 50.0 
+        html += c_row("Tank Roof", w_roof, w_ins_roof, 0, 0, 3.14159 * (D/2)**2)
 
         # Shell courses
         prev_h = 0

@@ -258,11 +258,11 @@ with st.container():
     
     with col_geom:
         tank_roof_type = st.selectbox("Tank Roof Type", ["[Type 1] CRT - Cone Roof Tank", "[Type 2] DRT - Dome Roof Tank", "[Type 3] IFRT - Internal Floating Roof Tank", "[Type 4] EFRT - External Floating Roof Tank"], index=0, key="roof_type_new")
-        ID_input = st.number_input("Inside Diameter (D) [mm]", value=8000.0, step=100.0, key="ID_input")
-        H_input = st.number_input("Tank Height (H) [mm]", value=6000.0, step=100.0, key="H_input")
-        HD = st.number_input("Design Liquid Level (HD) [mm]", value=6000.0, step=100.0, key="HD")
-        HT = st.number_input("Test Liquid Level (HT) [mm]", value=6000.0, step=100.0, key="HT")
-        HHL = st.number_input("Max. Liquid Level (HHL) [mm]", value=5400.0, step=100.0, key="HHL")
+        ID_input = st.number_input("Inside Diameter (D) [mm]", value=28500.0, step=100.0, key="ID_input")
+        H_input = st.number_input("Tank Height (H) [mm]", value=16500.0, step=100.0, key="H_input")
+        HD = st.number_input("Design Liquid Level (HD) [mm]", value=15500.0, step=100.0, key="HD")
+        HT = st.number_input("Test Liquid Level (HT) [mm]", value=16500.0, step=100.0, key="HT")
+        HHL = st.number_input("Max. Liquid Level (HHL) [mm]", value=15500.0, step=100.0, key="HHL")
         HLL = st.number_input("Min. Liquid Level (HLL) [mm]", value=1200.0, step=100.0, key="HLL")
         conical_bottom_type = st.selectbox("Conical Bottom Type", ["Cone-Up", "Cone-Down", "Flat"], key="conical_bottom_type")
         if conical_bottom_type != "Flat":
@@ -291,17 +291,17 @@ with st.container():
     st.subheader("OPERATION & DESIGN CONDITIONS")
     col_op1, col_op2 = st.columns(2)
     with col_op1:
-        liquid_name = st.text_input("Content", "Middle Distillate Flow Improver", key="liquid_name")
-        G = st.number_input("Max. Specific Gravity", value=0.870, step=0.01, format="%.3f", key="G")
+        liquid_name = st.text_input("Content", "Crude Oil", key="liquid_name")
+        G = st.number_input("Max. Specific Gravity", value=0.850, step=0.01, format="%.3f", key="G")
         sg_test = st.number_input("Specific Gravity for Test Medium", value=1.000, step=0.01, format="%.3f", key="sg_test")
         mdmt = st.number_input("MDMT [°C]", value=5.0, step=1.0, key="mdmt")
         operating_temp = st.number_input("Operating Temperature [°C]", value=50.0, step=1.0, key="operating_temp")
         design_temp = st.number_input("Design Temperature [°C]", value=85.0, step=1.0, key="design_temp")
 
     with col_op2:
-        P_design_mm = st.number_input("Design Pressure [ Internal ] [mmAq]", value=76.5, step=1.0, key="P_design_mm")
-        P_external_mm = st.number_input("Design Pressure [ External ] [mmAq]", value=25.4, step=1.0, key="P_external_mm")
-        P_test_mm = st.number_input("Test Pressure [mmAq]", value=76.5, step=1.0, key="P_test_mm")
+        P_design_mm = st.number_input("Design Pressure [ Internal ] [mmAq]", value=150.0, step=1.0, key="P_design_mm")
+        P_external_mm = st.number_input("Design Pressure [ External ] [mmAq]", value=25.0, step=1.0, key="P_external_mm")
+        P_test_mm = st.number_input("Test Pressure [mmAq]", value=150.0, step=1.0, key="P_test_mm")
         st.info("P_design > 0 indicates potential need for Annex F. P_external > 0 indicates potential need for Annex V.")
         P_external = P_external_mm * 0.00980665
     st.markdown('---')
@@ -447,7 +447,7 @@ with st.container():
     
     with col_wind:
         st.subheader("Wind & Roof Loads")
-        V_wind = st.number_input("Wind Speed (3-sec gust) [m/s]", value=65.0, step=1.0, key="V_wind") # 234 kph = 65 m/s
+        V_wind = st.number_input("Wind Speed (3-sec gust) [m/s]", value=45.0, step=1.0, key="V_wind") # 162 kph = 45 m/s
         # Additional Loads
         snow_load = st.number_input("Ground Snow Load [kPa]", value=0.5, step=0.1, key="snow_load")
         live_load = st.number_input("Roof Live Load [kPa]", value=1.0, step=0.1, key="live_load")
@@ -485,8 +485,8 @@ with st.container():
                 st.write(f"Calculated: SDS={SDS:.3f} g, SD1={SD1:.3f} g")
         
         elif "Design" in seismic_method:
-            SDS = st.number_input("SDS (Design Short Period) [g]", value=0.0, step=0.01, key="SDS")
-            SD1 = st.number_input("SD1 (Design 1-Sec Period) [g]", value=0.0, step=0.01, key="SD1")
+            SDS = st.number_input("SDS (Design Short Period) [g]", value=0.50, step=0.01, key="SDS")
+            SD1 = st.number_input("SD1 (Design 1-Sec Period) [g]", value=0.22, step=0.01, key="SD1")
             # Calc logic just passes them
             
         elif "Single" in seismic_method:
@@ -518,7 +518,7 @@ with st.expander("🇰🇷 KDS Standard Options (Advanced)", expanded=False):
         c_kds1, c_kds2 = st.columns(2)
         with c_kds1:
             st.markdown("#### KDS 41 12 00 (Wind)")
-            kds_V0 = st.number_input("Basic Wind Speed V0 (m/s)", value=26.0, step=1.0, help="Seoul: 26, Busan: 40, Jeju: 44", key="kds_v0")
+            kds_V0 = st.number_input("Basic Wind Speed V0 (m/s)", value=45.0, step=1.0, help="PDF Reference Value", key="kds_v0")
             kds_Terrain = st.selectbox("Terrain Category", ['A', 'B', 'C', 'D'], index=1, help="A: City, B: Urban, C: Open, D: Sea/Coastal", key="kds_terrain")
             
             # Risk Category for Importance Factor
@@ -612,7 +612,7 @@ def reset_courses_on_width_change():
     st.session_state.pop("shell_courses_data", None)
 
 c_sh1, c_sh2 = st.columns([2, 1])
-std_width = c_sh1.number_input("Standard Plate Width (m)", value=1.524, step=0.001, key="std_plate_width", on_change=reset_courses_on_width_change)
+std_width = c_sh1.number_input("Standard Plate Width (m)", value=2.400, step=0.001, key="std_plate_width", on_change=reset_courses_on_width_change)
 # Button still useful for explicit reset, but input change now handles it too
 if c_sh2.button("Auto-Generate Courses", help="Reset shell courses based on height and plate width"):
     # Clear existing data to force regeneration
@@ -944,36 +944,46 @@ if 'use_kds' in locals() and use_kds:
     kds_seismic = Loads.KDSSeismicLoad(kds_params)
     kds_seismic_res = kds_seismic.calculate_loads(W_shell_kg, W_roof_kg, W_liquid_kg)
 
-# --- Governing Loads Determination ---
+# --- Governing Loads Determination (Comparison Logic) ---
 gov_wind_P = P_wind_kPa
 gov_wind_M = M_wind_kNm
 gov_wind_code = "API 650 (ASCE 7)"
 
-gov_seismic_res = seismic_res
-gov_seismic_load_obj = seismic_load
+final_SDS = SDS
+final_SD1 = SD1
 gov_seismic_code = "API 650 (Annex E)"
 
 if 'use_kds' in locals() and use_kds:
-    # Wind Comparison (Pressure for Stiffeners)
+    # 1. Wind Comparison (Pressure & Moment)
     if kds_wind_P > P_wind_kPa:
         gov_wind_P = kds_wind_P
-        gov_wind_code = "KDS 41"
-        
-    # Wind Comparison (Moment for Anchors)
+        gov_wind_code = "KDS 41 (Governing)"
     if kds_wind_M > M_wind_kNm:
         gov_wind_M = kds_wind_M
-        # Code might differ for Moment, but usually consistent. 
-        # Update code based on Moment if it governs stability/anchors
-        if kds_wind_M > M_wind_kNm: gov_wind_code = "KDS 41" 
 
-    # Seismic Comparison
-    kds_V = kds_seismic_res.get('Base_Shear_kN', 0)
-    api_V = seismic_res.get('Base_Shear_kN', 0)
+    # 2. Seismic Parameter Comparison (SDS, SD1)
+    # The user requested to use the 'end values' (Max of API/KDS)
+    kds_SDS_val = kds_seismic.SDS
+    kds_SD1_val = kds_seismic.S1
     
-    if kds_V > api_V:
-        gov_seismic_res = kds_seismic_res
-        gov_seismic_load_obj = kds_seismic
-        gov_seismic_code = "KDS 41"
+    if kds_SDS_val > SDS or kds_SD1_val > SD1:
+        final_SDS = max(SDS, kds_SDS_val)
+        final_SD1 = max(SD1, kds_SD1_val)
+        gov_seismic_code = "KDS 41 Parameters (Governing)"
+        
+        # Re-run API 650 calculation with GOVERNING parameters
+        temp_params = params.copy()
+        temp_params['SDS'] = final_SDS
+        temp_params['SD1'] = final_SD1
+        temp_params['S1'] = final_SD1
+        gov_seismic_load_obj = SeismicLoad(temp_params)
+        gov_seismic_res = gov_seismic_load_obj.calculate_loads(W_shell_kg, W_roof_kg, W_liquid_kg)
+    else:
+        gov_seismic_res = seismic_res
+        gov_seismic_load_obj = seismic_load
+else:
+    gov_seismic_res = seismic_res
+    gov_seismic_load_obj = seismic_load
 
     # --- Integrate Seismic Annular Requirement into Bottom Design ---
     seismic_ann_status = gov_seismic_res.get('Annular_Check', 'Not Required')
