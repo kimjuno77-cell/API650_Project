@@ -52,7 +52,7 @@ class ReportGenerator2026:
         self.generate_chapter_14_small_pressure()
         self.generate_chapter_15_loading_data()
         self.generate_chapter_16_weight_summary()
-        self.generate_chapter_16_nozzle()
+        self.generate_chapter_17_venting()
         self.generate_chapter_18_civil_loading()
         self.generate_chapter_19_external_pressure()
         
