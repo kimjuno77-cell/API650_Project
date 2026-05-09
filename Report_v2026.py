@@ -62,15 +62,15 @@ class ReportGenerator2026:
     def _assemble_full_html(self):
         css = self._get_css()
         
-        toc_html = "<div class='toc'><h2>TABLE OF CONTENTS</h2><ul>"
+        toc_html = "<div class='toc'><h2>TABLE OF CONTENTS</h2><div class='toc-container'><ul>"
         body_html = ""
         
         for ch in self.chapters:
             toc_html += f"""
             <li class='toc-item'>
-                <a href='#ch{ch['num']}'>CHAPTER {ch['num']}. {ch['title']}</a>
+                <span class='toc-title'>CHAPTER {ch['num']}. {ch['title']}</span>
                 <span class='toc-dots'></span>
-                <span class='page-num-placeholder'>Page {ch['num']*2 + 1}</span>
+                <span class='toc-page'>Page {ch['num']*2 + 1}</span>
             </li>"""
             body_html += f"<div id='ch{ch['num']}' class='chapter'>"
             body_html += f"<h1 class='chapter-title'>CHAPTER {ch['num']}. {ch['title']}</h1>"
@@ -78,7 +78,7 @@ class ReportGenerator2026:
             body_html += ch['content']
             body_html += "</div><div class='page-break'></div>"
             
-        toc_html += "</ul></div><div class='page-break'></div>"
+        toc_html += "</ul></div></div><div class='page-break'></div>"
         
         full_html = f"""
         <!DOCTYPE html>
@@ -143,12 +143,13 @@ class ReportGenerator2026:
         }
         .cover-table td { color: white; border: none; text-align: left; padding: 8px; font-size: 1.1rem; }
         
-        .toc h2 { text-align: center; color: #2d3748; margin-bottom: 30px; font-weight: 700; }
+        .toc h2 { text-align: center; color: #2d3748; margin-bottom: 40px; font-weight: 700; font-size: 2.5rem; border-bottom: 3px solid #4ca1af; display: inline-block; padding-bottom: 10px; }
+        .toc-container { width: 80%; margin: 0 auto; }
         .toc ul { list-style: none; padding: 0; }
-        .toc-item { display: flex; align-items: baseline; margin-bottom: 12px; }
-        .toc-item a { text-decoration: none; color: #2d3748; font-weight: 600; white-space: nowrap; }
-        .toc-dots { flex-grow: 1; border-bottom: 2px dotted #cbd5e0; margin: 0 10px; }
-        .page-num-placeholder { color: #718096; font-weight: 400; font-family: 'Roboto Mono', monospace; }
+        .toc-item { display: flex; align-items: baseline; margin-bottom: 15px; font-size: 1.1rem; }
+        .toc-title { flex-shrink: 0; font-weight: 600; color: #2d3748; }
+        .toc-dots { flex-grow: 1; border-bottom: 2px dotted #cbd5e0; margin: 0 10px; height: 1em; }
+        .toc-page { flex-shrink: 0; font-family: 'Roboto Mono', monospace; color: #4ca1af; font-weight: 700; min-width: 80px; text-align: right; }
         
         .chapter { padding: 60px 80px; page-break-after: always; }
         .chapter-title { 
@@ -329,6 +330,9 @@ class ReportGenerator2026:
             </tr>
             <tr>
                 <td>Roof Type:</td><td colspan="3">{d.get('roof_type','')}</td>
+            </tr>
+            <tr>
+                <td>Applicable Annexes:</td><td colspan="3"><b>{', '.join(d.get('Applied_Annexes', [])) if d.get('Applied_Annexes') else '-'}</b></td>
             </tr>
         </table>
         """

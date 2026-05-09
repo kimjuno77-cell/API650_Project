@@ -1739,7 +1739,11 @@ with st.container():
             'max_level': max_level, 'min_level': min_level,
             'shell_method': getattr(shell_design, 'design_report_info', {}).get('Method', shell_method_ui),
             'roof_type': roof_type,
-            'roof_slope': roof_slope
+            'roof_slope': roof_slope,
+            'mat_shell': mat_shell,
+            'roof_material': roof_material,
+            'mat_bottom': mat_bottom,
+            'mat_annular': mat_annular if use_annular else "N/A"
         },
         'weights': {
             'W_shell_kg': W_shell_kg,
@@ -1887,6 +1891,7 @@ with st.container():
          if "Annex A (Small Tanks)" not in applied_annexes: applied_annexes.append("Annex A (Small Tanks)")
     
     extended_design_data['Applied_Annexes'] = applied_annexes
+    report_data['design_data']['Applied_Annexes'] = applied_annexes # Also put in design_data for easy access
     report_data['extended'] = extended_design_data
 
     st.session_state['report_data'] = report_data
