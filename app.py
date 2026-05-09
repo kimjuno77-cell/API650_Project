@@ -29,6 +29,7 @@ from Report_v2026 import ReportGenerator2026
 from Appendix_F import AppendixF, FrangibleCheck
 from Materials import CARBON_STEEL_MATERIALS, STAINLESS_STEEL_MATERIALS
 from Bottom_Design import BottomDesign
+from Annex_V_Design import AnnexVDesign
 
 # Page Configuration
 st.set_page_config(page_title="API 650 Tank Design", page_icon="🛢️", layout="wide")
@@ -1075,8 +1076,28 @@ if 'use_kds' in locals() and use_kds:
         gov_seismic_res = seismic_res
         gov_seismic_load_obj = seismic_load
 else:
-    gov_seismic_res = seismic_res
     gov_seismic_load_obj = seismic_load
+
+# --- NEW: Seismic Checks (E.6.1.4, E.6.2.2) ---
+t_shell_bot_mm = shell_courses[0].get('t_used', 6.0)
+Sd_first = shell_courses[0].get('Sd', 137.0)
+import Materials
+mat_bot = shell_courses[0].get('Material', 'A 283 C')
+fy_bot = Materials.get_material_properties_base(mat_bot).get('Fy', 205.0)
+
+# 1. Seismic Hoop Stress (E.6.1.4)
+final_hoop_res = gov_seismic_load_obj.check_hoop_stress(t_shell_bot_mm, max_level, Sd_first, joint_efficiency)
+
+# 2. Seismic Longitudinal Compression (E.6.2.2)
+# Convert weights to kN for the check method
+W_shell_kN = W_shell_kg * 0.00980665
+W_roof_kN = W_roof_kg * 0.00980665
+final_comp_res = gov_seismic_load_obj.check_longitudinal_compression(t_shell_bot_mm, W_shell_kN, W_roof_kN, gov_seismic_res.get('Ms_kNm', 0), Sd_first, fy_bot)
+
+# --- NEW: Annex V (External Pressure) Check ---
+# P_external is in mmH2O from UI
+annex_v = AnnexVDesign(D, H, shell_courses, P_external, Fy=fy_bot)
+annex_v_res = annex_v.run_design()
 
     # --- Integrate Seismic Annular Requirement into Bottom Design ---
     seismic_ann_status = gov_seismic_res.get('Annular_Check', 'Not Required')
@@ -1783,7 +1804,10 @@ with st.container():
             'struct_data': struct_data, # Use local var
             'bottom_res': bottom_design.results,
             'seismic_res': gov_seismic_res, # Use Governing Seismic Data
-            'seismic_hoop_res': final_hoop_res if 'final_hoop_res' in locals() else {}, # Explicit Hoop Stress
+            'seismic_hoop_res': final_hoop_res if 'final_hoop_res' in locals() else {},
+            'seismic_comp_res': final_comp_res if 'final_comp_res' in locals() else {},
+            'annex_v_res': annex_v_res if 'annex_v_res' in locals() else {},
+ # Explicit Hoop Stress
             'venting_res': venting_res, # New API 2000 Data
             'wind_girder_res': wind_girder_res, # New API 650 5.9
             'nozzle_res': nozzle_res, # New Nozzle Schedule

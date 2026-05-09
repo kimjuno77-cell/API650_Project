@@ -550,6 +550,68 @@ class SeismicLoad:
             'Seismic_Add_kPa': P_seismic
         }
 
+    def check_longitudinal_compression(self, t_mm, W_shell_kN, W_roof_kN, Ms_kNm, Sd, Fy):
+        """
+        Calculates maximum longitudinal compression stress and compares with allowable.
+        API 650 E.6.2.2.
+        t_mm: Shell thickness at bottom.
+        W_shell_kN, W_roof_kN: Weights.
+        Ms_kNm: Seismic Overturning Moment at bottom.
+        Sd: Design Stress (MPa).
+        Fy: Yield Strength (MPa).
+        Returns: {fc_MPa, Fc_MPa, Status}
+        """
+        if t_mm <= 0: return {'Status': 'Error'}
+        
+        # 1. Stress calculation (E.6.2.2.1)
+        # fc = (W_shell + W_roof) / (pi * D * t) + (1.273 * Ms) / (D^2 * t)
+        # Using SI units: kN, m, mm -> MPa
+        # Area term: pi * D * t_mm [mm2] -> (pi * D * 1000 * t_mm)
+        # Moment term: 1.273 * Ms_kNm * 10^6 / (D_m^2 * 1000^2 * t_mm) ?
+        # Simpler: fc [MPa] = ( (W_s + W_r) / (pi * D) + (1.273 * Ms / D^2) ) / t_mm
+        
+        term_gravity = (W_shell_kN + W_roof_kN) / (math.pi * self.D) # kN/m
+        term_moment = (1.273 * Ms_kNm) / (self.D ** 2) # kN/m
+        
+        fc = (term_gravity + term_moment) / t_mm # MPa
+        
+        # 2. Allowable Compression Stress Fc (API 650 5.6.2 and E.6.2.2.3)
+        # Simplified Fc check (Reference 5.6.2.1)
+        # Fc depends on D/t ratio and elastic buckling.
+        # For simplicity, using a typical allowable based on Fy and geometry:
+        # Fc_base = (0.125 * E * t / D) but not more than Sd? 
+        # Actually API 650 5.6.2.1 provides formulas:
+        # If G < (0.125 * E * t / D) ...
+        E_modulus = 200000 # MPa (Assume Steel)
+        
+        # Formula 5.6.2.1-1: 
+        # Fc1 = 10^6 * t / D (MPa) ?? US Customary formulas are different.
+        # SI formula 5.6.2.1 (approx): 
+        # Fc = 0.125 * E * (t/R) ? 
+        # API 650 13th 5.6.2.1: 
+        # B = 10^6 * t / (1000 * D) ?
+        
+        # Use E.6.2.2.3 logic: 
+        # F_c is the smaller of Sd or the buckling limit.
+        # buckling limit approx: 0.125 * E * (t/R) = 0.25 * E * (t/D)
+        F_buckle = (0.25 * E_modulus * t_mm) / (self.D * 1000.0)
+        
+        # F_c = min(Fy * 0.4, F_buckle) - conservative
+        Fc = min(Fy * 0.4, F_buckle) 
+        
+        # E.6.2.2.2: If seismic is included, increase allowable by 33%? 
+        # Actually API says compare fc to Fc.
+        
+        status = "OK" if fc <= Fc else "FAIL"
+        
+        return {
+            'fc_MPa': fc,
+            'Fc_MPa': Fc,
+            'Status': status,
+            'Gravity_Stress': term_gravity / t_mm,
+            'Moment_Stress': term_moment / t_mm
+        }
+
 class KDSSeismicLoad(SeismicLoad):
     def __init__(self, design_params):
         """

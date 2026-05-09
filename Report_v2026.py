@@ -248,27 +248,16 @@ class ReportGenerator2026:
         }
         """
 
-
-    # --- CHAPTER IMPLEMENTATIONS (Placeholders for now) ---
-    # --- CHAPTER IMPLEMENTATIONS ---
-
     def generate_chapter_1_design_data(self):
         d = self.design
         p = self.project_info
-        seismic = self.results.get('seismic_res') or {}
-        ext = self.extended
-
-        # Applied Annexes from extended data
-        annexes = (ext.get('Applied_Annexes') or [])
-        annex_str = ', '.join(annexes) if annexes else '-'
-
+        
         # Pressure conversions
         p_design_mmaq = d.get('P_design', 0)
         p_design_kpa = p_design_mmaq * 0.00980665
-        p_ext_kpa = d.get('P_external', 0)
-        p_ext_mmaq = p_ext_kpa / 0.00980665 if p_ext_kpa else 0
-        p_test_mmaq = d.get('P_test_shop', p_design_mmaq * 1.25)
-
+        p_ext_mmaq = d.get('P_external', 0)
+        p_ext_kpa = p_ext_mmaq * 0.00980665
+        
         info_table = f"""
         <table>
             <tr><th colspan="4" class="section-header">1.1 PROJECT INFORMATION</th></tr>
@@ -283,93 +272,49 @@ class ReportGenerator2026:
                 <td>Designer:</td><td>{p.get('designer','-')}</td>
                 <td>Date:</td><td>{datetime.now().strftime("%Y-%m-%d")}</td>
             </tr>
-            <tr>
-                <td>Applicable Code:</td><td>API 650 13th Edition</td>
-                <td>Rev.:</td><td>0</td>
-            </tr>
         </table>
         """
-
+        
         design_table = f"""
         <table>
+            <tr><th colspan="4" class="section-header">1.2 DESIGN PARAMETERS</th></tr>
             <tr>
                 <td>Inside Diameter (ID):</td><td>{d.get('D',0):.3f} m</td>
                 <td>Tank Height (H):</td><td>{d.get('H',0):.3f} m</td>
             </tr>
             <tr>
                 <td>Design Specific Gravity:</td><td>{d.get('G',0):.3f}</td>
-                <td>Max. Liquid Level (H.H.L):</td><td>{d.get('max_level',0):.3f} m</td>
+                <td>Max. Liquid Level (H.L.L):</td><td>{d.get('max_level',0):.3f} m</td>
             </tr>
             <tr>
-                <td>Min. Liquid Level (L.L.L):</td><td>{d.get('min_level',0):.3f} m</td>
-                <td>Design Pressure (Int.):</td><td>{d.get('P_design',0):.1f} mmH2O</td>
+                <td>Design Pressure (Int.):</td><td>{p_design_mmaq:.1f} mmH2O ({p_design_kpa:.3f} kPa)</td>
+                <td>Design Pressure (Ext.):</td><td>{p_ext_mmaq:.1f} mmH2O ({p_ext_kpa:.3f} kPa)</td>
             </tr>
             <tr>
                 <td>Design Temperature:</td><td>{d.get('design_temp',0):.1f} °C</td>
-                <td>Design Pressure (Ext.):</td><td>{d.get('P_external',0):.1f} mmH2O</td>
-            </tr>
-            <tr>
                 <td>Design Metal Temp (MDMT):</td><td>{d.get('mdmt',0):.1f} °C</td>
-                <td>Joint Efficiency:</td><td>{d.get('joint_efficiency',1.0):.2f}</td>
             </tr>
             <tr>
-                <td>Corrosion Allowance (Shell):</td><td>{d.get('CA',0):.1f} mm</td>
-                <td>Corrosion Allowance (Roof):</td><td>{d.get('CA_roof',0):.1f} mm</td>
-            </tr>
-            <tr>
-                <td>Corrosion Allowance (Bottom):</td><td>{d.get('CA_bottom',0):.1f} mm</td>
+                <td>Corrosion Allowance:</td><td>{d.get('CA',0):.1f} mm</td>
                 <td>Shell Design Method:</td><td>{d.get('shell_method','-')}</td>
             </tr>
             <tr>
                 <td>Material (Shell):</td><td>{d.get('mat_shell','-')}</td>
-                <td>Material (Roof):</td><td>{d.get('roof_material','-')}</td>
-            </tr>
-            <tr>
-                <td>Material (Bottom):</td><td>{d.get('mat_bottom','-')}</td>
-                <td>Material (Annular):</td><td>{d.get('mat_annular','-')}</td>
-            </tr>
-            <tr>
-                <td>Roof Type:</td><td colspan="3">{d.get('roof_type','')}</td>
-            </tr>
-            <tr>
-                <td>Applicable Annexes:</td><td colspan="3"><b>{', '.join(d.get('Applied_Annexes', [])) if d.get('Applied_Annexes') else '-'}</b></td>
+                <td>Joint Efficiency:</td><td>{d.get('joint_efficiency',1.0):.2f}</td>
             </tr>
         </table>
         """
-        
         self._add_chapter("TANK DESIGN DATA", info_table + "<br>" + design_table)
 
     def generate_chapter_2_capacity(self):
-        res = (self.results.get('capacities') or {}) # app.py passes capacities in 'capacities' key of results if I mapped it?
-        # Check app.py: gen_2026 takes rd['results']. 
-        # But 'capacities' is in rd['capacities'], NOT rd['results']['capacities']. 
-        # Wait, app.py passed calculation_results=rd['results'].
-        # Capacity is NOT in rd['results']. It's a sibling. 
-        # I must fetch it from extended or passed explicitly.
-        # In app.py I passed calculation_results=rd['results'].
-        # I SHOULD have passed the WHOLE rd or ensured capacity is in there.
-        # FIX: I will look for it in extended (if I add it) or assuming it's merged.
-        # Since I can't easily change app.py again right now without context switch, I will try to use 'capacity' from self.extended if I put it there.
-        # In app.py (Step 3612), I did NOT put 'capacities' in extended_context explicitly, but 'capacities' key exists in 'rd'.
-        # However, `rd['results']` usually contains shell/roof/etc.
-        # I will assume for now I might miss capacity data unless I find it.
-        # ACTUALLY, I can check self.design if I populated it there? No.
-        # Let's write a safe fallback.
-        
-        # NOTE: I will update app.py later to inject capacity into extended.
-        # For now, placeholder or basic calc.
         D = self.design.get('D', 0)
         H = self.design.get('H', 0)
-        max_level = self.design.get('HD', H)
-        
-        geo_vol = 3.14159 * (D/2)**2 * H
-        net_vol = 3.14159 * (D/2)**2 * max_level
-        
-        cap = self.extended.get('capacities') or {}
-        geo_vol = 3.14159 * (D/2)**2 * H
-        nom_vol = 3.14159 * (D/2)**2 * max_level
+        max_level = self.design.get('max_level', H)
         min_level = self.design.get('min_level', 0)
-        net_vol = 3.14159 * (D/2)**2 * (max_level - min_level)
+        
+        geo_vol = math.pi * (D/2)**2 * H
+        nom_vol = math.pi * (D/2)**2 * max_level
+        net_vol = math.pi * (D/2)**2 * (max_level - min_level)
 
         html = f"""
         <h3>2.1 STORAGE VOLUME & LEVEL</h3>
@@ -1384,30 +1329,52 @@ class ReportGenerator2026:
         self._add_chapter("CIVIL INFORMATION LOADING DATA", html)
 
     def generate_chapter_19_external_pressure(self):
-        p_ext_mmaq = self.design.get('P_external', 0)
-        # Convert mmH2O to kPa for Annex V calculation
-        p_ext_kpa = p_ext_mmaq * 0.00980665
-        D = self.design.get('D', 0)
-        H = self.design.get('H', 0)
-        
-        if p_ext_kpa <= 0:
+        res = self.results.get('annex_v_res', {})
+        if not res or res.get('Status') == 'Not Applicable':
             html = "<p>External pressure is not specified. Annex V is not applicable.</p>"
             self._add_chapter("ANNEX V (EXTERNAL PRESSURE)", html)
             return
             
-        p_ext_mmaq = p_ext_kpa / 0.00980665
-        t_smin = self.results.get('shell_courses', [{'t_used': 6.0}])[-1].get('t_used', 6.0)
-        N_sq = (445 * (D**3)) / (t_smin * (H**2)) if (t_smin > 0 and H > 0) else 0
+        D = self.design.get('D', 0)
+        H = self.design.get('H', 0)
+        Pe = res.get('Elastic Buckling Pressure Pe (kPa)', 0)
+        Pa = res.get('Allowable External Pressure Pa (kPa)', 0)
+        P_ext = res.get('Design External Pressure (kPa)', 0)
         
         html = f"""
-        <h3>19.1 ANNEX V (EXTERNAL PRESSURE)</h3>
+        <h3>19.1 EXTERNAL PRESSURE DESIGN (ANNEX V)</h3>
         <div class='calculation-block'>
-            <b>API 650 V.8.2.3 End Stiffener Ring Design</b><br>
-            <code>N² = (445 * D³) / (t_smin * H²)</code><br>
-            <code>N² = (445 * {D:.3f}³) / ({t_smin:.1f} * {H:.3f}²) = {N_sq:.3f}</code><br><br>
-            <i>Note: Where N² &le; 6, the tank must be stiffened for the design external pressure.</i>
+            <b>API 650 V.8.1.1 Elastic Buckling Pressure (P<sub>e</sub>)</b><br>
+            <code>Pe = [2.42 * E / (1 - &mu;&sup2;)&deg;⁷⁵] * [(t/D)&sup2;.⁵ / (L/D - 0.45&radic;(t/D))]</code><br>
+            <code>Pe = {Pe:.3f} kPa</code><br><br>
+            <b>API 650 V.8.1.2 Allowable External Pressure (P<sub>a</sub>)</b><br>
+            <code>Pa = Pe / 3 = {Pa:.3f} kPa</code><br><br>
+            <table>
+                <tr><td>Design External Pressure:</td><td>{P_ext:.3f} kPa</td></tr>
+                <tr><td>Allowable Pressure (Pa):</td><td>{Pa:.3f} kPa</td></tr>
+                <tr><td>Status:</td><td><b>{res.get('Status','-')}</b></td></tr>
+            </table>
         </div>
-        <table>
+
+        <h3>19.2 STIFFENING RING DESIGN (V.8.2)</h3>
+        <div class='calculation-block'>
+            <b>API 650 V.8.2.3 End Stiffener Factor (N&sup2;)</b><br>
+            <code>N&sup2; = (445 * D&sup3;) / (t * H&sup2;)</code><br>
+            <code>N&sup2; = (445 * {D:.1f}&sup3;) / ({res.get('Top Course Thickness (mm)',0):.1f} * {H:.1f}&sup2;) = {res.get('Bottom Stiffener Factor N2',0):.2f}</code><br><br>
+            <i>Note: If N&sup2; &le; 6, a bottom stiffener is required.</i>
+        </div>
+        """
+        
+        if res.get('Required Number of Rings', 0) > 0:
+            html += f"""
+            <div class='calculation-block'>
+                <b>Intermediate Stiffener Spacing (V.10)</b><br>
+                <tr><td>Max Spacing (L):</td><td>{res.get('Max Stiffener Spacing L (m)',0):.2f} m</td></tr><br>
+                <tr><td>Required Number of Rings:</td><td>{res.get('Required Number of Rings',0)}</td></tr>
+            </div>
+            """
+        
+        self._add_chapter("ANNEX V (EXTERNAL PRESSURE)", html)
             <tr><th colspan="2" class="section-header">External Pressure Parameters</th></tr>
             <tr><td>Design External Pressure (P_ext)</td><td>{p_ext_mmaq:.1f} mmH2O ({p_ext_kpa:.3f} kPa)</td></tr>
             <tr><td>Nominal Tank Diameter (D)</td><td>{D:.3f} m</td></tr>
