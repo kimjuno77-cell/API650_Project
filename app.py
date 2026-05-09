@@ -1652,8 +1652,11 @@ with st.container():
         'project_info': {'name': project_name, 'designer': designer_name},
         'design_data': {
             'D': D, 'H': H, 'G': G, 'P_design': P_design_mm, 
+            'P_external': P_external_mm, 'design_temp': design_temp, 'mdmt': mdmt,
             'CA': CA, 'CA_roof': CA_roof, 'CA_bottom': CA_bottom, 
-            'Shell_Method': getattr(shell_design, 'design_report_info', {}).get('Method', shell_method_ui),
+            'joint_efficiency': joint_efficiency,
+            'max_level': max_level, 'min_level': min_level,
+            'shell_method': getattr(shell_design, 'design_report_info', {}).get('Method', shell_method_ui),
             'roof_type': roof_type,
             'roof_slope': roof_slope
         },
@@ -1675,6 +1678,13 @@ with st.container():
         },
         'gov_codes': {'Wind': gov_wind_code, 'Seismic': gov_seismic_code}, # Pass codes at root
         'results': {
+            'capacities': {
+                'Gross Capacity (m3)': vol_gross_m3,
+                'Net Capacity (m3)': vol_net_m3,
+                'Vol_Net_m3': vol_net_m3,
+                'Empty Weight (kg)': W_empty_total,
+                'Operation Weight (kg)': W_op_total
+            },
             'shell_courses': shell_design.shell_courses,
             'shell_res': {'Shell Courses': shell_design.shell_courses}, # Mapper for Report_v2026/Classic checks
             'roof_res': roof_design.results if roof_design else {},

@@ -52,9 +52,10 @@ class ReportGenerator2026:
         self.generate_chapter_14_small_pressure()
         self.generate_chapter_15_loading_data()
         self.generate_chapter_16_weight_summary()
-        self.generate_chapter_17_venting()
+        self.generate_chapter_16_nozzle()
         self.generate_chapter_18_civil_loading()
-
+        self.generate_chapter_19_external_pressure()
+        
         # 2. Assemble Final HTML
         return self._assemble_full_html()
 
@@ -65,7 +66,7 @@ class ReportGenerator2026:
         body_html = ""
         
         for ch in self.chapters:
-            toc_html += f"<li><a href='#ch{ch['num']}'>CHAPTER {ch['num']}. {ch['title']}</a></li>"
+            toc_html += f"<li><a href='#ch{ch['num']}'>CHAPTER {ch['num']}. {ch['title']}</a><span class='page-num'></span></li>"
             body_html += f"<div id='ch{ch['num']}' class='chapter'>"
             body_html += f"<h1 class='chapter-title'>CHAPTER {ch['num']}. {ch['title']}</h1>"
             body_html += "<hr class='chapter-divider'>"
@@ -217,11 +218,13 @@ class ReportGenerator2026:
         .page-break { page-break-after: always; }
         .toc { padding: 60px 80px; }
         .toc h2 { color: #2d3748; margin-bottom: 30px; font-size: 2rem; }
-        .toc ul { list-style: none; padding: 0; }
+        .toc ul { list-style: none; padding: 0; counter-reset: toc-page; }
         .toc li { margin: 15px 0; display: flex; align-items: baseline; }
         .toc li::after { content: ""; flex: 1; border-bottom: 1px dotted #cbd5e0; margin: 0 10px; order: 2; }
         .toc a { text-decoration: none; color: #4a5568; font-weight: 500; order: 1; transition: color 0.2s; }
         .toc a:hover { color: #4ca1af; }
+        .toc .page-num { order: 3; color: #718096; font-family: 'Roboto Mono', monospace; font-size: 0.9rem; counter-increment: toc-page; }
+        .toc .page-num::before { content: counter(toc-page); }
 
         @media print {
             body { padding: 0; }
@@ -282,11 +285,19 @@ class ReportGenerator2026:
             </tr>
             <tr>
                 <td>Design Specific Gravity:</td><td>{d.get('G',0):.3f}</td>
-                <td>Design Pressure:</td><td>{d.get('P_design',0):.1f} mmH2O</td>
+                <td>Max. Liquid Level (H.H.L):</td><td>{d.get('max_level',0):.3f} m</td>
+            </tr>
+            <tr>
+                <td>Min. Liquid Level (L.L.L):</td><td>{d.get('min_level',0):.3f} m</td>
+                <td>Design Pressure (Int.):</td><td>{d.get('P_design',0):.1f} mmH2O</td>
             </tr>
             <tr>
                 <td>Design Temperature:</td><td>{d.get('design_temp',0):.1f} °C</td>
-                <td>External Pressure:</td><td>{d.get('P_external',0):.2f} kPa</td>
+                <td>Design Pressure (Ext.):</td><td>{d.get('P_external',0):.1f} mmH2O</td>
+            </tr>
+            <tr>
+                <td>Design Metal Temp (MDMT):</td><td>{d.get('mdmt',0):.1f} °C</td>
+                <td>Joint Efficiency:</td><td>{d.get('joint_efficiency',1.0):.2f}</td>
             </tr>
             <tr>
                 <td>Corrosion Allowance (Shell):</td><td>{d.get('CA',0):.1f} mm</td>
@@ -294,11 +305,10 @@ class ReportGenerator2026:
             </tr>
             <tr>
                 <td>Corrosion Allowance (Bottom):</td><td>{d.get('CA_bottom',0):.1f} mm</td>
-                <td>Joint Efficiency:</td><td>{d.get('joint_efficiency',1.0):.2f}</td>
+                <td>Shell Design Method:</td><td>{d.get('shell_method','-')}</td>
             </tr>
             <tr>
-                <td>Roof Type:</td><td>{d.get('roof_type','')}</td>
-                <td>Shell Design Method:</td><td>{d.get('shell_method','-')}</td>
+                <td>Roof Type:</td><td colspan="3">{d.get('roof_type','')}</td>
             </tr>
         </table>
         """
@@ -917,8 +927,8 @@ class ReportGenerator2026:
         self._add_chapter("SEISMIC DESIGN OF STORAGE TANK", html)
 
     def generate_chapter_13_anchor_bolt(self):
-        anchor = self.extended.get('anchor') or {}
-        chair = self.extended.get('anchor_chair') or {}
+        anchor = self.results.get('anchor_res') or {}
+        chair = self.results.get('anchor_chair_res') or {}
         
         status = anchor.get('Status', 'N/A')
         D = self.design.get('D', 0)
@@ -926,39 +936,50 @@ class ReportGenerator2026:
         
         html = f"<h3>13.1 ANCHOR BOLT DESIGN SUMMARY</h3>"
         
-        if status == 'Not Required':
-             html += "<div class='warning-box'>Anchors are not required based on API 650 stability criteria for Wind and Seismic loads.</div>"
+        if status == 'Anchors Not Required' or N == 0:
+             html += "<div class='warning-box'>Anchors are not required based on API 650 stability criteria.</div>"
         else:
              uplift_total = anchor.get('Net Uplift Force (kN)', 0)
              u_bolt = uplift_total / N if N > 0 else 0
+             bolt_dia = anchor.get('Bolt Diameter (mm)', 0)
              
+             # Uplift Cases
+             cases = anchor.get('Uplift_Table', [])
+             cases_rows = ""
+             for c in cases:
+                 cases_rows += f"<tr><td>{c['Case']}</td><td>{c['S_uplift']:.1f}</td><td>{c['W_resist']:.1f}</td><td><b>{c['Net_Uplift']:.1f}</b></td></tr>"
+                 
              html += f"""
-             <div style='background-color:#f8f9fa; padding:10px; margin-bottom:15px; border-left:4px solid #2c3e50;'>
-                 <b>Design Criteria (API 650 5.12)</b><br>
-                 Uplift Force per Bolt (U) = <code>[4 * Mw / (D * N)] - [W_shell + W_roof] / N</code> (Simplified Concept)<br>
-                 Actual calculated Uplift per bolt: <b>{u_bolt:.1f} kN</b>
+             <div class='calculation-block'>
+                 <b>Uplift Force Evaluation (API 650)</b><br>
+                 Uplift forces from Design Pressure, Wind, and Seismic are evaluated against Resisting Dead Loads.<br>
              </div>
+             <table>
+                 <tr><th colspan="4" class="section-header">Uplift Force Breakdown (kN)</th></tr>
+                 <tr><th>Load Case</th><th>Total Uplift Load (Load)</th><th>Resisting Weight (Resist)</th><th>Net Uplift</th></tr>
+                 {cases_rows}
+             </table>
              <table>
                  <tr><th colspan="2" class="section-header">Anchor Bolt Parameters</th></tr>
                  <tr><td>Number of Bolts (N)</td><td>{N} EA</td></tr>
-                 <tr><td>Selected Bolt Size</td><td><b>{anchor.get('Bolt Size', '-')}</b></td></tr>
+                 <tr><td>Bolt Diameter (d)</td><td><b>M{bolt_dia:.0f}</b></td></tr>
                  <tr><td>Total Net Uplift Force</td><td>{uplift_total:.1f} kN</td></tr>
                  <tr><td>Force per Bolt (U)</td><td>{u_bolt:.1f} kN</td></tr>
-                 <tr><td>Provided Bolt Area (Ab)</td><td>{anchor.get('Provided Bolt Area (mm2)', 0):.1f} mm2</td></tr>
-                 <tr><td>Allowable Tensile Stress</td><td>{anchor.get('Allowable Stress (MPa)', 105):.1f} MPa</td></tr>
+                 <tr><td>Required Bolt Area</td><td>{anchor.get('Required Bolt Area (mm2)', 0):.1f} mm²</td></tr>
              </table>
              """
              
-        if chair and chair.get('Status') != 'N/A':
+        if chair and chair.get('Status') != 'N/A' and N > 0:
             html += "<h3>13.2 ANCHOR CHAIR DIMENSIONS</h3>"
             html += f"""
             <table>
                 <tr><th>Description</th><th>Symbol</th><th>Value (mm)</th></tr>
-                <tr><td>Chair Height</td><td>h</td><td>{chair.get('Chair Height h', 0)}</td></tr>
-                <tr><td>Chair Width</td><td>b</td><td>{chair.get('Chair Width b', 0)}</td></tr>
-                <tr><td>Top Plate Thickness</td><td>c</td><td>{chair.get('Top Plate t', 0)}</td></tr>
-                <tr><td>Gusset Plate Thickness</td><td>g</td><td>{chair.get('Gusset Plate t', 0)}</td></tr>
-                <tr><td>Distance from Shell</td><td>e</td><td>{chair.get('Bolt Eccentricity e', 0)}</td></tr>
+                <tr><td>Top Plate Width</td><td>a</td><td>{chair.get('Top Plate Width (mm)', 0):.0f}</td></tr>
+                <tr><td>Top Plate Length</td><td>b</td><td>{chair.get('Top Plate Width (mm)', 0):.0f}</td></tr>
+                <tr><td>Top Plate Thickness</td><td>c</td><td>{chair.get('Top Plate Thk (mm)', 0):.0f}</td></tr>
+                <tr><td>Chair Height</td><td>h</td><td>{chair.get('Chair Height (mm)', 0):.0f}</td></tr>
+                <tr><td>Gusset Separation</td><td>g</td><td>{chair.get('Eccentricity (mm)', 0)*2:.0f}</td></tr>
+                <tr><td>Gusset Thickness</td><td>j</td><td>13</td></tr>
             </table>
             """
         
@@ -969,28 +990,39 @@ class ReportGenerator2026:
         af = self.extended.get('annex_f') or {}
         max_P = af.get('Max Design Pressure P_max (kPa)', 0)
         P_fail = af.get('Failure Pressure P_fail (kPa)', 0)
+        A_prov = af.get('Provided Area (mm2)', 0)
+        A_req = af.get('Required Area (mm2)', 0)
         
         if not af:
              html = "<p>Annex F (Small Internal Pressure) checks not performed.</p>"
         else:
              D = self.design.get('D', 0)
-             W = af.get('Total Weight W (N)', 0)
-             A_val = af.get('Participating Area A (mm2)', 0)
-             Fty = 200 # Approx or fetch if available
+             P_design_kPa = self.design.get('P_design', 0) * 0.00980665
+             W = self.results.get('weights', {}).get('W_shell_kg', 0) * 9.81 + self.results.get('weights', {}).get('W_roof_kg', 0) * 9.81
+             Fty = 200 # Assumed
              html = f"""
-             <h3>14.1 ANNEX F CALCULATIONS</h3>
-             <div style='background-color:#f8f9fa; padding:10px; margin-bottom:15px; border-left:4px solid #2c3e50;'>
-                 <b>API 650 F.4.1 Design Pressure Limits</b><br>
-                 <code>P_max = (W / (pi * D^2 / 4)) / 1000  (kPa)</code><br>
-                 <code>P_max = ({W:.1f} / (pi * {D:.3f}^2 / 4)) / 1000 = {max_P:.3f} kPa</code><br><br>
-                 <b>API 650 F.7 Calculated Failure Pressure</b><br>
-                 <code>P_fail = 0.00127 * A * Fty / D^2 + 0.000122 * W / D^2  (kPa)</code><br>
-                 <code>P_fail = 0.00127 * {A_val:.1f} * {Fty} / {D:.3f}^2 + 0.000122 * {W:.1f} / {D:.3f}^2 = {P_fail:.3f} kPa</code>
+             <h3>14.1 ANNEX F CALCULATIONS (Small Internal Pressure)</h3>
+             <div class='calculation-block'>
+                 <b>API 650 F.4.1 Design Pressure Limits (Gravity)</b><br>
+                 <code>P_max = W / (pi * D² / 4) / 1000  (kPa)</code><br>
+                 <code>P_max = {W:.1f} / (pi * {D:.3f}² / 4) / 1000 = {max_P:.3f} kPa</code><br><br>
+                 <b>API 650 F.5.1 Required Compression Area (A_req)</b><br>
+                 <code>A_req = P_net * D² / (2.04 * Fy * tan(θ))</code><br>
+                 <code>A_req = {P_design_kPa:.3f} * {D:.3f}² * 1000 / (2.04 * {Fty} * {math.tan(0.1667):.3f}) = {A_req:.1f} mm²</code><br><br>
+                 <b>API 650 5.10.2.6 Calculated Failure Pressure</b><br>
+                 <code>P_fail = 0.00127 * A * Fty / D² + 0.000122 * W_roof / D²  (kPa)</code><br>
+                 <code>P_fail = 0.00127 * {A_prov:.1f} * {Fty} / {D:.3f}² + 0.000122 * {W:.1f} / {D:.3f}² = {P_fail:.3f} kPa</code>
              </div>
              <table>
-                 <tr><td>Max Design Pressure (P_max):</td><td>{max_P:.3f} kPa</td></tr>
-                 <tr><td>Calculated Failure Pressure (P_fail):</td><td>{P_fail:.3f} kPa</td></tr>
-                 <tr><td>Frangible Joint?</td><td>{af.get('Frangible?', 'Check Detail')}</td></tr>
+                 <tr><th colspan="2" class="section-header">Annex F Design Verification</th></tr>
+                 <tr><td>Design Internal Pressure (P)</td><td>{P_design_kPa:.3f} kPa</td></tr>
+                 <tr><td>Max Design Pressure by Gravity (P_max)</td><td>{max_P:.3f} kPa</td></tr>
+                 <tr><td>Calculated Failure Pressure (P_fail)</td><td>{P_fail:.3f} kPa</td></tr>
+                 <tr><td>Top Angle Selected</td><td><b>{af.get('Top Angle', '-')}</b></td></tr>
+                 <tr><td>Required Compression Area</td><td>{A_req:.1f} mm²</td></tr>
+                 <tr><td>Provided Compression Area</td><td><b>{A_prov:.1f} mm²</b></td></tr>
+                 <tr><td>Area Verification</td><td>{'<span class="result-pass">PASS</span>' if A_prov >= A_req else '<span class="result-fail">FAIL</span>'}</td></tr>
+                 <tr><td>Frangibility Check</td><td>{af.get('Frangible?', '-')}</td></tr>
              </table>
              """
         self._add_chapter("DESIGN OF TANK FOR SMALL INTERNAL PRESSURES", html)
@@ -1305,3 +1337,35 @@ class ReportGenerator2026:
         """
         self._add_chapter("CIVIL INFORMATION LOADING DATA", html)
 
+    def generate_chapter_19_external_pressure(self):
+        p_ext_kpa = self.design.get('P_external', 0)
+        D = self.design.get('D', 0)
+        H = self.design.get('H', 0)
+        
+        if p_ext_kpa <= 0:
+            html = "<p>External pressure is not specified. Annex V is not applicable.</p>"
+            self._add_chapter("ANNEX V (EXTERNAL PRESSURE)", html)
+            return
+            
+        p_ext_mmaq = p_ext_kpa / 0.00980665
+        t_smin = self.results.get('shell_courses', [{'t_used': 6.0}])[-1].get('t_used', 6.0)
+        N_sq = (445 * (D**3)) / (t_smin * (H**2)) if (t_smin > 0 and H > 0) else 0
+        
+        html = f"""
+        <h3>19.1 ANNEX V (EXTERNAL PRESSURE)</h3>
+        <div class='calculation-block'>
+            <b>API 650 V.8.2.3 End Stiffener Ring Design</b><br>
+            <code>N² = (445 * D³) / (t_smin * H²)</code><br>
+            <code>N² = (445 * {D:.3f}³) / ({t_smin:.1f} * {H:.3f}²) = {N_sq:.3f}</code><br><br>
+            <i>Note: Where N² &le; 6, the tank must be stiffened for the design external pressure.</i>
+        </div>
+        <table>
+            <tr><th colspan="2" class="section-header">External Pressure Parameters</th></tr>
+            <tr><td>Design External Pressure (P_ext)</td><td>{p_ext_mmaq:.1f} mmH2O ({p_ext_kpa:.3f} kPa)</td></tr>
+            <tr><td>Nominal Tank Diameter (D)</td><td>{D:.3f} m</td></tr>
+            <tr><td>Tank Height (H)</td><td>{H:.3f} m</td></tr>
+            <tr><td>Min Shell Thickness (t_smin)</td><td>{t_smin:.1f} mm</td></tr>
+            <tr><td>Calculated N²</td><td><b>{N_sq:.3f}</b></td></tr>
+        </table>
+        """
+        self._add_chapter("ANNEX V (EXTERNAL PRESSURE)", html)
