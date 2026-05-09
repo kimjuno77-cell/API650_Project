@@ -1751,7 +1751,7 @@ with st.container():
     # Applied Annexes
     applied_annexes = ["Annex L (Data Sheet)"]
     if p_design_kPa > 0 : applied_annexes.append("Annex F (Internal Pressure)")
-    if P_external_kPa > 0.25: applied_annexes.append("Annex V (External Pressure)")
+    if P_external > 0.25: applied_annexes.append("Annex V (External Pressure)")
     if design_temp > 93.0: applied_annexes.append("Annex M (High Temperature)")
     is_seismic = False
     if "Mapped" in seismic_method and (Ss > 0 or S1 > 0): is_seismic = True
