@@ -295,12 +295,27 @@ class ReportGenerator2026:
                 <td>Design Metal Temp (MDMT):</td><td>{d.get('mdmt',0):.1f} °C</td>
             </tr>
             <tr>
-                <td>Corrosion Allowance:</td><td>{d.get('CA',0):.1f} mm</td>
+                <td>Corrosion Allowance (Shell):</td><td>{d.get('CA',0):.1f} mm</td>
                 <td>Shell Design Method:</td><td>{d.get('shell_method','-')}</td>
+            </tr>
+            <tr>
+                <td>Corrosion Allowance (Roof):</td><td>{d.get('CA_roof',0):.1f} mm</td>
+                <td>Corrosion Allowance (Bottom):</td><td>{d.get('CA_bottom',0):.1f} mm</td>
             </tr>
             <tr>
                 <td>Material (Shell):</td><td>{d.get('mat_shell','-')}</td>
                 <td>Joint Efficiency:</td><td>{d.get('joint_efficiency',1.0):.2f}</td>
+            </tr>
+            <tr>
+                <td>Material (Roof):</td><td>{d.get('roof_material','-')}</td>
+                <td>Material (Bottom):</td><td>{d.get('mat_bottom','-')}</td>
+            </tr>
+            <tr>
+                <td>Material (Annular):</td><td>{d.get('mat_annular','-')}</td>
+                <td>Roof Type:</td><td>{d.get('roof_type','-')}</td>
+            </tr>
+            <tr>
+                <td colspan="4"><b>Applicable Annexes:</b>&nbsp;&nbsp;{', '.join(d.get('Applied_Annexes', [])) if d.get('Applied_Annexes') else '-'}</td>
             </tr>
         </table>
         """
