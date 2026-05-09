@@ -39,3 +39,5 @@ scratch/
 
 # Ignore API 650 specific report folders
 *_files/
+
+!requirements.txt
