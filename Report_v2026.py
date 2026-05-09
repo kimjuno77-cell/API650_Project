@@ -738,64 +738,93 @@ class ReportGenerator2026:
         self._add_chapter("WIND GIRDER DESIGN", html)
 
     def generate_chapter_8_cone_roof(self):
-        roof_res = (self.results.get('roof_res') or {}).get('Roof Plate', {})
+        roof_res = self.results.get('roof_res', {})
+        plate_res = roof_res.get('Roof Plate', {})
+        lc_res = roof_res.get('Load Combinations', {})
         d = self.design
         D = d.get('D', 0)
         roof_type = d.get('roof_type', '')
         CA = d.get('CA_roof', 0)
+        slope = d.get('roof_slope', 0.0625)
+        theta_rad = math.atan(slope)
+        sin_theta = math.sin(theta_rad)
+        cos_theta = math.cos(theta_rad)
         
-        # Load Summary (PDF Page 17)
-        DL = (self.extended.get('weights') or {}).get('W_roof_kg', 0) * 9.81 / (3.14159 * (D/2)**2) if D > 0 else 0 # Pa
-        LL = d.get('live_load', 0) * 1000 # kPa to Pa
-        SL = d.get('snow_load', 0) * 1000 # kPa to Pa
-        Pi = d.get('P_design', 0) * 9.81  # mmAq to Pa
-        Pe = d.get('P_external', 0) * 1000 # kPa to Pa
+        # Pressures/Loads in kPa
+        Pi = d.get('P_design', 0) * 0.00980665
+        Pe = d.get('P_external', 0) * 0.00980665
+        LL = d.get('live_load', 1.0)
+        SL = d.get('snow_load', 0)
+        DL_add = d.get('dead_load_add', 0)
         
-        L_comb = max(LL, SL)
+        # Self Weight
+        t_use = plate_res.get('Used Thk', 6.0)
+        DL_plate = (t_use / 1000.0) * 7850.0 * 9.81 / 1000.0 # kPa
+        DL_total = DL_add + DL_plate
+        
+        B_max = lc_res.get('Max_B_kPa', 1.2)
         
         html = f"""
-        <h3>8.1 DESIGN LOAD SUMMARY (Pa)</h3>
+        <h3>8.1 DESIGN LOAD SUMMARY (kPa)</h3>
         <table>
-            <tr><th>Load Case</th><th>Value (Pa)</th><th>Value (kPa)</th></tr>
-            <tr><td>Dead Load (DL)</td><td>{DL:.1f}</td><td>{DL/1000:.3f}</td></tr>
-            <tr><td>Live Load (Lr)</td><td>{LL:.1f}</td><td>{LL/1000:.3f}</td></tr>
-            <tr><td>Snow Load (S)</td><td>{SL:.1f}</td><td>{SL/1000:.3f}</td></tr>
-            <tr><td>Internal Pressure (Pi)</td><td>{Pi:.1f}</td><td>{Pi/1000:.3f}</td></tr>
-            <tr><td>External Pressure (Pe)</td><td>{Pe:.1f}</td><td>{Pe/1000:.3f}</td></tr>
+            <tr><th>Load Case</th><th>Formula / Description</th><th>Value (kPa)</th></tr>
+            <tr><td>Dead Load (DL)</td><td>DL_add + (t_nom * rho_s * g) = {DL_add:.2f} + ({t_use}*7.85*0.00981)</td><td>{DL_total:.3f}</td></tr>
+            <tr><td>Roof Live Load (Lr)</td><td>User Specified</td><td>{LL:.2f}</td></tr>
+            <tr><td>Snow Load (S)</td><td>User Specified</td><td>{SL:.2f}</td></tr>
+            <tr><td>Internal Pressure (Pi)</td><td>{d.get('P_design',0):.1f} mmH2O * 0.00981</td><td>{Pi:.3f}</td></tr>
+            <tr><td>External Pressure (Pe)</td><td>{d.get('P_external',0):.1f} mmH2O * 0.00981</td><td>{Pe:.3f}</td></tr>
         </table>
 
         <h3>8.2 LOAD COMBINATIONS (API 650 5.2.2)</h3>
-        <table>
-            <tr><th>Combination</th><th>Calculation</th><th>Total Load (Pa)</th></tr>
-            <tr><td>(1) DL + Lr/S</td><td>{DL:.1f} + {L_comb:.1f}</td><td>{DL + L_comb:.1f}</td></tr>
-            <tr><td>(2) DL + Pe + 0.4(Lr/S)</td><td>{DL:.1f} + {Pe:.1f} + 0.4*{L_comb:.1f}</td><td>{DL + Pe + 0.4*L_comb:.1f}</td></tr>
-            <tr><td>(3) DL + Pi + 0.4(Lr/S)</td><td>{DL:.1f} + {Pi:.1f} + 0.4*{L_comb:.1f}</td><td>{DL + Pi + 0.4*L_comb:.1f}</td></tr>
-        </table>
+        <div class='calculation-block'>
+            <b>LC e.1:</b> DL + (Lr or S) + 0.4*Pe = {DL_total:.3f} + {max(LL, SL):.2f} + 0.4*{Pe:.3f} = <b>{lc_res.get('LC_e1_Lr', 0):.3f} kPa</b><br>
+            <b>LC e.2:</b> DL + Pe + 0.4*(Lr or S) = {DL_total:.3f} + {Pe:.3f} + 0.4*{max(LL, SL):.2f} = <b>{lc_res.get('LC_e2_Lr', 0):.3f} kPa</b><br>
+            <b>Governing Load (B):</b> max(LC e.1, LC e.2) = <b>{B_max:.3f} kPa</b>
+        </div>
 
-        <h3>8.3 ROOF PLATE THICKNESS</h3>
+        <h3>8.3 ROOF PLATE THICKNESS CALCULATION</h3>
         """
         
         if "Self-Supported" in roof_type:
-            slope = d.get('roof_slope', 0.0625)
-            theta = math.atan(slope)
-            t_min = D / (4.8 * math.sin(theta)) if theta > 0 else 0
-            t_use = roof_res.get('Nominal Thickness', roof_res.get('t_used', 6))
+            t_min_geom = D / (4.8 * sin_theta) if sin_theta > 0 else 0
+            
+            # F.6.1 Internal Pressure Check
+            # t = P * R / (cos(theta) * Sd * E)
+            Rt = D / (2 * sin_theta) if sin_theta > 0 else 0 # Radius of curvature approx
+            Sd_roof = 155.0 # default for 304
+            t_req_internal = (Pi * (D/2)) / (cos_theta * Sd_roof * 1.0) * 1000.0 / 1000.0 # Placeholder logic matching PDF
+            
+            # V.7.2.1 External Pressure (Buckling)
+            # t_cone = 83 * D / sin(theta) * sqrt(Pr / (1.72 * E))
+            E_mod = 193000.0 # MPa
+            t_req_buckling = 83.0 * D / sin_theta * math.sqrt(B_max / (1.72 * E_mod)) if sin_theta > 0 else 0
+            
+            t_req_gov = max(t_min_geom, t_req_internal, t_req_buckling, 5.0) + CA
             
             html += f"""
-            <div style='background-color:#f8f9fa; padding:10px; margin-bottom:15px; border-left:4px solid #2c3e50;'>
-                <b>API 650 5.10.5 Self-Supported Cone Roofs</b><br>
-                Minimum Thickness (t_min): <code>D / (4.8 * sin(theta)) + CA</code><br>
-                <code>t_min = {D:.3f} / (4.8 * sin({math.degrees(theta):.1f}*)) + {CA:.1f} = {t_min+CA:.2f} mm</code><br>
-                Provided Thickness: <b>{t_use} mm</b>
+            <div class='calculation-block'>
+                <b>1) API 650 5.10.5.1 Minimum Thickness (Geometric):</b><br>
+                <code>t_min = D / (4.8 * sin(theta)) + CA</code><br>
+                <code>t_min = {D:.3f} / (4.8 * {sin_theta:.4f}) + {CA:.1f} = {t_min_geom+CA:.2f} mm</code><br><br>
+                
+                <b>2) API 650 Annex F.6.1 Internal Pressure:</b><br>
+                <code>t_id = (Pi * R) / (cos(theta) * Sd * E) + CA</code><br>
+                <code>t_id = ({Pi:.3f} * {D/2:.3f}) / ({cos_theta:.4f} * {Sd_roof} * 1.0) = {t_req_internal:.2f} mm</code><br><br>
+                
+                <b>3) API 650 Annex V.7.2.1 External Pressure (Buckling):</b><br>
+                <code>t_cone = 83 * D / sin(theta) * sqrt(Pr / (1.72 * E)) + CA</code><br>
+                <code>t_cone = 83 * {D:.3f} / {sin_theta:.4f} * sqrt({B_max:.3f} / (1.72 * {E_mod})) = {t_req_buckling:.2f} mm</code><br><br>
+                
+                <b>Result:</b> Required Thickness = max(t_min, t_id, t_cone, 5mm) = <b>{t_req_gov:.2f} mm</b><br>
+                Provided Thickness = <b>{t_use:.2f} mm</b> &nbsp;&nbsp; <b>[ {plate_res.get('Status','-')} ]</b>
             </div>
             """
         else:
-            t_use = roof_res.get('Nominal Thickness', roof_res.get('t_used', 5))
             html += f"""
-            <div style='background-color:#f8f9fa; padding:10px; margin-bottom:15px; border-left:4px solid #2c3e50;'>
+            <div class='calculation-block'>
                 <b>API 650 5.10.4 Supported Cone Roofs</b><br>
-                Minimum Thickness: 5 mm (3/16 in.) + CA<br>
-                Provided Thickness: <b>{t_use} mm</b>
+                Minimum Thickness: 5 mm (3/16 in.) + CA = <b>{5.0 + CA:.1f} mm</b><br>
+                Provided Thickness: <b>{t_use:.2f} mm</b> &nbsp;&nbsp; <b>[ {plate_res.get('Status','-')} ]</b>
             </div>
             """
             

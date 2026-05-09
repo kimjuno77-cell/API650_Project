@@ -918,14 +918,23 @@ if roof_type == "External Floating Roof":
 
 else:
     # --- Standard Cone/Dome Roof Design ---
-    # Use selected type and slope
-    # Use local var dome_radius_input if defined, else None? 
     dr_val = locals().get('dome_radius_input', None)
-    
     roof_design = RoofDesign(D, roof_type, roof_slope, CA_roof, roof_material, 6.0, dome_radius=dr_val)
-    roof_design.check_roof_plate(total_load_kPa=(live_load + snow_load + dead_load_add + 0.0)) # Approximate check
-    roof_design.run_design() # Run standard design (which might repeat check)
-    W_roof_kg, W_roof_N = roof_design.calculate_roof_weight()
+    
+    # Pressures in kPa
+    Pi_kPa = P_design_mm * 0.00980665
+    Pe_kPa = P_external_mm * 0.00980665
+    
+    # Calculate approximate plate weight for DL input (kN/m2 = kPa)
+    plate_wt_kPa = (roof_design.t_used / 1000.0) * 7850.0 * 9.81 / 1000.0
+    DL_total_kPa = dead_load_add + plate_wt_kPa
+    
+    W_plates_kg, W_plates_N = roof_design.calculate_roof_weight()
+    W_roof_kN_est = W_plates_N / 1000.0
+    
+    # Run comprehensive design
+    roof_design_res = roof_design.run_full_design(DL_total_kPa, live_load, snow_load, Pe_kPa, Pi_kPa, W_roof_kN_est)
+    W_roof_kg, W_roof_N = W_plates_kg, W_plates_N
     
     # Structure Design (If Supported)
     struct_data = {}

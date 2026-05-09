@@ -14,7 +14,11 @@ class RoofDesign:
         self.material = material if material else 'A 283 C'
         self.t_used = float(thickness_used) if thickness_used else 0.0
         self.dome_radius = float(dome_radius) if dome_radius else (0.8 * self.D) # Default to 0.8D
-        self.results = {}
+        self.results = {
+            'Roof Plate': {},
+            'Compression Ring': {},
+            'Load Combinations': {}
+        }
 
     def get_material_stress(self):
         props = get_material_properties(self.material)
@@ -100,17 +104,9 @@ class RoofDesign:
                     # Let's check the original code again. 
                     # Original code:
                     # if 'self-supported cone': ...
-                    # elif 'dome' ... : ...
-                    # No else block for Supported? 
-                    # Supported implies structural support, so plate only needs t_min_std = 5.0 usually.
-                    
-                    # Implementation detail:
-                    # If switched to Supported, we just set t_min_std = 5.0 (plus CA handled later).
-                    t_min_std = 5.0 
+                    t_min_std = 5.0
                     self.results['Info'] = "Design changed to Supported Cone Roof. Structure calculation required."
-            
-            if t_min_std > 13.0 and 'self-supported' in self.roof_type.lower():
-                 self.results['Warning'] = f"Calculated Thickness {t_min_std:.1f}mm exceeds 13mm limit for Self-Supported Cone." # Should be caught above but safe guard
+            self.results['Roof Plate']['Status'] = "N/A"
 
         # Self-Supported Dome/Umbrella Roof (API 650 5.10.6)
         elif 'dome' in self.roof_type.lower() or 'umbrella' in self.roof_type.lower():
@@ -157,6 +153,60 @@ class RoofDesign:
             'Used Thk': self.t_used,
             'Status': status
         }
+        return t_min_std
+
+    def calculate_load_combinations(self, DL_kPa, Lr_kPa, S_kPa, Pe_kPa):
+        """
+        API 650 5.2.2 Load Combinations for Roof.
+        DL: Dead Load
+        Lr: Roof Live Load
+        S: Snow Load
+        Pe: External Pressure
+        """
+        Fpe = 0.4
+        LC_e1_Lr = DL_kPa + Lr_kPa + Fpe * Pe_kPa
+        LC_e1_S = DL_kPa + S_kPa + Fpe * Pe_kPa
+        LC_e2_Lr = DL_kPa + Pe_kPa + 0.4 * Lr_kPa
+        LC_e2_S = DL_kPa + Pe_kPa + 0.4 * S_kPa
+        B = max(LC_e1_Lr, LC_e1_S, LC_e2_Lr, LC_e2_S)
+        self.results['Load Combinations'] = {
+            'LC_e1_Lr': LC_e1_Lr, 'LC_e1_S': LC_e1_S,
+            'LC_e2_Lr': LC_e2_Lr, 'LC_e2_S': LC_e2_S,
+            'Max_B_kPa': B
+        }
+        return B
+
+    def check_compression_ring(self, Pi_kPa, W_roof_kN, Sd, Fy):
+        """
+        API 650 5.10.5.2 & F.5 / V.7.2 Roof-to-Shell Joint Area
+        """
+        theta = math.atan(self.slope)
+        tan_theta = math.tan(theta)
+        # 1. Required Area for Internal Pressure (F.5.1)
+        # DLR = Total Roof Weight (kN)
+        DLR = W_roof_kN
+        numerator_F = (self.D**2) * (Pi_kPa - 0.00127 * DLR / (self.D**2))
+        denominator_F = (1.27 * Fy * tan_theta)
+        A_req_internal = (numerator_F / denominator_F) * 1000.0 if denominator_F > 0 else 0
+        # 2. Required Area for External Pressure (5.10.5.2 and V.7.2)
+        B_kPa = self.results['Load Combinations'].get('Max_B_kPa', 1.2)
+        Fa = 0.6 * Fy
+        A_req_external = (125.0 * B_kPa * (self.D**2)) / (Fa * tan_theta) if tan_theta > 0 else 0
+        A_req_gov = max(A_req_internal, A_req_external)
+        self.results['Compression Ring'] = {
+            'A_req_internal_mm2': A_req_internal,
+            'A_req_external_mm2': A_req_external,
+            'A_req_gov_mm2': A_req_gov,
+            'Fy': Fy, 'Tan_Theta': tan_theta
+        }
+        return A_req_gov
+
+    def run_full_design(self, DL_kPa, Lr_kPa, S_kPa, Pe_kPa, Pi_kPa, W_roof_kN):
+        Sd, Fy, E_mod = self.get_material_stress()
+        B_max = self.calculate_load_combinations(DL_kPa, Lr_kPa, S_kPa, Pe_kPa)
+        t_min_std = self.check_roof_plate(B_max)
+        A_req = self.check_compression_ring(Pi_kPa, W_roof_kN, Sd, Fy)
+        return self.results
 
     def check_frangibility(self, W_shell_kg, W_roof_plates_kg, W_roof_struct_kg, area_participating_mm2):
         """
