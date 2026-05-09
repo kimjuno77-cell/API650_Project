@@ -102,31 +102,135 @@ class ReportGenerator2026:
 
     def _get_css(self):
         return """
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; line-height: 1.4; color: #333; margin: 0; padding: 20px; }
-        h1, h2, h3 { color: #2c3e50; }
-        .chapter-title { text-align: center; border-bottom: 2px solid #2c3e50; padding-bottom: 10px; margin-top: 50px; }
-        .chapter-divider { border: 0; height: 1px; background: #333; margin-bottom: 30px; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&family=Roboto+Mono:wght@400;500&display=swap');
+        
+        body { 
+            font-family: 'Inter', sans-serif; 
+            line-height: 1.6; 
+            color: #1a202c; 
+            margin: 0; 
+            padding: 0; 
+            background-color: #ffffff;
+        }
+        
+        .cover-page { 
+            height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+            justify-content: center; 
+            align-items: center; 
+            background: linear-gradient(135deg, #2c3e50 0%, #4ca1af 100%);
+            color: white;
+            text-align: center;
+        }
+        .cover-page h1 { font-size: 3rem; margin-bottom: 0.5rem; letter-spacing: -1px; }
+        .cover-page h2 { font-size: 1.5rem; font-weight: 300; opacity: 0.9; }
+        .cover-table { 
+            width: 50%; 
+            margin-top: 50px; 
+            background: rgba(255,255,255,0.1); 
+            backdrop-filter: blur(10px);
+            padding: 20px;
+            border-radius: 12px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        .cover-table td { color: white; border: none; text-align: left; padding: 8px; font-size: 1.1rem; }
+        
+        .chapter { padding: 60px 80px; }
+        .chapter-title { 
+            font-size: 2.2rem; 
+            color: #2d3748; 
+            margin-bottom: 30px; 
+            border-left: 10px solid #4ca1af;
+            padding-left: 20px;
+            text-transform: uppercase;
+        }
+        .chapter-divider { border: 0; height: 2px; background: #e2e8f0; margin-bottom: 40px; }
+        
+        h3 { font-size: 1.4rem; color: #4a5568; margin-top: 40px; border-bottom: 2px solid #edf2f7; padding-bottom: 8px; }
+        h4 { font-size: 1.1rem; color: #718096; margin-top: 25px; }
+
+        table { 
+            width: 100%; 
+            border-collapse: separate; 
+            border-spacing: 0;
+            margin: 20px 0; 
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            border: 1px solid #e2e8f0;
+        }
+        th { 
+            background-color: #f7fafc; 
+            color: #4a5568; 
+            font-weight: 600; 
+            padding: 12px; 
+            text-align: left;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        td { 
+            padding: 12px; 
+            border-bottom: 1px solid #edf2f7;
+            color: #2d3748;
+        }
+        tr:last-child td { border-bottom: none; }
+        tr:hover { background-color: #f8fafc; }
+
+        .section-header { 
+            background-color: #2d3748 !important; 
+            color: white !important; 
+            font-weight: 700; 
+            text-transform: uppercase; 
+            letter-spacing: 1px;
+            font-size: 0.85rem;
+        }
+
+        code { 
+            font-family: 'Roboto Mono', monospace; 
+            background: #f1f5f9; 
+            padding: 2px 6px; 
+            border-radius: 4px; 
+            color: #d53f8c;
+            font-size: 0.95rem;
+        }
+        
+        .calculation-block {
+            background-color: #f8fafc;
+            border-left: 4px solid #4ca1af;
+            padding: 20px;
+            margin: 20px 0;
+            border-radius: 0 8px 8px 0;
+        }
+
+        .result-pass { color: #38a169; font-weight: 700; }
+        .result-fail { color: #e53e3e; font-weight: 700; }
+        .warning-box { 
+            background-color: #fffaf0; 
+            border: 1px solid #feebc8; 
+            color: #c05621; 
+            padding: 15px; 
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
         .page-break { page-break-after: always; }
-        
-        table { width: 100%; border-collapse: collapse; margin-bottom: 15px; font-size: 10pt; }
-        th, td { border: 1px solid #ddd; padding: 6px; text-align: center; }
-        th { background-color: #f2f2f2; font-weight: bold; }
-        .left-align { text-align: left; }
-        .section-header { background-color: #e8eaeb; text-align: left; font-weight: bold; padding: 8px; }
-        
-        .cover-page { text-align: center; padding-top: 200px; height: 90vh; }
-        .cover-table { width: 60%; margin: 50px auto; border: none; }
-        .cover-table td { border: none; text-align: left; padding: 10px; font-size: 14pt; }
-        
-        .toc { padding: 40px; }
-        .toc ul { list-style-type: none; padding: 0; }
-        .toc li { margin: 10px 0; border-bottom: 1px dotted #ccc; }
-        .toc a { text-decoration: none; color: #333; font-weight: bold; font-size: 12pt; display: block; width: 100%; }
-        
-        .result-pass { color: green; font-weight: bold; }
-        .result-fail { color: red; font-weight: bold; }
-        .warning-box { background-color: #fff3cd; color: #856404; padding: 10px; border: 1px solid #ffeeba; margin: 10px 0; }
+        .toc { padding: 60px 80px; }
+        .toc h2 { color: #2d3748; margin-bottom: 30px; font-size: 2rem; }
+        .toc ul { list-style: none; padding: 0; }
+        .toc li { margin: 15px 0; display: flex; align-items: baseline; }
+        .toc li::after { content: ""; flex: 1; border-bottom: 1px dotted #cbd5e0; margin: 0 10px; order: 2; }
+        .toc a { text-decoration: none; color: #4a5568; font-weight: 500; order: 1; transition: color 0.2s; }
+        .toc a:hover { color: #4ca1af; }
+
+        @media print {
+            body { padding: 0; }
+            .chapter { padding: 40px; }
+            .cover-page { background: white; color: black; border: 2px solid #2c3e50; height: 95vh; }
+            .cover-table td { color: black; }
+            .cover-page h1 { color: #2c3e50; }
+        }
         """
+
 
     # --- CHAPTER IMPLEMENTATIONS (Placeholders for now) ---
     # --- CHAPTER IMPLEMENTATIONS ---
@@ -242,15 +346,15 @@ class ReportGenerator2026:
         </table>
         <div style='background-color:#f8f9fa; padding:10px; margin-bottom:15px; border-left:4px solid #2c3e50;'>
             <b>Volume Calculations</b><br>
-            <code>Storage Capacity  = π/4 × D² × H        = π/4 × {D:.3f}² × {H:.3f} = {geo_vol:.1f} m³ ({geo_vol*1000:.0f} liters)</code><br>
-            <code>Nominal Capacity  = π/4 × D² × H.L.L    = π/4 × {D:.3f}² × {max_level:.3f} = {nom_vol:.1f} m³</code><br>
-            <code>Net Work Capacity = π/4 × D² × (H.L.L - L.L.L) = π/4 × {D:.3f}² × ({max_level:.3f}-{min_level:.3f}) = {net_vol:.1f} m³</code>
+            <code>Storage Capacity  = pi/4 * D^2 * H        = pi/4 * {D:.3f}^2 * {H:.3f} = {geo_vol:.1f} m^3 ({geo_vol*1000:.0f} liters)</code><br>
+            <code>Nominal Capacity  = pi/4 * D^2 * H.L.L    = pi/4 * {D:.3f}^2 * {max_level:.3f} = {nom_vol:.1f} m^3</code><br>
+            <code>Net Work Capacity = pi/4 * D^2 * (H.L.L - L.L.L) = pi/4 * {D:.3f}^2 * ({max_level:.3f}-{min_level:.3f}) = {net_vol:.1f} m^3</code>
         </div>
         <table>
             <tr><th colspan="2" class="section-header">Capacity Summary</th></tr>
-            <tr><td>Storage Capacity</td><td>{geo_vol:.1f} m³  ({geo_vol*1000:.0f} liters)</td></tr>
-            <tr><td>Nominal Capacity (π/4 × D² × H.L.L)</td><td>{nom_vol:.1f} m³</td></tr>
-            <tr><td>Net Working Capacity (π/4 × D² × (H.L.L-L.L.L))</td><td>{net_vol:.1f} m³</td></tr>
+            <tr><td>Storage Capacity</td><td>{geo_vol:.1f} m^3  ({geo_vol*1000:.0f} liters)</td></tr>
+            <tr><td>Nominal Capacity (pi/4 * D^2 * H.L.L)</td><td>{nom_vol:.1f} m^3</td></tr>
+            <tr><td>Net Working Capacity (pi/4 * D^2 * (H.L.L-L.L.L))</td><td>{net_vol:.1f} m^3</td></tr>
             <tr><td>Equivalent Barrels (BBL)</td><td>{net_vol * 6.2898:.1f} BBL</td></tr>
         </table>
 
@@ -309,9 +413,38 @@ class ReportGenerator2026:
         method_name = shell_res.get('Method', '1-Foot Method')
         is_vdm = 'VDM' in method_name or 'Variable' in method_name
         
-        html = f"<h3>3.1 SHELL THICKNESS CALCULATION</h3>"
-        html += f"<p><b>Design Method:</b> {method_name}</p>"
-        
+        P_i = self.design.get('P_design', 0) * 0.00980665  # mmAq -> kPa
+
+        html = f"""
+        <h3>3.1 INPUT SUMMARY</h3>
+        <table>
+            <tr><th colspan="5" class="section-header">Shell Course Input Data</th></tr>
+            <tr><th>Course</th><th>Course Height (m)</th><th>H (m)</th><th>t used (mm)</th><th>CA (mm)</th></tr>
+        """
+        for c in courses:
+            html += f"<tr><td>{c.get('Course','-')}</td><td>{c.get('Width',0):.3f}</td><td>{c.get('H_eff_d',0):.3f}</td><td>{c.get('t_used',c.get('t_use',0))}</td><td>{CA:.2f}</td></tr>"
+        html += "</table>"
+
+        html += f"""
+        <h3>3.2 SHELL DESIGN SUMMARY</h3>
+        <table>
+            <tr>
+                <th>Course</th><th>Material</th>
+                <th>S<sub>d</sub> (MPa)</th><th>S<sub>t</sub> (MPa)</th>
+                <th>t<sub>d</sub> (mm)</th><th>t<sub>t</sub> (mm)</th>
+                <th>t<sub>min</sub> (mm)</th><th>t<sub>use</sub> (mm)</th>
+            </tr>
+        """
+        for c in courses:
+            t_use = c.get('t_used', c.get('t_use', 0))
+            html += f"""<tr>
+                <td>{c.get('Course','-')}</td><td>{c.get('Material','-')}</td>
+                <td>{c.get('Sd',0):.0f}</td><td>{c.get('St',0):.0f}</td>
+                <td>{c.get('td',0):.2f}</td><td>{c.get('tt',0):.2f}</td>
+                <td>5</td><td><b>{t_use}</b></td>
+            </tr>"""
+        html += "</table>"
+
         html += "<div style='background-color:#f8f9fa; padding:10px; margin-bottom:15px; border-left:4px solid #2c3e50;'>"
         if courses and not is_vdm:
             html += "<b>API 650 5.6.3.2 Design Shell Thickness (1-Foot Method)</b><br>"
@@ -321,61 +454,53 @@ class ReportGenerator2026:
             
             for c in courses:
                 H_d = c.get('H_eff_d', 0)
+                H_t = c.get('H_eff_t', H_d)  # Test effective height
                 Sd = c.get('Sd', 0)
                 St = c.get('St', 0)
                 td = c.get('td', 0)
                 tt = c.get('tt', 0)
+                # Recalculate H_eff for display matching PDF: H = base_H + P_i/(9.8*G)
+                base_H = c.get('H_base', H_d - P_i / (9.8 * G) if G > 0 else H_d)
+                P_i_kpa = P_i
+                H_eff_display = base_H + P_i_kpa / (9.8 * G) if G > 0 else H_d
+                H_t_display  = base_H + 1.25 * P_i_kpa / (9.8 * 1.0)
                 html += f"<b>[Course {c.get('Course')}]</b><br>"
-                html += f"<code>td = [4.9 * {D:.3f} * ({H_d:.3f} - 0.3) * {G:.3f}] / ({Sd:.1f} * {E:.2f}) + {CA:.1f} = {td:.3f} mm</code><br>"
-                html += f"<code>tt = [4.9 * {D:.3f} * ({H_d:.3f} - 0.3)] / ({St:.1f}) = {tt:.3f} mm</code><br><br>"
-                
+                html += f"<code>H = {base_H:.3f} + {P_i_kpa:.2f} / (9.8 * {G:.2f}) = <b>{H_eff_display:.4f} m</b></code><br>"
+                html += f"<code>t<sub>d</sub> = 4.9 * {D:.3f} * ({H_eff_display:.4f} - 0.3) * {G:.2f} / ({Sd:.1f} * {E:.2f}) + {CA:.1f} = <b>{td:.2f} mm</b></code><br>"
+                html += f"<code>H_t = {base_H:.3f} + 1.25 * {P_i_kpa:.2f} / (9.8 * 1.0) = {H_t_display:.4f} m</code><br>"
+                html += f"<code>t<sub>t</sub> = 4.9 * {D:.3f} * ({H_t_display:.4f} - 0.3) / ({St:.1f} * {E:.2f}) = <b>{tt:.2f} mm</b></code><br><br>"
+
+
         elif courses and is_vdm:
             html += "<b>API 650 5.6.4 Variable Design Point Method (VDM)</b><br>"
-            html += "<code>td = [1.06 - (0.0696 * D / H) * sqrt(H / Sd)] * (4.9 * H * D * G) / (Sd * E) + CA</code><br><br>"
-            
             for c in courses:
                 H_d = c.get('H_eff_d', 0)
                 Sd = c.get('Sd', 0)
                 St = c.get('St', 0)
                 td = c.get('td', 0)
-                term1 = math.sqrt(H_d / Sd) if Sd > 0 else 0
-                term2 = (0.0696 * D / H_d) * term1 if H_d > 0 else 0
-                base_t = (4.9 * H_d * D * G) / (Sd * E) if (Sd * E) > 0 else 0
-                
+                tt = c.get('tt', 0)
+                t_use = c.get('t_used', c.get('t_use', 0))
                 html += f"<b>[Course {c.get('Course')}]</b><br>"
-                html += f"<code>td = [1.06 - {term2:.4f}] * {base_t:.3f} + {CA:.1f} = {td:.3f} mm</code><br>"
-                html += f"<code>tt substitution omited for brevity...</code><br><br>"
+                html += f"<code>H<sub>eff</sub> = {H_d:.4f} m, t<sub>d</sub> = {td:.3f} mm, t<sub>t</sub> = {tt:.3f} mm &rarr; t<sub>use</sub> = <b>{t_use} mm</b></code><br><br>"
         html += "</div>"
-            
-        rows_html = ""
-        for c in courses:
-            rows_html += f"""
-            <tr>
-                <td>{c.get('Course', '-')}</td>
-                <td>{c.get('Width', 0):.0f}</td>
-                <td>{c.get('Material', '-')}</td>
-                <td>{c.get('td', 0):.2f}</td>
-                <td>{c.get('tt', 0):.2f}</td>
-                <td><b>{c.get('t_used', c.get('t_use', 0)):.2f}</b></td>
-                <td>{c.get('Weight', 0):.0f}</td>
-            </tr>
-            """
-            
+
         html += f"""
-        <h3>3.2 SHELL COURSE ARRANGEMENT</h3>
+        <h3>3.3 SHELL COURSE ARRANGEMENT & WEIGHT</h3>
         <table>
             <tr>
-                <th>Course</th>
-                <th>Width (mm)</th>
-                <th>Material</th>
-                <th>Min. td (mm)</th>
-                <th>Min. tt (mm)</th>
-                <th>Provided (mm)</th>
-                <th>Weight (kg)</th>
+                <th>Course</th><th>Width (m)</th><th>Material</th>
+                <th>t<sub>d</sub> (mm)</th><th>t<sub>t</sub> (mm)</th>
+                <th>t<sub>use</sub> (mm)</th><th>Weight (kg)</th>
             </tr>
-            {rows_html}
+        """
+        for c in courses:
+            html += f"""<tr>
+                <td>{c.get('Course','-')}</td><td>{c.get('Width',0):.3f}</td><td>{c.get('Material','-')}</td>
+                <td>{c.get('td',0):.2f}</td><td>{c.get('tt',0):.2f}</td>
+                <td><b>{c.get('t_used',c.get('t_use',0))}</b></td><td>{c.get('Weight',0):.0f}</td>
+            </tr>"""
+        html += f"""
         </table>
-        
         {self.extended.get('shell_svg', '')}
         """
         self._add_chapter("SHELL PLATE DESIGN", html)
@@ -478,11 +603,11 @@ class ReportGenerator2026:
             <div style='background-color:#f8f9fa; padding:10px; margin-bottom:15px; border-left:4px solid #2c3e50;'>
                 <b>API 650 5.9.6.1 Top Wind Girder Required Section Modulus</b><br>
                 <code>Z = (D^2 * H2) / 17</code><br>
-                <code>Z = ({D:.3f}^2 * {H2:.3f}) / 17 = {Z_req:.2f} cm³</code>
+                <code>Z = ({D:.3f}^2 * {H2:.3f}) / 17 = {Z_req:.2f} cm^3</code>
             </div>
             <table>
-                <tr><td>Required Modulus (Z_req):</td><td>{Z_req:.2f} cm³</td></tr>
-                <tr><td>Provided Modulus (Z_act):</td><td>{top.get('Z_act_cm3',0):.2f} cm³</td></tr>
+                <tr><td>Required Modulus (Z_req):</td><td>{Z_req:.2f} cm^3</td></tr>
+                <tr><td>Provided Modulus (Z_act):</td><td>{top.get('Z_act_cm3',0):.2f} cm^3</td></tr>
                 <tr><td>Check:</td><td class='{ "result-pass" if top.get('Status')=="OK" else "result-fail" }'>{top.get('Status','-')}</td></tr>
             </table>
             """
@@ -515,42 +640,67 @@ class ReportGenerator2026:
 
     def generate_chapter_8_cone_roof(self):
         roof_res = (self.results.get('roof_res') or {}).get('Roof Plate', {})
-        D = self.design.get('D', 0)
-        roof_type = self.design.get('roof_type', '')
+        d = self.design
+        D = d.get('D', 0)
+        roof_type = d.get('roof_type', '')
+        CA = d.get('CA_roof', 0)
         
-        html = f"<h3>8.1 CONE ROOF PLATE THICKNESS ({roof_type})</h3>"
+        # Load Summary (PDF Page 17)
+        DL = (self.extended.get('weights') or {}).get('W_roof_kg', 0) * 9.81 / (3.14159 * (D/2)**2) if D > 0 else 0 # Pa
+        LL = d.get('live_load', 0) * 1000 # kPa to Pa
+        SL = d.get('snow_load', 0) * 1000 # kPa to Pa
+        Pi = d.get('P_design', 0) * 9.81  # mmAq to Pa
+        Pe = d.get('P_external', 0) * 1000 # kPa to Pa
+        
+        L_comb = max(LL, SL)
+        
+        html = f"""
+        <h3>8.1 DESIGN LOAD SUMMARY (Pa)</h3>
+        <table>
+            <tr><th>Load Case</th><th>Value (Pa)</th><th>Value (kPa)</th></tr>
+            <tr><td>Dead Load (DL)</td><td>{DL:.1f}</td><td>{DL/1000:.3f}</td></tr>
+            <tr><td>Live Load (Lr)</td><td>{LL:.1f}</td><td>{LL/1000:.3f}</td></tr>
+            <tr><td>Snow Load (S)</td><td>{SL:.1f}</td><td>{SL/1000:.3f}</td></tr>
+            <tr><td>Internal Pressure (Pi)</td><td>{Pi:.1f}</td><td>{Pi/1000:.3f}</td></tr>
+            <tr><td>External Pressure (Pe)</td><td>{Pe:.1f}</td><td>{Pe/1000:.3f}</td></tr>
+        </table>
+
+        <h3>8.2 LOAD COMBINATIONS (API 650 5.2.2)</h3>
+        <table>
+            <tr><th>Combination</th><th>Calculation</th><th>Total Load (Pa)</th></tr>
+            <tr><td>(1) DL + Lr/S</td><td>{DL:.1f} + {L_comb:.1f}</td><td>{DL + L_comb:.1f}</td></tr>
+            <tr><td>(2) DL + Pe + 0.4(Lr/S)</td><td>{DL:.1f} + {Pe:.1f} + 0.4*{L_comb:.1f}</td><td>{DL + Pe + 0.4*L_comb:.1f}</td></tr>
+            <tr><td>(3) DL + Pi + 0.4(Lr/S)</td><td>{DL:.1f} + {Pi:.1f} + 0.4*{L_comb:.1f}</td><td>{DL + Pi + 0.4*L_comb:.1f}</td></tr>
+        </table>
+
+        <h3>8.3 ROOF PLATE THICKNESS</h3>
+        """
         
         if "Self-Supported" in roof_type:
-            slope = self.design.get('roof_slope', 0.0625)
+            slope = d.get('roof_slope', 0.0625)
             theta = math.atan(slope)
             t_min = D / (4.8 * math.sin(theta)) if theta > 0 else 0
+            t_use = roof_res.get('Nominal Thickness', roof_res.get('t_used', 6))
+            
             html += f"""
             <div style='background-color:#f8f9fa; padding:10px; margin-bottom:15px; border-left:4px solid #2c3e50;'>
                 <b>API 650 5.10.5 Self-Supported Cone Roofs</b><br>
-                <code>t_min = D / (4.8 * sin(θ))</code><br>
-                <code>t_min = {D:.3f} / (4.8 * sin({math.degrees(theta):.2f}°)) = {t_min:.2f} mm</code>
+                Minimum Thickness (t_min): <code>D / (4.8 * sin(theta)) + CA</code><br>
+                <code>t_min = {D:.3f} / (4.8 * sin({math.degrees(theta):.1f}*)) + {CA:.1f} = {t_min+CA:.2f} mm</code><br>
+                Provided Thickness: <b>{t_use} mm</b>
             </div>
             """
-        elif "Supported" in roof_type:
+        else:
+            t_use = roof_res.get('Nominal Thickness', roof_res.get('t_used', 5))
             html += f"""
             <div style='background-color:#f8f9fa; padding:10px; margin-bottom:15px; border-left:4px solid #2c3e50;'>
                 <b>API 650 5.10.4 Supported Cone Roofs</b><br>
-                Roof plates shall have a nominal thickness of not less than 5 mm (3/16 in.) plus any corrosion allowance.
+                Minimum Thickness: 5 mm (3/16 in.) + CA<br>
+                Provided Thickness: <b>{t_use} mm</b>
             </div>
             """
             
-        rows = ""
-        for k, v in roof_res.items():
-             rows += f"<tr><td>{k}</td><td>{v}</td></tr>"
-             
-        html += f"""
-        <table>
-            <tr><th>Parameter</th><th>Value</th></tr>
-            {rows}
-        </table>
-        """
-        
-        self._add_chapter("CONE ROOF PLATE THICKNESS", html)
+        self._add_chapter("CONE ROOF PLATE DESIGN", html)
 
     def generate_chapter_9_roof_structure(self):
         struct = (self.results.get('struct_data') or {})
@@ -575,7 +725,7 @@ class ReportGenerator2026:
             html += f"""
             <div style='background-color:#f8f9fa; padding:10px; margin-bottom:15px; border-left:4px solid #2c3e50;'>
                 <b>API 650 5.10.4.4 Allowable Stresses for Roof Structure</b><br>
-                Bending Stress, <code>Fb = 0.6 * Fy</code> or <code>137 MPa</code> (19,800 lbf/in²)<br>
+                Bending Stress, <code>Fb = 0.6 * Fy</code> or <code>137 MPa</code> (19,800 lbf/in^2)<br>
                 Deflection Limit = <code>L / 200</code><br>
                 (Structural profiles evaluated based on AISC Manual)
             </div>
@@ -589,91 +739,100 @@ class ReportGenerator2026:
 
     def generate_chapter_10_compression_ring(self):
         roof_res = (self.results.get('roof_res') or {}).get('Roof Plate', {})
+        d = self.design
+        D = d.get('D', 0)
+        courses = (self.results.get('shell_res') or {}).get('Shell Courses', [])
+        t_top = courses[0].get('t_used', 8) if courses else 8 # top course
+        t_roof = roof_res.get('Nominal Thickness', 6)
         
-        req_area = roof_res.get('Required Compression Area', 'N/A')
-        avail_area = roof_res.get('Available Compression Area', 'N/A')
+        req_area = roof_res.get('Required Compression Area', 0)
+        avail_area = roof_res.get('Available Compression Area', 0)
         
-        if req_area == 'N/A':
-            html = "<p>Compression Ring analysis not applicable or data not found in Roof Results.</p>"
-            if "Supported" in self.design.get('roof_type', ''):
-                 html += "<p>(Supported Cone Roofs typically use Top Angle as compression ring, detailed in Ch 9).</p>"
+        if not req_area or req_area == 'N/A':
+            html = "<p>Compression Ring analysis not performed or not applicable.</p>"
         else:
-            D = self.design.get('D', 0)
-            slope = self.design.get('roof_slope', 0.0625)
+            # Participating Area details (PDF Page 21)
+            w_shell = 0.6 * math.sqrt( (D/2) * 1000 * t_top ) / 1000 # m
+            w_roof  = 0.6 * math.sqrt( (D/2) * 1000 * t_roof / math.sin(math.atan(d.get('roof_slope',0.0625))) ) / 1000 if d.get('roof_slope') else 0
+            
             html = f"""
-            <h3>10.1 COMPRESSION RING AREA CHECK</h3>
+            <h3>10.1 PARTICIPATING AREA AT JUNCTION (API 650 5.10.5.2)</h3>
             <div style='background-color:#f8f9fa; padding:10px; margin-bottom:15px; border-left:4px solid #2c3e50;'>
-                <b>API 650 5.10.5.2 / 5.10.6.2 Required Compression Area</b><br>
-                <code>Ac_req = P * R^2 / (8 * Fy * tan(θ))</code> (Cone Roof Example)<br>
-                <code>Ac_req = P * ({D/2:.3f})^2 / (8 * Fy * {slope:.4f}) = {req_area} mm²</code><br>
-                Calculated Required Area vs Effective Participating Area of Roof-to-Shell Junction.
+                <b>Effective Participating Widths</b><br>
+                Shell side: <code>0.6 * sqrt(R * t_shell)</code> = 0.6 * sqrt({D/2:.3f} * {t_top}) = {w_shell*1000:.1f} mm<br>
+                Roof side: <code>0.6 * sqrt(R * t_roof / sin(theta))</code> = {w_roof*1000:.1f} mm
             </div>
             <table>
-                <tr><td>Required Area (mm²):</td><td>{req_area}</td></tr>
-                <tr><td>Available Area (mm²):</td><td>{avail_area}</td></tr>
-                <tr><td>Effective Width (Shell):</td><td>{roof_res.get('Participating Width Shell', '-')}</td></tr>
-                <tr><td>Effective Width (Roof):</td><td>{roof_res.get('Participating Width Roof', '-')}</td></tr>
+                <tr><th>Component</th><th>Effective Width (mm)</th><th>Thickness (mm)</th><th>Area (mm2)</th></tr>
+                <tr><td>Shell Portion</td><td>{w_shell*1000:.1f}</td><td>{t_top}</td><td>{w_shell*1000*t_top:.1f}</td></tr>
+                <tr><td>Roof Portion</td><td>{w_roof*1000:.1f}</td><td>{t_roof}</td><td>{w_roof*1000*t_roof:.1f}</td></tr>
+                <tr><td>Top Angle / Stiffener</td><td>-</td><td>-</td><td>{avail_area - (w_shell*1000*t_top + w_roof*1000*t_roof):.1f}</td></tr>
+                <tr style='font-weight:bold; background:#eee;'><td>TOTAL AVAILABLE AREA</td><td></td><td></td><td>{avail_area:.1f}</td></tr>
             </table>
-            <p><b>Status:</b> { 'OK' if roof_res.get('Compression Ring Status') != 'Stiffener Required' else 'FAIL - Stiffener Required' }</p>
+
+            <h3>10.2 COMPRESSION RING AREA CHECK</h3>
+            <p>Required Area (Ac): <b>{req_area:.1f} mm2</b></p>
+            <p>Available Area (Aa): <b>{avail_area:.1f} mm2</b></p>
+            <p>Status: <b class="{'result-pass' if avail_area >= req_area else 'result-fail'}">{'PASS' if avail_area >= req_area else 'FAIL - Stiffener Required'}</b></p>
             """
         
         self._add_chapter("REQUIRED AREA OF COMPRESSION RING", html)
 
     def generate_chapter_11_wind_load(self):
         wind = (self.results.get('wind_res') or {})
-        p_design = self.design.get('P_design', 0)
         V = self.design.get('V_wind', 0)
         V_mph = V * 3.6 / 1.609
         
         Kzt = wind.get('Kzt', 1.0)
         Kd = wind.get('Kd', 0.95)
         G_wind = wind.get('G', 0.85)
-        Cf = 0.6 # Cylinder default per API 650
+        Cf = 0.6
         I_wind = wind.get('I', 1.0)
         
-        # Determine Governing Wind Pressure
         p_wind = wind.get('P_wind_kPa', 0)
         qz = 0.613 * Kzt * Kd * (V**2) * I_wind
         
-        Mw_kNm = (self.extended.get('anchor') or {}).get('Wind Overturning Moment (kN-m)', 0)
-        Mw_Nmm = Mw_kNm * 1000 * 1000
+        anchor = self.extended.get('anchor') or {}
         D = self.design.get('D', 0)
         H = self.design.get('H', 0)
-        Area = D * H
-        
+        P_i_kpa = self.design.get('P_design', 0) * 0.00980665
+
+        w = self.extended.get('weights') or {}
+        DLS = w.get('W_shell_kg', 0) * 9.81
+        DLR = w.get('W_roof_kg', 0) * 9.81
+
+        Mws_kNm = anchor.get('Mws_kNm', p_wind * D * H**2 / 2) if p_wind else 0
+        Mpi_kNm = anchor.get('Mpi_kNm', P_i_kpa * 1000 * 3.14159 * D**3 / 8 / 1000)
+        MDL_kNm = anchor.get('MDL_kNm', DLS * D / 2 / 1000)
+        MDLR_kNm = anchor.get('MDLR_kNm', DLR * D / 2 / 1000)
+
+        UL1 = 0.6 * (Mws_kNm) + Mpi_kNm
+        DL1 = MDL_kNm / 1.5 + MDLR_kNm
+        UL2 = (Mws_kNm) + 0.4 * Mpi_kNm
+        DL2 = (MDL_kNm + anchor.get('MF_kNm', 0)) / 2 + MDLR_kNm
+        anchorage_required = (UL1 > DL1) or (UL2 > DL2)
+
         html = f"""
         <h3>11.1 WIND LOAD PARAMETERS & PRESSURE</h3>
         <div style='background-color:#f8f9fa; padding:10px; margin-bottom:15px; border-left:4px solid #2c3e50;'>
-            <b>Design Parameters</b><br>
             Velocity (V): {V} m/s ({V_mph:.1f} mph)<br>
-            Topographic Factor (Kzt): {Kzt}<br>
-            Directionality Factor (Kd): {Kd}<br>
-            Gust Factor (G): {G_wind}<br>
-            Force Coefficient (Cf): {Cf}<br><br>
-            <b>Velocity Pressure (qz)</b><br>
-            <code>qz = 0.613 * Kzt * Kd * V^2 * I</code><br>
-            <code>qz = 0.613 * {Kzt} * {Kd} * {V}^2 * {I_wind} = {qz:.1f} N/m²</code><br><br>
-            <b>Design Wind Pressure (P_ws)</b><br>
-            <code>P_ws = qz * G * Cf * 0.6 (ASD factor)</code><br>
-            <code>P_ws = {qz:.1f} * {G_wind} * {Cf} * 0.6 = {p_wind*1000:.1f} N/m² = {p_wind:.3f} kPa</code>
+            qz = 0.613 * {Kzt} * {Kd} * {V}^2 * {I_wind} = {qz:.1f} N/m2<br>
+            P_ws = {qz:.1f} * {G_wind} * {Cf} * 0.6 = {p_wind:.3f} kPa
         </div>
         
-        <h3>11.2 OVERTURNING MOMENT (Mw)</h3>
+        <h3>11.2 OVERTURNING MOMENT</h3>
         <div style='background-color:#f8f9fa; padding:10px; margin-bottom:15px; border-left:4px solid #2c3e50;'>
-            <b>API 650 5.11.2 Wind Overturning Moment</b><br>
-            <code>Mw_shell = P_ws * Projected_Area * Moment_Arm</code><br>
-            <code>Mw_shell = {p_wind:.3f} kPa * ({D:.3f} m * {H:.3f} m) * ({H:.3f} m / 2) = {Mw_kNm:.1f} kNm</code><br>
-            (Note: Total Mw includes Roof and Appurtenance wind moments if applicable.)<br><br>
-            <b>Stability Check</b><br>
-            Anchorage required if: <code>0.6 * Mw + Mpi > M_dl / 1.5 + M_dl_liquid</code>
+            Mws = {p_wind:.4f} * 1000 * {D:.2f} * {H:.2f} * {H:.2f} / 2 = {Mws_kNm*1000:.1f} N-m<br>
+            Mpi = {P_i_kpa:.3f} * 1000 * pi * {D:.3f}^3 / 8 = {Mpi_kNm*1000:.1f} N-m
         </div>
+
+        <h3>11.3 STABILITY CHECK</h3>
         <table>
-             <tr><th>Parameter</th><th>Value</th></tr>
-             <tr><td>Wind Overturning Moment (Mw):</td><td>{Mw_kNm:.1f} kNm</td></tr>
-             <tr><td>Anchorage Requirement:</td><td>{ 'Required' if self.extended.get('anchor',{}).get('Net Uplift Force (kN)', 0) > 0 else 'Not Required' }</td></tr>
+            <tr><th>Check Case</th><th>Uplift (N-m)</th><th>Resisting (N-m)</th><th>Result</th></tr>
+            <tr><td>0.6Mw + Mpi</td><td>{UL1*1000:.0f}</td><td>{DL1*1000:.0f}</td><td>{"FAIL" if UL1>DL1 else "OK"}</td></tr>
+            <tr><td>Mw + 0.4Mpi</td><td>{UL2*1000:.0f}</td><td>{DL2*1000:.0f}</td><td>{"FAIL" if UL2>DL2 else "OK"}</td></tr>
         </table>
-        
-        {self.extended.get('wind_moment_svg', '')}
+        <p><b>Anchorage: {"Required" if anchorage_required else "Not Required"}</b></p>
         """
         self._add_chapter("WIND LOAD ON TANKS", html)
 
@@ -684,84 +843,78 @@ class ReportGenerator2026:
         if not seismic:
             html = "<p>Seismic Data not available (Method 'None' selected?)</p>"
         else:
-            Vi = seismic.get('Impulsive Base Shear (kN)', 0) # Might not be directly in dict, but Base Shear is.
-            Vc = seismic.get('Convective Base Shear (kN)', 0)
-            V_total = seismic.get('Base_Shear_kN', 0)
+            D = self.design.get('D', 0)
+            H = self.design.get('H', 0)
+            G = self.design.get('G', 1.0)
+            max_level = self.design.get('HD', H)
+            w = self.extended.get('weights') or {}
+            Ws = w.get('W_shell_kg', 0)
+            Wr = w.get('W_roof_kg', 0)
+            Wp = (3.14159 * (D/2)**2 * max_level) * G * 1000 # Product weight
             
+            # Parameters
             Ss = seismic.get('Ss_input', 0)
             S1 = seismic.get('S1_input', 0)
             SDS = seismic.get('SDS', 0)
             SD1 = seismic.get('SD1', 0)
-            I_seis = seismic.get('Importance Factor', 1.0)
+            I = seismic.get('Importance Factor', 1.0)
+            Rwi = 3.5 
+            Rwc = 2.0
             
+            # Results
             Wi = seismic.get('Wi_kg', 0)
             Wc = seismic.get('Wc_kg', 0)
-            Tc = seismic.get('Tc_s', 0)
-            
             Ai = seismic.get('Ai', 0)
             Ac = seismic.get('Ac', 0)
             Av = seismic.get('Av', 0)
-            
+            V = seismic.get('Base_Shear_kN', 0)
             Mrw = seismic.get('Ringwall_Moment_kNm', 0)
-            Ms = seismic.get('Slab_Moment_kNm', 0)
-            J = seismic.get('Anchorage_Ratio_J', 0)
-            status = seismic.get('Anchorage_Status', 'N/A')
-            
-            D = self.design.get('D', 0)
-            H = self.design.get('H', 0)
-            w = self.extended.get('weights') or {}
-            Ws = w.get('W_shell_kg', 0)
-            Wr = w.get('W_roof_kg', 0)
+            ds = seismic.get('Sloshing_Wave_Height_m', 0)
             
             html = f"""
-            <h3>12.1 SITE GROUND MOTION PARAMETERS</h3>
+            <h3>12.1 SEISMIC DESIGN PARAMETERS</h3>
+            <table>
+                <tr><th colspan="4" class="section-header">Site Ground Motion (API 650 E.4)</th></tr>
+                <tr><td>Mapped Spectral Accel (Ss)</td><td>{Ss:.3f} g</td><td>Mapped Spectral Accel (S1)</td><td>{S1:.3f} g</td></tr>
+                <tr><td>Design Spectral Accel (SDS)</td><td>{SDS:.3f} g</td><td>Design Spectral Accel (SD1)</td><td>{SD1:.3f} g</td></tr>
+                <tr><td>Site Class</td><td>{seismic.get('Site Class','D')}</td><td>Importance Factor (I)</td><td>{I}</td></tr>
+            </table>
+
+            <h3>12.2 EFFECTIVE MASS DISTRIBUTION (API 650 E.6.1)</h3>
             <div style='background-color:#f8f9fa; padding:10px; margin-bottom:15px; border-left:4px solid #2c3e50;'>
-                <b>Mapped Parameters & Site Class</b><br>
-                Site Class: {seismic.get('Site Class','-')} | Importance Factor (I): {I_seis}<br>
-                Ss: {Ss:.3f} | S1: {S1:.3f}<br><br>
-                <b>Design Spectral Response Accelerations</b><br>
-                <code>SDS = 2/3 * Fa * Ss = {SDS:.3f}</code><br>
-                <code>SD1 = 2/3 * Fv * S1 = {SD1:.3f}</code>
-            </div>
-            
-            <h3>12.2 WEIGHT DISTRIBUTION & EFFECTIVE MASS</h3>
-            <div style='background-color:#f8f9fa; padding:10px; margin-bottom:15px; border-left:4px solid #2c3e50;'>
-                <b>Structural Weights</b><br>
-                Shell (Ws): {Ws:.0f} kg | Roof (Wr): {Wr:.0f} kg<br><br>
-                <b>Effective Liquid Weights (API 650 E.6.1.1)</b><br>
-                <code>Wi (Impulsive) = f(D/H) * W_liquid</code> = {Wi:.0f} kg<br>
-                <code>Wc (Convective) = f(D/H) * W_liquid</code> = {Wc:.0f} kg
+                Shell Weight (Ws): {Ws:.0f} kg<br>
+                Roof Weight (Wr): {Wr:.0f} kg<br>
+                Total Product Weight (Wp): {Wp:.0f} kg<br><br>
+                <b>Effective Liquid Weight</b><br>
+                Impulsive Mass (Wi): <b>{Wi:.0f} kg</b><br>
+                Convective Mass (Wc): <b>{Wc:.0f} kg</b>
             </div>
 
-            <h3>12.3 SPECTRAL ACCELERATION & BASE SHEAR</h3>
-            <div style='background-color:#f8f9fa; padding:10px; margin-bottom:15px; border-left:4px solid #2c3e50;'>
-                <b>Spectral Accelerations</b><br>
-                <code>Ai = SDS * (I / Rwi) = {SDS:.3f} * ({I_seis} / 3.5) = {Ai:.3f}</code><br>
-                <code>Ac = K * SD1 * (1/Tc) * (I / Rwc) = {Ac:.3f}</code> (Tc = {Tc:.2f} s)<br>
-                <code>Av = 0.47 * SDS = {Av:.3f}</code><br><br>
-                <b>API 650 E.6.1 Design Base Shear (V)</b><br>
-                <code>V = sqrt(Vi^2 + Vc^2)</code><br>
-                <code>V = {V_total:.1f} kN</code>
-            </div>
+            <h3>12.3 BASE SHEAR & OVERTURNING MOMENT</h3>
+            <table>
+                <tr><th>Component</th><th>Spectral Accel (Ai/Ac)</th><th>Mass (kg)</th><th>Shear (kN)</th></tr>
+                <tr><td>Impulsive</td><td>{Ai:.4f}</td><td>{Wi:.0f}</td><td>{seismic.get('Impulsive Base Shear (kN)', Ai*Wi*9.81/1000):.1f}</td></tr>
+                <tr><td>Convective</td><td>{Ac:.4f}</td><td>{Wc:.0f}</td><td>{seismic.get('Convective Base Shear (kN)', Ac*Wc*9.81/1000):.1f}</td></tr>
+                <tr style='font-weight:bold; background:#eee;'><td>TOTAL (RSS)</td><td>-</td><td>-</td><td>{V:.1f}</td></tr>
+            </table>
             
-            <h3>12.4 OVERTURNING MOMENTS & ANCHORAGE</h3>
+            <h3>12.4 SLOSHING & STABILITY</h3>
             <div style='background-color:#f8f9fa; padding:10px; margin-bottom:15px; border-left:4px solid #2c3e50;'>
-                <b>Overturning Moments (API 650 E.6.1.5)</b><br>
-                <code>Ringwall Moment (Mrw) = sqrt(Mirw^2 + Mcrw^2) = {Mrw:.1f} kNm</code><br>
-                <code>Slab Moment (Ms) = sqrt(Mis^2 + Mcs^2) = {Ms:.1f} kNm</code><br><br>
-                <b>Anchorage Ratio (API 650 E.6.2.1)</b><br>
-                <code>J = Mrw / (D^2 * [wt(1-0.4Av) + wa])</code><br>
-                <code>J = {Mrw:.1f} / ({D:.2f}^2 * [...]) = {J:.3f}</code><br>
-                <b>Status:</b> {status}
+                <b>Sloshing Wave Height (delta_s)</b><br>
+                <code>delta_s = 0.5 * D * Af = 0.5 * {D:.3f} * {Ac/I*Rwc:.4f} = {ds:.3f} m</code><br><br>
+                <b>Anchorage Ratio (J)</b><br>
+                <code>J = Mrw / (D^2 * [wt(1-0.4Av) + wa]) = {seismic.get('Anchorage_Ratio_J', 0):.3f}</code>
             </div>
-            
-            <h3>12.5 DESIGN SPECTRUM GRAPH</h3>
+            <table>
+                <tr><td>Ringwall Moment (Mrw):</td><td>{Mrw:.1f} kNm</td></tr>
+                <tr><td>Anchorage Ratio (J):</td><td>{seismic.get('Anchorage_Ratio_J', 0):.3f}</td></tr>
+                <tr><td>Stability Status:</td><td class="{'result-pass' if seismic.get('Anchorage_Status') != 'Anchorage Required' else 'result-fail'}"><b>{seismic.get('Anchorage_Status', 'OK')}</b></td></tr>
+            </table>
             """
             
             if graph:
-                html += f'<img src="data:image/png;base64,{graph}" style="max-width:80%; margin: 20px auto; display:block; border: 1px solid #ddd;" />'
-            else:
-                 html += "<p><i>Design Spectrum Graph not available.</i></p>"
+                html += f'<h3>12.5 DESIGN SPECTRUM GRAPH</h3><img src="data:image/png;base64,{graph}" style="max-width:80%; margin: 20px auto; display:block; border: 1px solid #ddd;" />'
+
             
         self._add_chapter("SEISMIC DESIGN OF STORAGE TANK", html)
 
@@ -770,41 +923,49 @@ class ReportGenerator2026:
         chair = self.extended.get('anchor_chair') or {}
         
         status = anchor.get('Status', 'N/A')
+        D = self.design.get('D', 0)
+        N = anchor.get('Number of Bolts', 0)
         
-        html = f"<h3>13.1 ANCHOR BOLT DESIGN ({status})</h3>"
+        html = f"<h3>13.1 ANCHOR BOLT DESIGN SUMMARY</h3>"
         
         if status == 'Not Required':
-             html += "<p>Anchors not required based on Wind/Seismic Uplift Check.</p>"
+             html += "<div class='warning-box'>Anchors are not required based on API 650 stability criteria for Wind and Seismic loads.</div>"
         else:
-             N = anchor.get('Number of Bolts', 0)
-             uplift = anchor.get('Net Uplift Force (kN)', 0)
-             U = uplift / N if N > 0 else 0
+             uplift_total = anchor.get('Net Uplift Force (kN)', 0)
+             u_bolt = uplift_total / N if N > 0 else 0
+             
              html += f"""
              <div style='background-color:#f8f9fa; padding:10px; margin-bottom:15px; border-left:4px solid #2c3e50;'>
-                 <b>API 650 5.12.5 Anchor Bolt Area</b><br>
-                 <code>Ab = U / Sd</code><br>
-                 Where U = Net uplift force per bolt = <code>{uplift:.1f} kN / {N} = {U:.1f} kN</code>
+                 <b>Design Criteria (API 650 5.12)</b><br>
+                 Uplift Force per Bolt (U) = <code>[4 * Mw / (D * N)] - [W_shell + W_roof] / N</code> (Simplified Concept)<br>
+                 Actual calculated Uplift per bolt: <b>{u_bolt:.1f} kN</b>
              </div>
              <table>
-                 <tr><td>Net Uplift Force (Total):</td><td>{uplift:.1f} kN</td></tr>
-                 <tr><td>Required Bolt Area:</td><td>{anchor.get('Required Bolt Area (mm2)', 0):.1f} mm²</td></tr>
-                 <tr><td>Bolt Size Selected:</td><td>{anchor.get('Bolt Size', '-')}</td></tr>
-                 <tr><td>Number of Bolts:</td><td>{N}</td></tr>
+                 <tr><th colspan="2" class="section-header">Anchor Bolt Parameters</th></tr>
+                 <tr><td>Number of Bolts (N)</td><td>{N} EA</td></tr>
+                 <tr><td>Selected Bolt Size</td><td><b>{anchor.get('Bolt Size', '-')}</b></td></tr>
+                 <tr><td>Total Net Uplift Force</td><td>{uplift_total:.1f} kN</td></tr>
+                 <tr><td>Force per Bolt (U)</td><td>{u_bolt:.1f} kN</td></tr>
+                 <tr><td>Provided Bolt Area (Ab)</td><td>{anchor.get('Provided Bolt Area (mm2)', 0):.1f} mm2</td></tr>
+                 <tr><td>Allowable Tensile Stress</td><td>{anchor.get('Allowable Stress (MPa)', 105):.1f} MPa</td></tr>
              </table>
              """
              
-        if chair:
-            html += "<h3>13.2 ANCHOR CHAIR DESIGN</h3>"
-            def format_dict(d):
-                h = ""
-                for k,v in d.items(): 
-                    if isinstance(v, (int, float)): v=f"{v:.2f}"
-                    h += f"<tr><td>{k}</td><td>{v}</td></tr>"
-                return h
-                
-            html += f"<table>{format_dict(chair)}</table>"
+        if chair and chair.get('Status') != 'N/A':
+            html += "<h3>13.2 ANCHOR CHAIR DIMENSIONS</h3>"
+            html += f"""
+            <table>
+                <tr><th>Description</th><th>Symbol</th><th>Value (mm)</th></tr>
+                <tr><td>Chair Height</td><td>h</td><td>{chair.get('Chair Height h', 0)}</td></tr>
+                <tr><td>Chair Width</td><td>b</td><td>{chair.get('Chair Width b', 0)}</td></tr>
+                <tr><td>Top Plate Thickness</td><td>c</td><td>{chair.get('Top Plate t', 0)}</td></tr>
+                <tr><td>Gusset Plate Thickness</td><td>g</td><td>{chair.get('Gusset Plate t', 0)}</td></tr>
+                <tr><td>Distance from Shell</td><td>e</td><td>{chair.get('Bolt Eccentricity e', 0)}</td></tr>
+            </table>
+            """
         
         self._add_chapter("ANCHOR BOLT & ANCHOR CHAIR DESIGN", html)
+
         
     def generate_chapter_14_small_pressure(self):
         af = self.extended.get('annex_f') or {}
@@ -822,8 +983,8 @@ class ReportGenerator2026:
              <h3>14.1 ANNEX F CALCULATIONS</h3>
              <div style='background-color:#f8f9fa; padding:10px; margin-bottom:15px; border-left:4px solid #2c3e50;'>
                  <b>API 650 F.4.1 Design Pressure Limits</b><br>
-                 <code>P_max = (W / (π * D^2 / 4)) / 1000  (kPa)</code><br>
-                 <code>P_max = ({W:.1f} / (π * {D:.3f}^2 / 4)) / 1000 = {max_P:.3f} kPa</code><br><br>
+                 <code>P_max = (W / (pi * D^2 / 4)) / 1000  (kPa)</code><br>
+                 <code>P_max = ({W:.1f} / (pi * {D:.3f}^2 / 4)) / 1000 = {max_P:.3f} kPa</code><br><br>
                  <b>API 650 F.7 Calculated Failure Pressure</b><br>
                  <code>P_fail = 0.00127 * A * Fty / D^2 + 0.000122 * W / D^2  (kPa)</code><br>
                  <code>P_fail = 0.00127 * {A_val:.1f} * {Fty} / {D:.3f}^2 + 0.000122 * {W:.1f} / {D:.3f}^2 = {P_fail:.3f} kPa</code>
@@ -908,7 +1069,7 @@ class ReportGenerator2026:
                 <th>Metal New (kg)</th><th>Metal Corroded (kg)</th>
                 <th>Insulation (kg)</th>
                 <th>Operating Liquid (kg)</th><th>Test Liquid (kg)</th>
-                <th>Surface Area (m²)</th>
+                <th>Surface Area (m^2)</th>
             </tr>
         """
         # Roof
@@ -984,22 +1145,22 @@ class ReportGenerator2026:
                 <code>Outbreathing = Thermal Outbreathing + Liquid Movement (Pump-in)</code>
             </div>
             <table>
-                <tr><td>Inbreathing Req (Thermal + Liquid):</td><td>{V_in:.1f} Nm³/h</td></tr>
-                <tr><td>Outbreathing Req (Thermal + Liquid):</td><td>{V_out:.1f} Nm³/h</td></tr>
+                <tr><td>Inbreathing Req (Thermal + Liquid):</td><td>{V_in:.1f} Nm^3/h</td></tr>
+                <tr><td>Outbreathing Req (Thermal + Liquid):</td><td>{V_out:.1f} Nm^3/h</td></tr>
             </table>
             
             <h3>17.2 EMERGENCY VENTING (FIRE CASE)</h3>
             <div style='background-color:#f8f9fa; padding:10px; margin-bottom:15px; border-left:4px solid #2c3e50;'>
                 <b>API 2000 4.3.3.2 Emergency Venting (Fire Exposure)</b><br>
-                <code>Q = 43200 * A_wetted^0.82</code> (For Wetted Area < 260 m²)<br>
+                <code>Q = 43200 * A_wetted^0.82</code> (For Wetted Area < 260 m^2)<br>
                 <code>Q = 43200 * {A_wetted:.1f}^0.82 = {Q_watts:.0f} Watts</code><br><br>
                 <code>Emergency Venting = Q / (L_v * sqrt(M / T))</code><br>
-                <code>Emergency Venting = {V_emerg:.1f} Nm³/h</code> (Simplified Substitution)
+                <code>Emergency Venting = {V_emerg:.1f} Nm^3/h</code> (Simplified Substitution)
             </div>
             <table>
-                <tr><td>Wetted Area:</td><td>{vent.get('Wetted_Area_m2',0):.1f} m²</td></tr>
+                <tr><td>Wetted Area:</td><td>{vent.get('Wetted_Area_m2',0):.1f} m^2</td></tr>
                 <tr><td>Heat Input (Q):</td><td>{vent.get('Heat_Input_Q_Watts',0):.0f} Watts</td></tr>
-                <tr><td>Required Venting Capacity:</td><td>{V_emerg:.1f} Nm³/h</td></tr>
+                <tr><td>Required Venting Capacity:</td><td>{V_emerg:.1f} Nm^3/h</td></tr>
             </table>
             """
         self._add_chapter("VENTING ATM. AND LOW-PRESSURE STORAGE TANKS", html)
@@ -1098,115 +1259,47 @@ class ReportGenerator2026:
         AG_val = calc_bolt(1.5 * UP_int_tot, Mw, DL)
 
         html = f"""
-        <h3>18.1 CIVIL INFORMATION LOADING DATA</h3>
-        <p>The following loads are provided for foundation design. Units are in Metric Tons (ton) and Meters (m).</p>
+        <h3>18.1 DESIGN BASIS FOR FOUNDATION LOADING</h3>
+        <p>Loads are calculated per API 650 requirements. Units: Metric Tons (ton) and Meters (m).</p>
         
         <div style='background-color:#f8f9fa; padding:10px; margin-bottom:15px; border-left:4px solid #2c3e50;'>
-            <b>1. Base Parameters (for Reference)</b><br>
-            <ul>
-                <li><code>Area (A)</code> = π * (D/2)² = {Area:.2f} m²</li>
-                <li><code>Circumference (C)</code> = π * D = {Circ:.2f} m</li>
-                <li><code>Dead Load (DL)</code> = Shell + Roof + Struct = {DL:.2f} ton</li>
-                <li><code>Product Weight</code> = {W_product:.2f} ton</li>
-                <li><code>Test Water Weight</code> = {W_testwater:.2f} ton</li>
-                <li><code>Design Pressure (P_int)</code> = {P_int:.3f} ton/m²</li>
-                <li><code>Wind Moment (Mw)</code> = {Mw:.2f} ton-m</li>
-                <li><code>Seismic Ringwall Moment (Mrw)</code> = {Mrw:.2f} ton-m</li>
-                <li><code>Seismic Slab Moment (Ms)</code> = {Ms:.2f} ton-m</li>
-            </ul>
-            <b>2. Calculation Formulas (Examples)</b><br>
-            <ul>
-                <li><b>DW1 (Max Z) [Earthquake Full Liquid]</b>: <br>
-                    <code>Z = P_bottom + P_product + P_int + (Ms / Z_base)</code><br>
-                    <code>Z = {P_bottom:.3f} + {P_product:.3f} + {P_int:.3f} + ({Ms:.2f} / {Z_base:.2f}) = {Z:.2f} ton/m²</code>
-                </li>
-                <li><b>W1 (Max C) [Operation Full Liquid w/ Wind]</b>: <br>
-                    <code>C = (DL / C) + (LL * A / C) - (P_int * A / C) + (Mw / Z_shell)</code><br>
-                    <code>C = {DL_line:.3f} + {LL_line:.3f} - {UP_int_line:.3f} + {WL_line:.3f} = {C:.2f} ton/m</code>
-                </li>
-                <li><b>W2 (Max E) [Operation Full Liquid w/ Wind]</b>: <br>
-                    <code>E = ((P_int * A) + Wind Uplift Force - DL) / N</code><br>
-                    <code>E = ({UP_int_tot:.2f} + {4 * Mw / D if D else 0:.2f} - {DL:.2f}) / {N} = {E_val:.2f} ton/ea</code>
-                </li>
-            </ul>
+            <b>1. Loading Variables</b><br>
+            - Shell & Struct Weight: {DL_line*Circ:.2f} ton<br>
+            - Product Weight: {W_product:.2f} ton<br>
+            - Internal Pressure Uplift: {UP_int_tot:.2f} ton<br>
+            - Wind Overturning Moment: {Mw:.2f} ton-m<br>
+            - Seismic Overturning Moment: {Mrw:.2f} ton-m
         </div>
-        
-        <p><b>Number of Anchor Bolts (N):</b> {N}</p>
-        
-        <table style="font-size: 9pt;">
-            <tr>
-                <th rowspan="2">Item</th>
-                <th rowspan="2">Type</th>
-                <th colspan="2">OPERATION</th>
-                <th colspan="2">HYDRO TEST</th>
-                <th rowspan="2">PNEUMATIC<br>TEST</th>
-                <th rowspan="2">EARTHQUAKE<br>FULL LIQ</th>
-                <th rowspan="2">UPLIFT INT.<br>PRESSURE</th>
+
+        <h3>18.2 FOUNDATION LOADING SUMMARY MATRIX</h3>
+        <table style="font-size: 8.5pt;">
+            <tr style="background:#2c3e50; color:white;">
+                <th>Item</th><th>Type</th><th>Op. Full</th><th>Op. Empty</th><th>Test Full</th><th>Test Empty</th><th>Pneu. Test</th><th>Earthquake</th>
             </tr>
             <tr>
-                <th>FULL LIQ</th><th>EMPTY</th>
-                <th>FULL LIQ</th><th>EMPTY</th>
+                <td>DW1 (ton/m2)</td><td>Max Pressure</td>
+                <td>{A:.2f} (A)</td><td>{F:.2f} (F)</td><td>{K:.2f} (K)</td><td>{P:.2f} (P)</td><td>{U:.2f} (U)</td><td>{Z:.2f} (Z)</td>
             </tr>
             <tr>
-                <td>DW1 (ton/m²)</td>
-                <td>Max Z</td>
-                <td>{A:.2f} (A)</td>
-                <td>{F:.2f} (F)</td>
-                <td>{K:.2f} (K)</td>
-                <td>{P:.2f} (P)</td>
-                <td>{U:.2f} (U)</td>
-                <td>{Z:.2f} (Z)</td>
-                <td>-</td>
+                <td>W1 (ton/m)</td><td>Max Load</td>
+                <td>{C:.2f} (C)</td><td>{H_val:.2f} (H)</td><td>{M:.2f} (M)</td><td>{R:.2f} (R)</td><td>{W_val:.2f} (W)</td><td>{AB:.2f} (AB)</td>
             </tr>
             <tr>
-                <td>DW1 (ton/m²)</td>
-                <td>Min AA</td>
-                <td>-</td><td>-</td><td>-</td><td>-</td><td>-</td>
-                <td>{AA:.2f} (AA)</td>
-                <td>-</td>
+                <td>W1 (ton/m)</td><td>Min Load</td>
+                <td>{B:.2f} (B)</td><td>{G_val:.2f} (G)</td><td>{L:.2f} (L)</td><td>{Q:.2f} (Q)</td><td>{V_val:.2f} (V)</td><td>{AA:.2f} (AA)</td>
             </tr>
             <tr>
-                <td>W1 (ton/m)</td>
-                <td>Min (No Wind)</td>
-                <td>{B:.2f} (B)</td>
-                <td>{G_val:.2f} (G)</td>
-                <td>{L:.2f} (L)</td>
-                <td>{Q:.2f} (Q)</td>
-                <td>{V:.2f} (V)</td>
-                <td>-</td><td>-</td>
-            </tr>
-            <tr>
-                <td>W1 (ton/m)</td>
-                <td>Max (Wind/EQ)</td>
-                <td>{C:.2f} (C)</td>
-                <td>{H_val:.2f} (H)</td>
-                <td>{M:.2f} (M)</td>
-                <td>{R:.2f} (R)</td>
-                <td>{W:.2f} (W)</td>
-                <td>{AB:.2f} (AB)</td>
-                <td>-</td>
-            </tr>
-            <tr>
-                <td>W2 (ton/ea)</td>
-                <td>No Wind</td>
-                <td>{D_val:.2f} (D)</td>
-                <td>{I_val:.2f} (I)</td>
-                <td>{N_val:.2f} (N)</td>
-                <td>{S_val:.2f} (S)</td>
-                <td>{X_val:.2f} (X)</td>
-                <td>-</td><td>{AF_val:.2f} (AF)</td>
-            </tr>
-            <tr>
-                <td>W2 (ton/ea)</td>
-                <td>Wind/EQ Max</td>
-                <td>{E_val:.2f} (E)</td>
-                <td>{J_val:.2f} (J)</td>
-                <td>{O_val:.2f} (O)</td>
-                <td>{T_val:.2f} (T)</td>
-                <td>{Y_val:.2f} (Y)</td>
-                <td>{AC_val:.2f} (AC)</td>
-                <td>{AG_val:.2f} (AG)</td>
+                <td>W2 (ton/ea)</td><td>Anchor Load</td>
+                <td>{E_val:.2f} (E)</td><td>{J_val:.2f} (J)</td><td>{O_val:.2f} (O)</td><td>{T_val:.2f} (T)</td><td>{Y_val:.2f} (Y)</td><td>{AC_val:.2f} (AC)</td>
             </tr>
         </table>
+
+        <h3>18.3 LOAD ITEM DEFINITIONS</h3>
+        <div style="font-size: 9pt;">
+            <b>A / K / Z</b>: Vertical pressure on foundation including product/water and seismic moment.<br>
+            <b>C / M / AB</b>: Vertical line load on ringwall including shell weight and overturning moments.<br>
+            <b>E / J / AC</b>: Net uplift force per anchor bolt including internal pressure and wind/seismic moments.
+        </div>
         """
         self._add_chapter("CIVIL INFORMATION LOADING DATA", html)
+
