@@ -129,38 +129,48 @@ class ReportGenerator2026:
         """
 
     # --- CHAPTER IMPLEMENTATIONS (Placeholders for now) ---
-    
     # --- CHAPTER IMPLEMENTATIONS ---
 
     def generate_chapter_1_design_data(self):
         d = self.design
         p = self.project_info
-        
+        seismic = self.results.get('seismic_res') or {}
+        ext = self.extended
+
+        # Applied Annexes from extended data
+        annexes = (ext.get('Applied_Annexes') or [])
+        annex_str = ', '.join(annexes) if annexes else '-'
+
+        # Pressure conversions
+        p_design_mmaq = d.get('P_design', 0)
+        p_design_kpa = p_design_mmaq * 0.00980665
+        p_ext_kpa = d.get('P_external', 0)
+        p_ext_mmaq = p_ext_kpa / 0.00980665 if p_ext_kpa else 0
+        p_test_mmaq = d.get('P_test_shop', p_design_mmaq * 1.25)
+
         info_table = f"""
         <table>
             <tr><th colspan="4" class="section-header">1.1 PROJECT INFORMATION</th></tr>
             <tr>
-                <td width="20%">Project Name:</td><td width="30%">{p.get('project_name','')}</td>
-                <td width="20%">Designer:</td><td width="30%">{p.get('designer','')}</td>
+                <td width="20%">Item No.:</td><td width="30%"><b>{p.get('project_name','')}</b></td>
+                <td width="20%">SET:</td><td width="30%">1 EA</td>
             </tr>
             <tr>
-                <td>Client:</td><td>{p.get('client','-')}</td>
-                <td>Location:</td><td>{p.get('location','-')}</td>
+                <td>Equipment Name:</td><td colspan="3">{p.get('tank_name', p.get('project_name',''))}</td>
             </tr>
             <tr>
+                <td>Designer:</td><td>{p.get('designer','-')}</td>
                 <td>Date:</td><td>{datetime.now().strftime("%Y-%m-%d")}</td>
-                <td>Rev:</td><td>0</td>
+            </tr>
+            <tr>
+                <td>Applicable Code:</td><td>API 650 13th Edition</td>
+                <td>Rev.:</td><td>0</td>
             </tr>
         </table>
         """
-        
+
         design_table = f"""
         <table>
-            <tr><th colspan="4" class="section-header">1.2 DESIGN PARAMETERS</th></tr>
-            <tr>
-                <td>Design Code:</td><td>API 650 13th Edition</td>
-                <td>Appendix:</td><td>{', '.join(d.get('appendix', ['-']))}</td>
-            </tr>
             <tr>
                 <td>Inside Diameter (ID):</td><td>{d.get('D',0):.3f} m</td>
                 <td>Tank Height (H):</td><td>{d.get('H',0):.3f} m</td>
@@ -216,23 +226,76 @@ class ReportGenerator2026:
         geo_vol = 3.14159 * (D/2)**2 * H
         net_vol = 3.14159 * (D/2)**2 * max_level
         
+        cap = self.extended.get('capacities') or {}
+        geo_vol = 3.14159 * (D/2)**2 * H
+        nom_vol = 3.14159 * (D/2)**2 * max_level
+        min_level = self.design.get('min_level', 0)
+        net_vol = 3.14159 * (D/2)**2 * (max_level - min_level)
+
         html = f"""
-        <h3>2.1 TANK CAPACITY CALCULATIONS</h3>
+        <h3>2.1 STORAGE VOLUME & LEVEL</h3>
+        <table>
+            <tr><th colspan="2" class="section-header">Level Summary</th></tr>
+            <tr><td>Total Liquid Level (H)</td><td>{H:.3f} m</td></tr>
+            <tr><td>High Liquid Level (H.L.L)</td><td>{max_level:.3f} m</td></tr>
+            <tr><td>Low Liquid Level (L.L.L)</td><td>{min_level:.3f} m</td></tr>
+        </table>
         <div style='background-color:#f8f9fa; padding:10px; margin-bottom:15px; border-left:4px solid #2c3e50;'>
-            <b>Geometric Volume Calculation</b><br>
-            <code>V_nominal = π * (D/2)² * H</code><br>
-            <code>V_nominal = π * ({D:.3f}/2)² * {H:.3f} = {geo_vol:.1f} m³</code><br><br>
-            <code>V_working = π * (D/2)² * HD</code><br>
-            <code>V_working = π * ({D:.3f}/2)² * {max_level:.3f} = {net_vol:.1f} m³</code>
+            <b>Volume Calculations</b><br>
+            <code>Storage Capacity  = π/4 × D² × H        = π/4 × {D:.3f}² × {H:.3f} = {geo_vol:.1f} m³ ({geo_vol*1000:.0f} liters)</code><br>
+            <code>Nominal Capacity  = π/4 × D² × H.L.L    = π/4 × {D:.3f}² × {max_level:.3f} = {nom_vol:.1f} m³</code><br>
+            <code>Net Work Capacity = π/4 × D² × (H.L.L - L.L.L) = π/4 × {D:.3f}² × ({max_level:.3f}-{min_level:.3f}) = {net_vol:.1f} m³</code>
         </div>
         <table>
-            <tr><th colspan="2" class="section-header">2.1 CAPACITY CALCULATION</th></tr>
-            <tr><td>Geometric Volume (Full Height):</td><td>{geo_vol:.3f} m³</td></tr>
-            <tr><td>Working Volume (Max Level {max_level}m):</td><td>{net_vol:.3f} m³</td></tr>
-            <tr><td>Barrels (BBL):</td><td>{net_vol * 6.2898:.1f} BBL</td></tr>
+            <tr><th colspan="2" class="section-header">Capacity Summary</th></tr>
+            <tr><td>Storage Capacity</td><td>{geo_vol:.1f} m³  ({geo_vol*1000:.0f} liters)</td></tr>
+            <tr><td>Nominal Capacity (π/4 × D² × H.L.L)</td><td>{nom_vol:.1f} m³</td></tr>
+            <tr><td>Net Working Capacity (π/4 × D² × (H.L.L-L.L.L))</td><td>{net_vol:.1f} m³</td></tr>
+            <tr><td>Equivalent Barrels (BBL)</td><td>{net_vol * 6.2898:.1f} BBL</td></tr>
         </table>
+
+        <h3>2.2 THICKNESS SUMMARY</h3>
+        <table>
+            <tr>
+                <th>Identifier</th><th>Material</th><th>Diameter (m)</th>
+                <th>Height (m)</th><th>Nominal t (mm)</th><th>Design t (mm)</th>
+                <th>CA (mm)</th><th>DMT (°C)</th><th>MDMT (°C)</th>
+            </tr>
         """
-        self._add_chapter("TANK CAPACITY", html)
+        # Shell courses
+        courses_data = (self.results.get('shell_res') or {}).get('Shell Courses', [])
+        mdmt = self.design.get('mdmt', -18.6)
+        CA = self.design.get('CA', 0)
+        CA_roof = self.design.get('CA_roof', 0)
+        CA_bot = self.design.get('CA_bottom', 0)
+
+        # Roof row
+        roof_res = (self.results.get('roof_res') or {}).get('Roof Plate', {})
+        t_roof_nom = roof_res.get('Nominal Thickness', roof_res.get('t_used', 6))
+        t_roof_des = roof_res.get('t_design', 5)
+        mat_roof = self.design.get('roof_material', '-')
+        od_roof = round(D + 0.002 * (t_roof_nom or 6), 4)
+        html += f"<tr><td>Tank Roof</td><td>{mat_roof}</td><td>{od_roof:.3f} OD</td><td>-</td><td>{t_roof_nom}</td><td>{t_roof_des}</td><td>{CA_roof}</td><td>{mdmt}</td><td>N/I</td></tr>"
+
+        # Shell courses (top to bottom displayed bottom-first in PDF)
+        for c in reversed(courses_data):
+            cn = c.get('Course', '-')
+            mat = c.get('Material', '-')
+            t_nom = c.get('t_used', c.get('t_use', 0))
+            t_des = max(c.get('td', 0), c.get('tt', 0))
+            w = c.get('Width', 0)
+            html += f"<tr><td>Shell Course #{cn}</td><td>{mat}</td><td>{D:.3f} ID</td><td>{w:.3f}</td><td>{t_nom}</td><td>{t_des:.0f}</td><td>{CA}</td><td>{mdmt}</td><td>N/I</td></tr>"
+
+        # Bottom row
+        bott_res = (self.results.get('bottom_res') or {}).get('Bottom Plate', {})
+        t_bot_nom = bott_res.get('Nominal Thickness', bott_res.get('t_used', 10))
+        t_bot_des = bott_res.get('t_design', 5)
+        mat_bot = self.design.get('mat_bottom', '-')
+        od_bot = round(D + 0.11, 3)
+        html += f"<tr><td>Tank Bottom</td><td>{mat_bot}</td><td>{od_bot:.3f} OD</td><td>-</td><td>{t_bot_nom}</td><td>{t_bot_des}</td><td>{CA_bot}</td><td>{mdmt}</td><td>N/I</td></tr>"
+        html += "</table><p><small>DMT - Design Metal Temperature &nbsp;&nbsp; MDMT - Minimum Permissible Design Metal Temperature &nbsp;&nbsp; N/I - Not Impact Tested</small></p>"
+        self._add_chapter("TANK CAPACITY & THICKNESS SUMMARY", html)
+
         
     def generate_chapter_3_shell_design(self):
         shell_res = (self.results.get('shell_res') or {})
@@ -806,43 +869,100 @@ class ReportGenerator2026:
     def generate_chapter_16_weight_summary(self):
         w = self.extended.get('weights', {})
         D = self.design.get('D', 0)
-        
-        # Calculate water weight for testing
-        h_test = self.design.get('H', 0) # Assmume full height test
-        v_test = 3.14159 * (D/2)**2 * h_test
-        w_water = v_test * 1000 # kg
-        
-        w_shell = w.get('W_shell_kg',0)
-        w_roof = w.get('W_roof_kg',0)
-        w_struct = (self.results.get('struct_data') or {}).get('Total_Struct_Weight',0)
-        w_bottom = w.get('W_bottom_kg',0)
-        
-        w_empty = w_shell + w_roof + w_struct + w_bottom
-        w_oper = w_empty + (self.extended.get('capacities',{}).get('Net Capacity (m3)',0) * self.design.get('G',1.0) * 1000)
-        w_test = w_empty + w_water
-        
+        G = self.design.get('G', 1.0)
+        H = self.design.get('H', 0)
+        max_level = self.design.get('HD', H)
+
+        v_test = 3.14159 * (D/2)**2 * H
+        w_water = v_test * 1000
+
+        w_shell = w.get('W_shell_kg', 0)
+        w_roof  = w.get('W_roof_kg', 0)
+        w_bottom= w.get('W_bottom_kg', 0)
+        w_struct= (self.results.get('struct_data') or {}).get('Total_Struct_Weight', 0)
+        w_anchor= w.get('W_anchor_kg', 0)
+
+        # Insulation weight estimate
+        ins_total = sum(c.get('Insulation_kg', 0) for c in (self.results.get('shell_res') or {}).get('Shell Courses', []))
+
+        # Liquid weight at operating level
+        v_oper = 3.14159 * (D/2)**2 * max_level
+        w_liq = v_oper * G * 1000
+
+        w_empty = w_shell + w_roof + w_bottom + w_struct + w_anchor
+        w_oper = w_empty + w_liq
+        w_test_total = w_empty + w_water
+
+        courses_data = (self.results.get('shell_res') or {}).get('Shell Courses', [])
+
+        # Build component rows
+        def c_row(name, metal, ins, op_liq, test_liq, sa):
+            return f"<tr><td>{name}</td><td>{metal:.1f}</td><td>{metal:.1f}</td><td>{ins:.1f}</td><td>{op_liq:.1f}</td><td>{test_liq:.1f}</td><td>{sa:.2f}</td></tr>"
+
         html = f"""
         <h3>16.1 WEIGHT SUMMARY</h3>
-        <div style='background-color:#f8f9fa; padding:10px; margin-bottom:15px; border-left:4px solid #2c3e50;'>
-            <b>Weight Aggregation</b><br>
-            <code>Total Empty Weight = Shell + Roof + Structure + Bottom + Appurtenances</code><br>
-            <code>Total Empty Weight = {w_shell:.0f} + {w_roof:.0f} + {w_struct:.0f} + {w_bottom:.0f} = {w_empty:.0f} kg</code><br>
-            <code>Hydrotest Weight = Empty Weight + Water(Full Height) = {w_empty:.0f} + {w_water:.0f} = {w_test:.0f} kg</code>
-        </div>
-        <table>
-            <tr><th>Condition</th><th>Weight (kg)</th><th>Weight (Metric Ton)</th></tr>
-            <tr><td>Empty Tank (Approx):</td><td>{w_empty:.0f}</td><td>{w_empty/1000:.1f}</td></tr>
-            <tr><td>Operating Weight (Design Level):</td><td>{w_oper:.0f}</td><td>{w_oper/1000:.1f}</td></tr>
-            <tr><td>Hydrotest Weight (Full Water):</td><td>{w_test:.0f}</td><td>{w_test/1000:.1f}</td></tr>
+        <p><b>Weight (kg) Contributed by Tank Elements</b></p>
+        <table style="font-size:9pt;">
+            <tr>
+                <th>Component</th>
+                <th>Metal New (kg)</th><th>Metal Corroded (kg)</th>
+                <th>Insulation (kg)</th>
+                <th>Operating Liquid (kg)</th><th>Test Liquid (kg)</th>
+                <th>Surface Area (m²)</th>
+            </tr>
+        """
+        # Roof
+        html += c_row("Tank Roof", w_roof, 0, 0, 0, 3.14159 * (D/2)**2)
+
+        # Shell courses
+        prev_h = 0
+        for c in reversed(courses_data):
+            mat_w = c.get('Weight', 0)
+            ins_w = c.get('Insulation_kg', 0)
+            wid   = c.get('Width', 0)
+            liq_h = max(0, max_level - prev_h)
+            liq_v = 3.14159 * D * wid * 0  # simplified – liquid in annular area per course
+            liq_w_c = 0  # approximate – full liquid weight shown in total
+            sa_c  = 3.14159 * D * wid
+            html += c_row(f"Shell Course #{c.get('Course','-')}", mat_w, ins_w, 0, 0, sa_c)
+            prev_h += wid
+
+        # Bottom
+        sa_bot = 3.14159 * (D/2 + 0.055)**2
+        html += c_row("Tank Bottom", w_bottom, 0, 0, 0, sa_bot)
+        # Anchor
+        if w_anchor > 0:
+            html += c_row("Anchorage", w_anchor, 0, 0, 0, 0)
+
+        html += f"""
+            <tr style="font-weight:bold; background:#f2f2f2;">
+                <td>TOTAL</td>
+                <td>{w_empty:.1f}</td><td>{w_empty:.1f}</td>
+                <td>{ins_total:.1f}</td>
+                <td>{w_liq:.1f}</td><td>{w_water:.1f}</td>
+                <td>-</td>
+            </tr>
         </table>
-        
-        <h3>16.2 MOMENT SUMMARY</h3>
+
+        <h3>16.2 TANK TOTALS</h3>
         <table>
-            <tr><td>Wind Moment (Mw):</td><td>{self.extended.get('anchor',{}).get('Wind Overturning Moment (kN-m)', 0):.0f} kNm</td></tr>
-            <tr><td>Seismic Ringwall Moment (Mrw):</td><td>{(self.results.get('seismic_res') or {}).get('Ringwall_Moment_kNm', 0):.0f} kNm</td></tr>
+            <tr><th colspan="3" class="section-header">Weight Summary</th></tr>
+            <tr><th>Condition</th><th>New (kg)</th><th>Corroded (kg)</th></tr>
+            <tr><td>Operating Weight (kg)</td><td>{w_oper:.0f}</td><td>{w_oper:.0f}</td></tr>
+            <tr><td>Empty Weight (kg)</td><td>{w_empty:.0f}</td><td>{w_empty:.0f}</td></tr>
+            <tr><td>Test Weight (kg) — Full Water</td><td>{w_test_total:.0f}</td><td>{w_test_total:.0f}</td></tr>
+            <tr><td>Capacity (liters)</td><td>{v_oper*1000:.0f}</td><td>{v_oper*1000:.0f}</td></tr>
+        </table>
+
+        <h3>16.3 MOMENT SUMMARY</h3>
+        <table>
+            <tr><td>Wind Overturning Moment (Mw):</td><td>{self.extended.get('anchor',{}).get('Wind Overturning Moment (kN-m)', 0):.1f} kN-m</td></tr>
+            <tr><td>Seismic Ringwall Moment (Mrw):</td><td>{(self.results.get('seismic_res') or {}).get('Ringwall_Moment_kNm', 0):.1f} kN-m</td></tr>
+            <tr><td>Seismic Slab Moment (Ms):</td><td>{(self.results.get('seismic_res') or {}).get('Slab_Moment_kNm', 0):.1f} kN-m</td></tr>
         </table>
         """
-        self._add_chapter("WEIGHT & BM SUMMARY", html)
+        self._add_chapter("WEIGHT & MOMENT SUMMARY", html)
+
 
     def generate_chapter_17_venting(self):
         vent = (self.results.get('venting_res') or {})
