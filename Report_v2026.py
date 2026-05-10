@@ -472,6 +472,7 @@ class ReportGenerator2026:
         for c in courses:
             t_use = c.get('t_used', c.get('t_use', 0))
             t_req = c.get('t_req', 0)
+            t_min = c.get('t_min_code', 5.0)
             status_color = "#e53e3e" if t_use < t_req - 0.01 else "inherit"
             status_weight = "700" if t_use < t_req - 0.01 else "400"
             
@@ -479,7 +480,7 @@ class ReportGenerator2026:
                 <td>{c.get('Course','-')}</td><td>{c.get('Material','-')}</td>
                 <td>{c.get('Sd',0):.0f}</td><td>{c.get('St',0):.0f}</td>
                 <td>{c.get('td',0):.2f}</td><td>{c.get('tt',0):.2f}</td>
-                <td>5</td><td style='color:{status_color}; font-weight:{status_weight};'><b>{t_use}</b></td>
+                <td>{t_min:.1f}</td><td style='color:{status_color}; font-weight:{status_weight};'><b>{t_use}</b></td>
             </tr>"""
         html += "</table>"
 
@@ -512,6 +513,10 @@ class ReportGenerator2026:
                     - Effective Test Height, H<sub>t</sub> = {base_H:.3f} + 1.25 * {P_i:.2f} / (9.8 * 1.0) = <b>{H_t_display:.3f} m</b><br>
                     - Required Thickness (Test), t<sub>t</sub> = [4.9 * D * (H_t - 0.3)] / (St * E)<br>
                     <code>t<sub>t</sub> = [4.9 * {D:.3f} * ({H_t_display:.3f} - 0.3)] / ({St:.1f} * {E:.2f}) = <b>{tt:.2f} mm</b></code><br>
+                    - Calculated Required, t<sub>req</sub> = max(t<sub>d</sub>, t<sub>t</sub>) = <b>{max(td,tt):.2f} mm</b><br>
+                    - API 650 Min. Code, t<sub>min code</sub> = <b>{c.get('t_min_code', 5.0):.1f} mm</b><br>
+                    - <b>Final Required</b> = max(t<sub>req</sub>, t<sub>min code</sub>) = <b>{c.get('t_req', 0):.2f} mm</b><br>
+                    &rarr; <b>t<sub>used</sub> = {c.get('t_used', 0)} mm</b>
                 </div>
                 """
 
@@ -540,7 +545,10 @@ class ReportGenerator2026:
                         factor = 1.06 - (0.0696 * D / H<sub>eff</sub>) * √(H<sub>eff</sub> / S<sub>d</sub>)<br>
                         <code>t<sub>d</sub> = factor × [4.9 × D × H<sub>eff</sub> × G / (S<sub>d</sub> × E)] + CA = <b>{td:.3f} mm</b></code><br>
                         <code>t<sub>t</sub> = factor × [4.9 × D × H<sub>eff</sub> / S<sub>t</sub>] = <b>{tt:.3f} mm</b></code><br>
-                        t<sub>min code</sub> = {c.get('t_req', max(td,tt)):.1f} mm &nbsp;→&nbsp; <b>t<sub>used</sub> = {t_use} mm</b>
+                        - Calculated Required, t<sub>req</sub> = max(t<sub>d</sub>, t<sub>t</sub>) = <b>{max(td,tt):.3f} mm</b><br>
+                        - API 650 Min. Code, t<sub>min code</sub> = <b>{c.get('t_min_code', 5.0):.1f} mm</b><br>
+                        - <b>Final Required</b> = max(t<sub>req</sub>, t<sub>min code</sub>) = <b>{c.get('t_req', 0):.3f} mm</b><br>
+                        &rarr; <b>t<sub>used</sub> = {t_use} mm</b>
                     </div>"""
                 else:
                     # Upper course: E.6.4.3
@@ -553,7 +561,10 @@ class ReportGenerator2026:
                         H_x = H<sub>eff</sub> - x = {H_d:.4f} - {x_d:.4f} = <b>{H_x_d:.4f} m</b><br>
                         <code>t<sub>d</sub> = [4.9 × {D:.3f} × {H_x_d:.4f} × G] / (S<sub>d</sub> × E) + CA = <b>{td:.3f} mm</b></code><br>
                         <code>t<sub>t</sub> = [4.9 × {D:.3f} × {H_x_d:.4f}] / S<sub>t</sub> = <b>{tt:.3f} mm</b></code><br>
-                        t<sub>min code</sub> = {c.get('t_req', max(td,tt)):.1f} mm &nbsp;→&nbsp; <b>t<sub>used</sub> = {t_use} mm</b>
+                        - Calculated Required, t<sub>req</sub> = max(t<sub>d</sub>, t<sub>t</sub>) = <b>{max(td,tt):.3f} mm</b><br>
+                        - API 650 Min. Code, t<sub>min code</sub> = <b>{c.get('t_min_code', 5.0):.1f} mm</b><br>
+                        - <b>Final Required</b> = max(t<sub>req</sub>, t<sub>min code</sub>) = <b>{c.get('t_req', 0):.3f} mm</b><br>
+                        &rarr; <b>t<sub>used</sub> = {t_use} mm</b>
                     </div>"""
         html += "</div>"
 

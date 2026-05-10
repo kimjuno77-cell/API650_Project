@@ -794,42 +794,47 @@ if "latest_shell_results" in st.session_state:
 # Use Data Editor with dynamic key
 editor_key = f"shell_courses_input_{st.session_state.get('last_loaded', 'default')}"
 
-with st.form("shell_course_form"):
-    edited_df = st.data_editor(
-        df_shell_input,
-        key=editor_key, # Key for persistence
-        column_config={
-            "Material": st.column_config.SelectboxColumn(
-                "Material",
-                help="Select API 650 Material",
-                width="medium",
-                options=all_materials,
-                required=True,
-            ),
-            "Width (m)": st.column_config.NumberColumn(
-                "Width (m)",
-                min_value=0.1,
-                max_value=5.0,
-                step=0.001,
-            ),
-            "Req Thickness (mm)": st.column_config.NumberColumn(
-                "Req Thickness (mm)",
-                disabled=True, # Read-only
-                format="%.2f"
-            ),
-            "Rec Thickness (mm)": st.column_config.NumberColumn(
-                "Rec Thickness (mm)",
-                disabled=True, # Read-only
-                format="%.0f"
-            ),
-        },
-        hide_index=True,
-        num_rows="dynamic"
-    )
-    st.form_submit_button("일괄 적용 (Apply Updates)")
+# Use a container instead of a form for real-time responsiveness
+edited_df = st.data_editor(
+    df_shell_input,
+    key=editor_key, # Key for persistence
+    column_config={
+        "Material": st.column_config.SelectboxColumn(
+            "Material",
+            help="Select API 650 Material",
+            width="medium",
+            options=all_materials,
+            required=True,
+        ),
+        "Width (m)": st.column_config.NumberColumn(
+            "Width (m)",
+            min_value=0.1,
+            max_value=5.0,
+            step=0.001,
+        ),
+        "Thickness Used (mm)": st.column_config.NumberColumn(
+            "Thickness Used (mm)",
+            help="Actual nominal thickness used (User Input)",
+            min_value=0.0,
+            step=0.1,
+            format="%.1f"
+        ),
+        "Req Thickness (mm)": st.column_config.NumberColumn(
+            "Req Thickness (mm)",
+            disabled=True, # Read-only
+            format="%.2f"
+        ),
+        "Rec Thickness (mm)": st.column_config.NumberColumn(
+            "Rec Thickness (mm)",
+            disabled=True, # Read-only
+            format="%.0f"
+        ),
+    },
+    hide_index=True,
+    num_rows="dynamic"
+)
 
-# Update the persistence key 'shell_courses_data' with serializable format
-# This ensures save_project_to_json gets the latest edited data
+# Update the persistence key 'shell_courses_data' immediately
 st.session_state["shell_courses_data"] = edited_df.to_dict('records')
 
 # Validation: Compare Total Course Height with Tank Height
@@ -840,11 +845,15 @@ if abs(total_course_h - H) > 0.01:
 # Convert edited DF back to list format expected by ShellDesign
 courses_input = []
 for index, row in edited_df.iterrows():
+    # Robustly fetch Thickness Used - handle None or missing
+    t_val = row.get('Thickness Used (mm)', 0.0)
+    if t_val is None: t_val = 0.0
+    
     courses_input.append({
         'Course': row['Course'],
         'Material': row['Material'],
         'Width': row['Width (m)'],
-        'Thickness_Used': row['Thickness Used (mm)']
+        'Thickness_Used': float(t_val)
     })
     
 shell_design = ShellDesign(

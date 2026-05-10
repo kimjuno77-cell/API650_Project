@@ -166,6 +166,8 @@ class NozzleDesign:
                     status = "OK (Min Thk)"
                     
                 n['Check_Course'] = target_course['name']
+                n['t_used'] = t_s_used
+                n['t_req'] = t_s_req
                 n['A_req_mm2'] = A_req
                 n['A_avail_mm2'] = A_total
                 n['Status'] = status

@@ -275,6 +275,11 @@ class ShellDesign:
             # Auto-assign Recommended if Used is 0
             if t_used <= 0.0:
                 t_used = t_rec
+                
+            # Volume = Pi * (D + t/1000) * Width * t/1000
+            D_center = self.D + (t_used / 1000.0)
+            vol = math.pi * D_center * width * (t_used / 1000.0)
+            weight = vol * 7850.0
             
             self.results.append({
                 'Course': course['Course'],
@@ -287,7 +292,9 @@ class ShellDesign:
                 'tt': tt,
                 't_req': t_req,
                 't_rec': t_rec,
+                't_min_code': t_min_code,
                 't_used': t_used,
+                'Weight': weight,
                 'Status': 'OK' if t_used >= t_req - 0.01 else 'FAIL'
             })
             
