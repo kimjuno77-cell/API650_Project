@@ -89,6 +89,7 @@ class ReportGenerator2026:
             <style>{css}</style>
         </head>
         <body>
+            <div id="print-footer">Page <span class="page-num-content"></span></div>
             <div class='cover-page'>
                 <h1>API 650 STORAGE TANK DESIGN CALCULATION</h1>
                 <h2>PROJECT: HRSG AMMONIA STORAGE TANK (262-M-TK-101)</h2>
@@ -147,11 +148,28 @@ class ReportGenerator2026:
         .toc h2 { text-align: center; color: #2d3748; margin-bottom: 40px; font-weight: 700; font-size: 2.5rem; border-bottom: 3px solid #4ca1af; display: inline-block; padding-bottom: 10px; }
         .toc-container { width: 80%; margin: 0 auto; }
         .toc ul { list-style: none; padding: 0; }
-        .toc-item { display: flex; align-items: baseline; margin-bottom: 15px; font-size: 1.1rem; }
+        .toc-item { 
+            display: flex; 
+            align-items: baseline; 
+            margin-bottom: 12px; 
+            font-size: 1.05rem; 
+            width: 100%;
+        }
         .toc-title { flex-shrink: 0; font-weight: 600; color: #2d3748; }
-        .toc-dots { flex-grow: 1; border-bottom: 2px dotted #cbd5e0; margin: 0 10px; height: 1em; }
-        .toc-page { flex-shrink: 0; font-family: 'Roboto Mono', monospace; color: #4ca1af; font-weight: 700; min-width: 80px; text-align: right; }
+        .toc-dots { flex-grow: 1; border-bottom: 2px dotted #cbd5e0; margin: 0 10px; height: 1em; min-width: 20px; }
+        .toc-page { flex-shrink: 0; font-family: 'Roboto Mono', monospace; color: #4ca1af; font-weight: 700; min-width: 60px; text-align: right; }
         
+        /* Print Footer */
+        #print-footer {
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            right: 40px;
+            font-size: 10pt;
+            color: #718096;
+            font-family: 'Roboto Mono', monospace;
+        }
+
         .chapter { padding: 60px 80px; page-break-after: always; }
         .chapter-title { 
             font-size: 2.2rem; 
@@ -230,15 +248,7 @@ class ReportGenerator2026:
         }
 
         .page-break { page-break-after: always; }
-        .toc { padding: 60px 80px; }
-        .toc h2 { color: #2d3748; margin-bottom: 30px; font-size: 2rem; }
-        .toc ul { list-style: none; padding: 0; counter-reset: toc-page; }
-        .toc li { margin: 15px 0; display: flex; align-items: baseline; }
-        .toc li::after { content: ""; flex: 1; border-bottom: 1px dotted #cbd5e0; margin: 0 10px; order: 2; }
-        .toc a { text-decoration: none; color: #4a5568; font-weight: 500; order: 1; transition: color 0.2s; }
-        .toc a:hover { color: #4ca1af; }
-        .toc .page-num { order: 3; color: #718096; font-family: 'Roboto Mono', monospace; font-size: 0.9rem; counter-increment: toc-page; }
-        .toc .page-num::before { content: counter(toc-page); }
+        .toc { padding: 60px 80px; text-align: center; }
 
         @media print {
             body { padding: 0; }
@@ -246,6 +256,16 @@ class ReportGenerator2026:
             .cover-page { background: white; color: black; border: 2px solid #2c3e50; height: 95vh; }
             .cover-table td { color: black; }
             .cover-page h1 { color: #2c3e50; }
+            
+            #print-footer { display: block; }
+            .page-num-content::after { content: counter(page); }
+            
+            @page {
+                margin: 2cm;
+                @bottom-right {
+                    content: "Page " counter(page);
+                }
+            }
         }
         """
 
