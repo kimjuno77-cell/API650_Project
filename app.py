@@ -37,34 +37,32 @@ st.set_page_config(page_title="API 650 Tank Design", page_icon="🛢️", layout
 # --- Helper Functions for State Management ---
 def save_project_to_json():
     """
-    Serializes current session state inputs to JSON.
-    returns: JSON string
+    Serializes all relevant design inputs from session state to JSON.
+    Excludes internal system/auth variables for a clean project file.
     """
-    # Keys to save
-    keys_to_save = [
-        "project_name", "designer_name", "shell_method_ui", 
-        "ID_input", "H", "liquid_name", "G", "HD", "min_level",
-        "design_temp", "mdmt", "joint_efficiency",
-        "roof_type", "roof_slope", "roof_material", "dome_radius_ui",
-        "struct_mat_yield", "top_angle", "detail_type",
-        "efrt_b_pontoon", "efrt_h_outer", "efrt_h_inner", "efrt_gap_rim",
-        "efrt_t_deck", "efrt_t_rim", "efrt_t_pontoon", "efrt_n_pontoons",
-        "efrt_rafter_size", "efrt_leg_size", "efrt_leg_od", "efrt_leg_thk",
-        "pump_in", "pump_out", "flash_point_opt", "insulation_opt",
-        "nozzle_schedule_data",
-        "V_wind", "snow_load", "live_load", "dead_load_add",
-        "sug", "seismic_method", "site_class", "Ss", "S1", "SDS", "SD1", "Sp", "TL",
-        "use_kds", 
-        "kds_v0", "kds_terrain", "kds_risk_wind", "kds_iw_input",
-        "kds_zone_input", "kds_s_input", "kds_soil", "kds_risk_seismic", "kds_ie_input",
-        "shell_courses_data", "std_plate_width",
-        "mat_bottom", "use_annular", "ann_width", "ann_thk", "P_external"
-    ]
+    # System keys to exclude from saving
+    EXCLUDE_KEYS = {
+        "auth_manager", "logged_in", "username", "role", "session_recovered", 
+        "last_loaded", "latest_shell_results", "report_data", "shell_res",
+        "nozzle_res", "wind_girder_res", "roof_res", "bottom_res", "anchor_res",
+        "seismic_res", "annex_v_res", "sloshing_res", "venting_res",
+        "new_pass_admin", "create_user_name", "create_user_pass", "create_user_role",
+        "download_html_btn"
+    }
     
     data = {}
-    for k in keys_to_save:
-        if k in st.session_state:
-            data[k] = st.session_state[k]
+    for k, v in st.session_state.items():
+        # Skip internal keys and widget-specific keys that start with certain prefixes if needed
+        if k in EXCLUDE_KEYS:
+            continue
+        
+        # Only save JSON-serializable primitives and lists/dicts
+        # This handles strings, numbers, booleans, and our data tables
+        if isinstance(v, (str, int, float, bool, list, dict)) or v is None:
+            # Skip keys that are likely temporary or large binary data (like base64 graphs)
+            if k.endswith("_svg") or k.endswith("_graph") or k == "extended_data":
+                continue
+            data[k] = v
             
     return json.dumps(data, indent=4)
 
@@ -362,7 +360,13 @@ with st.container():
     col_geom, col_cap = st.columns(2)
     
     with col_geom:
-        tank_roof_type = st.selectbox("Tank Roof Type", ["[Type 1] CRT - Cone Roof Tank", "[Type 2] DRT - Dome Roof Tank", "[Type 3] IFRT - Internal Floating Roof Tank", "[Type 4] EFRT - External Floating Roof Tank"], index=0, key="roof_type_new")
+        roof_type_opts = ["[Type 1] CRT - Cone Roof Tank", "[Type 2] DRT - Dome Roof Tank", "[Type 3] IFRT - Internal Floating Roof Tank", "[Type 4] EFRT - External Floating Roof Tank"]
+        def get_roof_idx():
+            val = st.session_state.get("roof_type_new", "[Type 1] CRT - Cone Roof Tank")
+            try: return roof_type_opts.index(val)
+            except: return 0
+            
+        tank_roof_type = st.selectbox("Tank Roof Type", roof_type_opts, index=get_roof_idx(), key="roof_type_new")
         ID_input = st.number_input("Inside Diameter (D) [mm]", value=3900.0, step=100.0, key="ID_input", help="Reference: 262-M-TK-101 (Ammonia Tank)")
         H_input = st.number_input("Tank Height (H) [mm]", value=6600.0, step=100.0, key="H_input", help="Reference: 262-M-TK-101 (Ammonia Tank)")
         HD = st.number_input("Design Liquid Level (HD) [mm]", value=6000.0, step=100.0, key="HD")
@@ -495,10 +499,19 @@ with st.container():
 
     with col_mat2:
         st.subheader("Material Selection")
-        mat_shell = st.selectbox("Shell Plate", all_materials, index=all_materials.index("A283M-C") if "A283M-C" in all_materials else 0, key="mat_shell")
-        mat_bottom = st.selectbox("Bottom Plate", all_materials, index=all_materials.index("A283M-C") if "A283M-C" in all_materials else 0, key="mat_bottom")
-        mat_annular = st.selectbox("Annular Plate", all_materials, index=all_materials.index("A283M-C") if "A283M-C" in all_materials else 0, key="mat_annular")
-        roof_material = st.selectbox("Roof Plate", all_materials, index=all_materials.index("A283M-C") if "A283M-C" in all_materials else 0, key="roof_material")
+        
+        # Calculate indices based on session state for robust loading
+        def get_mat_idx(key, default="A283M-C"):
+            val = st.session_state.get(key, default)
+            try:
+                return all_materials.index(val)
+            except ValueError:
+                return 0
+
+        mat_shell = st.selectbox("Shell Plate", all_materials, index=get_mat_idx("mat_shell", "A283M-C"), key="mat_shell")
+        mat_bottom = st.selectbox("Bottom Plate", all_materials, index=get_mat_idx("mat_bottom", "A283M-C"), key="mat_bottom")
+        mat_annular = st.selectbox("Annular Plate", all_materials, index=get_mat_idx("mat_annular", "A283M-C"), key="mat_annular")
+        roof_material = st.selectbox("Roof Plate", all_materials, index=get_mat_idx("roof_material", "A283M-C"), key="roof_material")
         use_annular = st.checkbox("Use Annular Plate?", value=True, key="use_annular")
         ann_width_input = 600.0
         ann_thk_input = 8.0
@@ -662,11 +675,22 @@ with st.expander("🇰🇷 KDS Standard Options (Advanced)", expanded=True):
         flash_point_cat = 'High' if '>=' in flash_point_opt else 'Low'
         
     with st.expander("Annex F & Roof Detail Options", expanded=False):
+        detail_type_opts = ["Angle (Detail a)", "Butt Weld (Generic)", "Angle w/ Plate (Detail c)", "Internal Angle (Detail d)"]
+        def get_detail_idx():
+            val = st.session_state.get("detail_type_key", "Angle (Detail a)")
+            try: return detail_type_opts.index(val)
+            except: return 0
+            
         detail_type = st.selectbox("Roof-to-Shell Detail (Fig F.2)", 
-            ["Angle (Detail a)", "Butt Weld (Generic)", "Angle w/ Plate (Detail c)", "Internal Angle (Detail d)"], index=0)
+            detail_type_opts, index=get_detail_idx(), key="detail_type_key")
         
         angle_opts = ["L50x50x4", "L50x50x5", "L50x50x6", "L65x65x5", "L65x65x6", "L65x65x8", "L75x75x6", "L75x75x9", "L100x100x8", "L100x100x10"]
-        top_angle_size = st.selectbox("Top Angle Size", angle_opts, index=6)
+        def get_angle_idx():
+            val = st.session_state.get("top_angle_key", "L75x75x6")
+            try: return angle_opts.index(val)
+            except: return 6
+            
+        top_angle_size = st.selectbox("Top Angle Size", angle_opts, index=get_angle_idx(), key="top_angle_key")
 
 # Run Calculation
 # Prepare params dictionary similar to InputReader
@@ -1978,7 +2002,7 @@ with st.container():
     
     report_type = st.radio("Select Report Type", 
                            ["Summary Report", "Full Calculation Report (Detailed 50+ Pages)", "Ver.2026 (Professional)"], 
-                           index=0, horizontal=True)
+                           index=0, horizontal=True, key="report_type_ui")
     
     template_to_use = "report_template.html"
     if report_type == "Summary":
