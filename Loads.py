@@ -550,7 +550,66 @@ class SeismicLoad:
             'Seismic_Add_kPa': P_seismic
         }
 
+    def check_sloshing_freeboard(self, H_liq, tank_height, Tc_s=None):
+        """
+        API 650 Annex E.7 Sloshing Wave Height and Freeboard Check.
+        Computes design sloshing wave height dh and checks freeboard.
+        
+        H_liq: Maximum design liquid level (m)
+        tank_height: Total shell height (m)
+        Tc_s: Convective period in seconds (recomputed if None)
+        """
+        ratio = self.D / H_liq if H_liq > 0 else 1.0
+        
+        # Recompute Tc if not provided
+        if Tc_s is None:
+            Ks = 0.576 / math.sqrt(math.tanh(3.67 / ratio))
+            Tc_s = 1.8 * Ks * math.sqrt(self.D)
+        
+        # Ac (convective spectral acceleration)
+        Rw_c = 1.5
+        SD1 = self.S1
+        if Tc_s > 0:
+            Ac = 1.5 * (SD1 / Tc_s) * (self.I / Rw_c)
+        else:
+            Ac = self.SDS * (self.I / Rw_c)
+        
+        # API 650 E.7.1: Design Sloshing Wave Height
+        # dh = 0.5 * D * Ac  (for Tc <= TL = 4s typical)
+        TL = 4.0  # Long-period transition (sec), default 4s
+        if Tc_s <= TL:
+            dh = 0.5 * self.D * Ac
+        else:
+            # dh = 0.5 * D * Ac * TL / Tc (E.7.1.2)
+            dh = 0.5 * self.D * Ac * (TL / Tc_s)
+        
+        # Available freeboard
+        freeboard = tank_height - H_liq
+        
+        # API 650 E.7.2: Minimum Freeboard Requirement
+        # If dh > freeboard, sloshing wave hits roof → may cause overpressure
+        status = "OK" if dh <= freeboard else "FAIL"
+        warning = None
+        if status == "FAIL":
+            warning = (f"Sloshing wave height ({dh:.3f} m) exceeds available freeboard "
+                       f"({freeboard:.3f} m). Roof damage risk. Consider raising shell or reducing level.")
+        
+        return {
+            'D_m': self.D,
+            'H_liq_m': H_liq,
+            'Tank_Height_m': tank_height,
+            'Tc_s': Tc_s,
+            'Ac': Ac,
+            'TL_s': TL,
+            'dh_m': dh,
+            'Freeboard_m': freeboard,
+            'Status': status,
+            'Warning': warning,
+            'Formula': 'dh = 0.5 * D * Ac  [API 650 E.7.1]'
+        }
+
     def check_longitudinal_compression(self, t_mm, W_shell_kN, W_roof_kN, Ms_kNm, Sd, Fy):
+
         """
         Calculates maximum longitudinal compression stress and compares with allowable.
         API 650 E.6.2.2.

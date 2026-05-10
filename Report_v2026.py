@@ -55,6 +55,7 @@ class ReportGenerator2026:
         self.generate_chapter_17_venting()
         self.generate_chapter_18_civil_loading()
         self.generate_chapter_19_external_pressure()
+        self.generate_chapter_20_nozzle_reinforcement()
         
         # 2. Assemble Final HTML
         return self._assemble_full_html()
@@ -497,15 +498,43 @@ class ReportGenerator2026:
 
         elif courses and is_vdm:
             html += "<b>API 650 5.6.4 Variable Design Point Method (VDM)</b><br>"
-            for c in courses:
-                H_d = c.get('H_eff_d', 0)
-                Sd = c.get('Sd', 0)
-                St = c.get('St', 0)
-                td = c.get('td', 0)
-                tt = c.get('tt', 0)
-                t_use = c.get('t_used', c.get('t_use', 0))
-                html += f"<b>[Course {c.get('Course')}]</b><br>"
-                html += f"<code>H<sub>eff</sub> = {H_d:.4f} m, t<sub>d</sub> = {td:.3f} mm, t<sub>t</sub> = {tt:.3f} mm &rarr; t<sub>use</sub> = <b>{t_use} mm</b></code><br><br>"
+            html += """<div class='calculation-block'>
+                <b>Notation:</b> H<sub>eff</sub> = Effective liquid height at course bottom,
+                x = design point offset (0.61√(D·t) for upper courses),
+                H_x = H<sub>eff</sub> - x<br><br>
+            </div>"""
+            for i, c in enumerate(courses):
+                H_d    = c.get('H_eff_d', 0)
+                Sd     = c.get('Sd', 0)
+                St     = c.get('St', 0)
+                td     = c.get('td', 0)
+                tt     = c.get('tt', 0)
+                t_use  = c.get('t_used', c.get('t_use', 0))
+                t_prev = courses[i-1].get('t_used', td) if i > 0 else 0
+                
+                if i == 0:
+                    # Bottom course: E.6.4.2
+                    html += f"""<div class='calculation-block'>
+                        <b>[Course {c.get('Course')} — Bottom Course, API 650 5.6.4.2]</b><br>
+                        H<sub>eff</sub> = {H_d:.4f} m<br>
+                        factor = 1.06 - (0.0696 * D / H<sub>eff</sub>) * √(H<sub>eff</sub> / S<sub>d</sub>)<br>
+                        <code>t<sub>d</sub> = factor × [4.9 × D × H<sub>eff</sub> × G / (S<sub>d</sub> × E)] + CA = <b>{td:.3f} mm</b></code><br>
+                        <code>t<sub>t</sub> = factor × [4.9 × D × H<sub>eff</sub> / S<sub>t</sub>] = <b>{tt:.3f} mm</b></code><br>
+                        t<sub>min code</sub> = {c.get('t_req', max(td,tt)):.1f} mm &nbsp;→&nbsp; <b>t<sub>used</sub> = {t_use} mm</b>
+                    </div>"""
+                else:
+                    # Upper course: E.6.4.3
+                    x_d = 0.61 * math.sqrt(D * t_prev / 1000.0) if t_prev > 0 else 0
+                    H_x_d = max(0, H_d - x_d)
+                    html += f"""<div class='calculation-block'>
+                        <b>[Course {c.get('Course')} — Upper Course, API 650 5.6.4.3]</b><br>
+                        H<sub>eff</sub> = {H_d:.4f} m, &nbsp; t<sub>prev</sub> = {t_prev} mm<br>
+                        x = 0.61 × √(D × t<sub>prev</sub>) = 0.61 × √({D:.3f} × {t_prev}/1000) = <b>{x_d:.4f} m</b><br>
+                        H_x = H<sub>eff</sub> - x = {H_d:.4f} - {x_d:.4f} = <b>{H_x_d:.4f} m</b><br>
+                        <code>t<sub>d</sub> = [4.9 × {D:.3f} × {H_x_d:.4f} × G] / (S<sub>d</sub> × E) + CA = <b>{td:.3f} mm</b></code><br>
+                        <code>t<sub>t</sub> = [4.9 × {D:.3f} × {H_x_d:.4f}] / S<sub>t</sub> = <b>{tt:.3f} mm</b></code><br>
+                        t<sub>min code</sub> = {c.get('t_req', max(td,tt)):.1f} mm &nbsp;→&nbsp; <b>t<sub>used</sub> = {t_use} mm</b>
+                    </div>"""
         html += "</div>"
 
         html += f"""
@@ -682,12 +711,35 @@ class ReportGenerator2026:
             stress = (4.9 * D * (H_d - 0.3) * G) / t_prov if t_prov > 0 else 0
             
             html = f"""
-            <h3>6.1 ANNULAR PLATE REQUIREMENT</h3>
+            <h3>6.1 ANNULAR PLATE REQUIREMENT (API 650 5.5)</h3>
             <div class='calculation-block'>
-                <b>API 650 5.5 Annular Bottom Plates</b><br>
-                Product Stress in 1st Shell Course: <code>Stress = (4.9 * D * (H - 0.3) * G) / t_provided</code><br>
-                <code>Stress = (4.9 * {D:.3f} * ({H_d:.3f} - 0.3) * {G:.3f}) / {t_prov:.2f} = {stress:.1f} MPa</code><br><br>
-                Required thickness based on Table 5.1 and First Course Stresses.
+                <b>API 650 5.5.1 Annular Plate Requirement Check</b><br>
+                Product Stress in 1st Shell Course:<br>
+                <code>σ = (4.9 × D × (H - 0.3) × G) / t_provided</code><br>
+                <code>σ = (4.9 × {D:.3f} × ({H_d:.3f} - 0.3) × {G:.3f}) / {t_prov:.2f} = <b>{stress:.1f} MPa</b></code><br><br>
+                <b>API 650 Table 5-1: Minimum Annular Plate Thickness</b><br>
+                <table style='width:auto; margin-left:20px;'>
+                    <tr style='background:#4a5568;color:white;'>
+                        <th>Condition (1st Course σ)</th><th>Min. t<sub>annular</sub> (mm)</th><th>Applicable?</th>
+                    </tr>
+                    <tr {'style="background:#c6f6d5;"' if stress <= 170 else ''}>
+                        <td>σ ≤ 170 MPa</td><td>6.0 mm</td>
+                        <td>{'✅ Governs' if stress <= 170 else '-'}</td>
+                    </tr>
+                    <tr {'style="background:#c6f6d5;"' if 170 < stress <= 190 else ''}>
+                        <td>170 &lt; σ ≤ 190 MPa</td><td>8.0 mm</td>
+                        <td>{'✅ Governs' if 170 < stress <= 190 else '-'}</td>
+                    </tr>
+                    <tr {'style="background:#c6f6d5;"' if 190 < stress <= 210 else ''}>
+                        <td>190 &lt; σ ≤ 210 MPa</td><td>11.0 mm</td>
+                        <td>{'✅ Governs' if 190 < stress <= 210 else '-'}</td>
+                    </tr>
+                    <tr {'style="background:#c6f6d5;"' if stress > 210 else ''}>
+                        <td>σ &gt; 210 MPa</td><td>Special (per 5.5.3)</td>
+                        <td>{'✅ Governs' if stress > 210 else '-'}</td>
+                    </tr>
+                </table><br>
+                <b>Min. Annular Thickness Required:</b> {6.0 if stress <= 170 else (8.0 if stress <= 190 else (11.0 if stress <= 210 else 'Special'))} mm + CA
             </div>
 
             <h3>6.2 ANNULAR PLATE DIMENSIONS & PROJECTION</h3>
@@ -1079,21 +1131,98 @@ class ReportGenerator2026:
                 </div>
                 """
             
+            html += "<h3>12.4 SEISMIC HOOP STRESS CHECK (API 650 E.6.1.4)</h3>"
+            
+            hoop = self.results.get('seismic_hoop_res', {})
+            if hoop:
+                Ph   = hoop.get('Hydro_kPa', 0)
+                Pdyn = hoop.get('Seismic_Add_kPa', 0)
+                Ptot = Ph + Pdyn
+                t_bot = self.results.get('shell_courses', [{}])[0].get('t_used', 0) if self.results.get('shell_courses') else 0
+                D_ = self.design.get('D', 0)
+                sigma = hoop.get('Stress_MPa', 0)
+                allow = hoop.get('Allow_MPa', 0)
+                s_cls = 'result-pass' if hoop.get('Status','') == 'OK' else 'result-fail'
+                html += f"""
+                <div class="calculation-block">
+                    <b>E.6.1.4 Pressure Components at Bottom (y = 0):</b><br>
+                    ① Hydrostatic: P<sub>h</sub> = γ × H<sub>liq</sub> = <b>{Ph:.3f} kPa</b><br>
+                    ② Impulsive:  P<sub>i</sub> = Ai × γ × H<sub>liq</sub><br>
+                    ③ Convective: P<sub>c</sub> = Ac × γ × H<sub>liq</sub><br>
+                    ④ Vertical:   P<sub>av</sub> = (2/3)×SDS × γ × H<sub>liq</sub><br>
+                    ⑤ Dynamic SRSS: P<sub>dyn</sub> = √(P<sub>i</sub>² + P<sub>c</sub>² + P<sub>av</sub>²) = <b>{Pdyn:.3f} kPa</b><br>
+                    ⑥ Total: P<sub>total</sub> = P<sub>h</sub> + P<sub>dyn</sub> = {Ph:.3f} + {Pdyn:.3f} = <b>{Ptot:.3f} kPa</b><br><br>
+                    σ<sub>hoop</sub> = P<sub>total</sub> × D / (2 × t) = {Ptot:.3f} × {D_:.3f} / (2 × {t_bot}/1000) = <b>{sigma:.2f} MPa</b><br>
+                    Allowable = 1.333 × S<sub>d</sub> × E = <b>{allow:.2f} MPa</b><br>
+                    → <b class="{s_cls}">{hoop.get('Status','-')}</b>
+                </div>
+                """
+
             html += "<h3>12.5 SEISMIC LONGITUDINAL COMPRESSION (API 650 E.6.2.2)</h3>"
             comp = self.results.get('seismic_comp_res', {})
             if comp:
+                fc     = comp.get('fc_MPa', comp.get('Stress_MPa', 0))
+                Fc     = comp.get('Fc_MPa', comp.get('Allow_MPa', 0))
+                f_grav = comp.get('Gravity_Stress', 0)
+                f_mom  = comp.get('Moment_Stress', 0)
+                c_cls  = 'result-pass' if comp.get('Status','') == 'OK' else 'result-fail'
                 html += f"""
                 <div class="calculation-block">
-                    <b>Compression Stress calculation:</b><br>
-                    Max Compression, sigma_c = (wt_shell + wt_roof) / (2000 * pi * R * t) + (1.27 * Ms) / (D^2 * t)<br>
-                    Calculated Stress: <b>{comp.get('Stress_MPa', 0):.2f} MPa</b><br>
-                    Allowable Stress (Fa): <b>{comp.get('Allow_MPa', 0):.2f} MPa</b><br>
-                    Status: <b class="{'result-pass' if comp.get('Status') == 'OK' else 'result-fail'}">{comp.get('Status','-')}</b>
+                    <b>E.6.2.2.1 Compression Stress:</b><br>
+                    σ<sub>c</sub> = [(W<sub>s</sub>+W<sub>r</sub>) / (π×D)] / t + [1.273×M<sub>s</sub> / D²] / t<br>
+                    σ<sub>gravity</sub> = {f_grav:.3f} MPa &nbsp;|&nbsp; σ<sub>moment</sub> = {f_mom:.3f} MPa<br>
+                    σ<sub>c</sub> = <b>{fc:.3f} MPa</b><br><br>
+                    <b>E.6.2.2.3 Allowable F<sub>c</sub>:</b><br>
+                    F<sub>c</sub> = min(0.4×F<sub>y</sub>, 0.25×E×t/D) = <b>{Fc:.3f} MPa</b><br>
+                    → <b class="{c_cls}">{comp.get('Status','-')}</b>
                 </div>
                 """
+
+            # E.7 Sloshing
+            html += "<h3>12.6 SLOSHING WAVE HEIGHT & FREEBOARD (API 650 E.7)</h3>"
+            sl = self.results.get('sloshing_res', {})
+            if sl:
+                dh  = sl.get('dh_m', 0)
+                fb  = sl.get('Freeboard_m', 0)
+                Tc_ = sl.get('Tc_s', 0)
+                Ac_ = sl.get('Ac', 0)
+                D_  = sl.get('D_m', self.design.get('D', 0))
+                sl_cls = 'result-pass' if sl.get('Status','') == 'OK' else 'result-fail'
+                html += f"""
+                <div class="calculation-block">
+                    <b>E.7.1 Sloshing Wave Height:</b><br>
+                    T<sub>c</sub> = {Tc_:.2f} s &nbsp;|&nbsp; A<sub>c</sub> = {Ac_:.4f}<br>
+                    d<sub>h</sub> = 0.5 × D × A<sub>c</sub> = 0.5 × {D_:.3f} × {Ac_:.4f} = <b>{dh:.3f} m</b><br><br>
+                    <b>E.7.2 Freeboard Check:</b><br>
+                    Available Freeboard = H<sub>shell</sub> − H<sub>liq</sub> = {sl.get('Tank_Height_m',0):.3f} − {sl.get('H_liq_m',0):.3f} = <b>{fb:.3f} m</b><br>
+                    d<sub>h</sub> ({dh:.3f} m) {'≤' if dh<=fb else '>'} Freeboard ({fb:.3f} m)
+                    → <b class="{sl_cls}">{sl.get('Status','-')}</b>
+                    {'<br><span style="color:#e53e3e;">⚠️ ' + sl.get('Warning','') + '</span>' if sl.get('Warning') else ''}
+                </div>
+                """
+            else:
+                html += "<p>Sloshing check not performed (seismic not active).</p>"
+
+            # E.8 Anchorage Ratio
+            J = seismic.get('Anchorage_Ratio_J', 0)
+            anc_stat = seismic.get('Anchorage_Status', '-')
+            html += f"""
+            <h3>12.7 ANCHORAGE RATIO J (API 650 E.6.2.1 / E.8)</h3>
+            <div class="calculation-block">
+                <b>E.6.2.1 Anchorage Ratio:</b><br>
+                J = M<sub>rw</sub> / [D² × (w<sub>t</sub>×(1−0.4×A<sub>v</sub>) + w<sub>a</sub>)]<br>
+                Where: w<sub>t</sub> = W<sub>shell</sub>/(π×D), w<sub>a</sub> = W<sub>roof</sub>/(π×D)<br>
+                J = <b>{J:.3f}</b><br><br>
+                <b>E.8 Interpretation:</b><br>
+                J ≤ 0.785 → Self-Anchored (Stable)<br>
+                0.785 < J ≤ 1.54 → Self-Anchored with Annular Plate Check<br>
+                J > 1.54 → Mechanical Anchors Required<br>
+                → <b>{anc_stat}</b>
+            </div>
+            """
             
             if graph:
-                html += f'<h3>12.6 DESIGN SPECTRUM GRAPH</h3><img src="data:image/png;base64,{graph}" style="max-width:80%; margin: 20px auto; display:block; border: 1px solid #ddd;" />'
+                html += f'<h3>12.8 DESIGN SPECTRUM GRAPH</h3><img src="data:image/png;base64,{graph}" style="max-width:80%; margin: 20px auto; display:block; border: 1px solid #ddd;" />'
 
             
         self._add_chapter("SEISMIC DESIGN OF STORAGE TANK", html)
@@ -1586,22 +1715,92 @@ class ReportGenerator2026:
             </table>
         </div>
 
-        <h3>19.2 STIFFENING RING DESIGN (V.8.2)</h3>
+        <h3>19.2 BOTTOM STIFFENER REGION (V.8.2.3)</h3>
         <div class='calculation-block'>
-            <b>API 650 V.8.2.3 End Stiffener Factor (N&sup2;)</b><br>
-            <code>N&sup2; = (445 * D&sup3;) / (t * H&sup2;)</code><br>
-            <code>N&sup2; = (445 * {D:.1f}&sup3;) / ({res.get('Top Course Thickness (mm)',0):.1f} * {H:.1f}&sup2;) = {res.get('Bottom Stiffener Factor N2',0):.2f}</code><br><br>
-            <i>Note: If N&sup2; &le; 6, a bottom stiffener is required.</i>
+            <b>API 650 V.8.2.3 End Stiffener Factor N²:</b><br>
+            <code>N² = (445 × D³) / (t × H²)</code><br>
+            <code>N² = (445 × {D:.3f}³) / ({res.get('t_min_mm',0):.1f} × {H:.3f}²) = <b>{res.get('N_sq',0):.2f}</b></code><br>
+            <i>Note: N² ≤ 6 → Bottom stiffener required</i>
         </div>
         """
-        
-        if res.get('Required Number of Rings', 0) > 0:
+
+        if res.get('Status') == 'FAIL':
+            L_max = res.get('L_max_m', 0)
+            N_rings = res.get('Num_Rings', 0)
             html += f"""
+            <h3>19.3 INTERMEDIATE STIFFENER RINGS REQUIRED (V.8.1.2 FAIL)</h3>
             <div class='calculation-block'>
-                <b>Intermediate Stiffener Spacing (V.10)</b><br>
-                <tr><td>Max Spacing (L):</td><td>{res.get('Max Stiffener Spacing L (m)',0):.2f} m</td></tr><br>
-                <tr><td>Required Number of Rings:</td><td>{res.get('Required Number of Rings',0)}</td></tr>
+                <b>Since Pa &lt; P_ext, intermediate stiffener rings are required.</b><br><br>
+                Maximum Ring Spacing (L_max):<br>
+                <code>L_max = D × [(coeff × (t/D)^2.5 / (3 × P_ext)) + 0.45 × √(t/D)]</code><br>
+                <code>L_max = <b>{L_max:.3f} m</b></code><br><br>
+                Required Number of Rings = ⌈H / L_max⌉ − 1 = <b>{N_rings} EA</b><br>
+                Minimum Ring Size: Per API 650 V.9, select a ring with Z ≥ required modulus.
             </div>
             """
+        else:
+            html += "<div class='calculation-block'>Unstiffened shell is adequate. <b>No intermediate rings required.</b></div>"
         
         self._add_chapter("ANNEX V (EXTERNAL PRESSURE)", html)
+
+    def generate_chapter_20_nozzle_reinforcement(self):
+        """
+        API 650 5.7.2 Nozzle Reinforcement Area Check.
+        """
+        nozzles = self.results.get('nozzle_res', [])
+        if not nozzles:
+            nozzles = (self.results.get('nozzle_schedule', []) or
+                       (self.results.get('nozzle_data') or {}).get('nozzle_schedule', []))
+        
+        if not nozzles:
+            self._add_chapter("NOZZLE REINFORCEMENT (5.7.2)",
+                              "<p>No nozzle data provided or not applicable.</p>")
+            return
+
+        html = f"""
+        <h3>20.1 NOZZLE REINFORCEMENT BASIS</h3>
+        <div class='calculation-block'>
+            <b>API 650 5.7.2 Reinforcement Area Method</b><br>
+            Required Area: A<sub>req</sub> = d × t<sub>r</sub> &nbsp;(d = nozzle hole diameter, t<sub>r</sub> = required shell thickness)<br>
+            Available Area: A<sub>avail</sub> = A<sub>1</sub> (shell excess) + A<sub>2</sub> (nozzle excess) + A<sub>3</sub> (repad)<br>
+            Criterion: A<sub>avail</sub> ≥ A<sub>req</sub>
+        </div>
+        <h3>20.2 NOZZLE SCHEDULE & REINFORCEMENT CHECK</h3>
+        <table>
+            <tr style='background:#2d3748;color:white;'>
+                <th>Mark</th><th>Service</th><th>Size (NPS)</th><th>OD (mm)</th>
+                <th>Elev (m)</th><th>Course</th><th>t<sub>r</sub> (mm)</th>
+                <th>t<sub>used</sub> (mm)</th><th>A<sub>req</sub> (mm²)</th>
+                <th>A<sub>1</sub> (mm²)</th><th>A<sub>3</sub> (Repad)</th>
+                <th>A<sub>avail</sub> (mm²)</th><th>Ratio</th><th>Status</th>
+            </tr>
+        """
+        
+        for n in nozzles:
+            mark  = n.get('Mark', '-')
+            svc   = n.get('Service', '-')
+            sz    = n.get('Size', n.get('Size (NPS)', '-'))
+            od    = n.get('OD_mm', 0)
+            elev  = n.get('Elevation', n.get('Elevation (m)', 0))
+            course= n.get('Check_Course', '-')
+            t_req = n.get('t_req', 0)   # Required shell thickness (from calculation)
+            t_used= n.get('t_used', 0)  # Used shell thickness
+            A_req = n.get('A_req_mm2', od * t_req if t_req > 0 else 0)
+            A_av  = n.get('A_avail_mm2', 0)
+            A1    = max(0, (t_used - t_req) * od) if (t_used > 0 and t_req > 0 and od > 0) else 0
+            A3    = A_av - A1  # Approximate repad contribution
+            ratio = A_av / A_req if A_req > 0 else 999
+            st    = n.get('Status', 'OK' if ratio >= 1.0 else 'FAIL')
+            cls   = 'result-pass' if st == 'OK' else 'result-fail'
+            html += f"""
+            <tr>
+                <td><b>{mark}</b></td><td>{svc}</td><td>{sz}"</td><td>{od:.1f}</td>
+                <td>{elev:.2f}</td><td>{course}</td>
+                <td>{t_req:.2f}</td><td>{t_used}</td>
+                <td>{A_req:.0f}</td><td>{A1:.0f}</td><td>{max(0,A3):.0f}</td>
+                <td><b>{A_av:.0f}</b></td><td>{ratio:.2f}</td>
+                <td class='{cls}'><b>{st}</b></td>
+            </tr>"""
+        
+        html += "</table>"
+        self._add_chapter("NOZZLE REINFORCEMENT (5.7.2)", html)

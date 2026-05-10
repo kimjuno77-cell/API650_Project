@@ -1109,6 +1109,13 @@ final_comp_res = gov_seismic_load_obj.check_longitudinal_compression(t_shell_bot
 annex_v = AnnexVDesign(D, H, shell_design.shell_courses, P_external, Fy=fy_bot)
 annex_v_res = annex_v.run_design()
 
+# --- NEW: E.7 Sloshing Freeboard Check ---
+sloshing_res = gov_seismic_load_obj.check_sloshing_freeboard(
+    H_liq=max_level,
+    tank_height=H,
+    Tc_s=gov_seismic_res.get('Tc_s', None)
+)
+
 # --- Integrate Seismic Annular Requirement into Bottom Design ---
 seismic_ann_status = gov_seismic_res.get('Annular_Check', 'Not Required')
 if "Required" in seismic_ann_status:
@@ -1817,6 +1824,7 @@ with st.container():
             'seismic_hoop_res': final_hoop_res if 'final_hoop_res' in locals() else {},
             'seismic_comp_res': final_comp_res if 'final_comp_res' in locals() else {},
             'annex_v_res': annex_v_res if 'annex_v_res' in locals() else {},
+            'sloshing_res': sloshing_res if 'sloshing_res' in locals() else {},
  # Explicit Hoop Stress
             'venting_res': venting_res, # New API 2000 Data
             'wind_girder_res': wind_girder_res, # New API 650 5.9
