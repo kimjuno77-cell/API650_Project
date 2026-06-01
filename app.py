@@ -53,7 +53,7 @@ def save_project_to_json():
     data = {}
     for k, v in st.session_state.items():
         # Skip internal keys and widget-specific keys that start with certain prefixes if needed
-        if k in EXCLUDE_KEYS:
+        if k in EXCLUDE_KEYS or k == "nozzles_editor" or k.startswith("shell_courses_input_"):
             continue
         
         # Only save JSON-serializable primitives and lists/dicts
@@ -76,6 +76,8 @@ def load_project_from_json(uploaded_file):
         
         # Robust Update
         for k, v in data.items():
+            if k == "nozzles_editor" or k.startswith("shell_courses_input_"):
+                continue
             st.session_state[k] = v
             
         st.success(f"Project '{uploaded_file.name}' Loaded! ({len(data)} items updated)")
@@ -245,6 +247,8 @@ if "session_recovered" not in st.session_state:
             with open(".last_session.json", "r", encoding="utf-8") as f_in:
                 data = json.load(f_in)
                 for k, v in data.items():
+                    if k == "nozzles_editor" or k.startswith("shell_courses_input_"):
+                        continue
                     if k not in st.session_state:
                         st.session_state[k] = v
             # st.toast("Last session recovered.")
