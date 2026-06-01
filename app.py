@@ -146,6 +146,15 @@ def display_design_warnings(rd):
         if N_sq <= 6:
              st.warning(f"⚠️ **[ANNEX V WARNING]** N² = {N_sq:.2f} (≤ 6). End Stiffener is REQUIRED per API 650 V.8.2.3.")
              # Not always a Hard Fail if stiffener is added later, but critical.
+
+    # 5. API 650 Annex F.2.4 Nozzle check
+    nozzle_res_list = results.get('nozzle_res', [])
+    for n in nozzle_res_list:
+        if n.get('F24_Active') and n.get('Status') == 'Reinforce Req':
+            st.error(f"🚨 **[ANNEX F.2.4 COMPLIANCE FAIL]** Roof nozzle **{n.get('Mark')}** (NPS {n.get('Size')}) requires reinforcement pad per API 650 F.2.4 (Design Pressure > 2 kPa).")
+            has_error = True
+        elif n.get('F24_Active') and n.get('F24_Warning'):
+            st.warning(f"⚠️ **[ANNEX F.2.4 COMPLIANCE NOTE]** {n.get('F24_Warning')}")
     
     if not has_error:
         st.success("✅ Design Integrity Check Passed! (Basic checks OK)")
@@ -1077,7 +1086,12 @@ wind_girder_res = wind_girder_design.calculate_intermediate_girders()
 nozzle_list_in = st.session_state.get("nozzle_schedule_data", [])
 nozzle_design = NozzleDesign(nozzle_list_in)
 nozzle_design.process_nozzles()
-nozzle_res = nozzle_design.check_reinforcement(shell_design.shell_courses)
+nozzle_res = nozzle_design.check_reinforcement(
+    shell_courses=shell_design.shell_courses,
+    roof_t_used=roof_design.t_used if ('roof_design' in locals() and roof_design) else 6.0,
+    roof_t_req=roof_design.t_req if ('roof_design' in locals() and roof_design) else 5.0,
+    P_design_kPa=P_design_mm * 0.00980665
+)
 
 # Seismic
 # Need Liquid Weight

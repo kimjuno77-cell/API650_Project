@@ -3,11 +3,12 @@ import math
 class NozzleDesign:
     """
     Handles Nozzle Schedule and Basic Checks for API 650 Tank.
+    Includes API 650 F.2.4 checking for roof nozzles under pressure > 2 kPa.
     """
     def __init__(self, nozzles_list=None):
         """
         :param nozzles_list: List of dicts defines nozzles.
-                             Keys: Mark, NPS, Service, Elevation, Remarks
+                             Keys: Mark, Size (NPS), Service, Elevation, Remarks
         """
         self.nozzles = nozzles_list if nozzles_list else []
         self.results = {}
@@ -36,7 +37,6 @@ class NozzleDesign:
             elev = nozzle.get('Elevation (m)', 0.0)
             
             # Lookup OD
-            # Strip " inch" or similar if present
             clean_nps = nps.replace('"', '').replace('in', '').strip()
             od = self.pipe_od_map.get(clean_nps, 0.0)
             
@@ -60,11 +60,10 @@ class NozzleDesign:
         self.results['nozzle_schedule'] = processed_list
         return processed_list
 
-    def check_reinforcement(self, shell_courses):
+    def check_reinforcement(self, shell_courses, roof_t_used=6.0, roof_t_req=5.0, P_design_kPa=0.0):
         """
         Perform Reinforcement Area Check (API 650 5.7.2).
-        A_required = d * t_r (required shell thickness)
-        A_available = A1 (Shell Excess) + A2 (nozzle excess) + A3 (Repad)
+        Includes API 650 F.2.4 roof nozzle checks.
         """
         if not self.results.get('nozzle_schedule'):
             return []
@@ -77,8 +76,8 @@ class NozzleDesign:
         for c in shell_courses:
             h_course = c.get('Width', 0.0)
             t_used = c.get('t_used', 0.0)
-            t_req = c.get('t_req', 0.0) # Ensure this exists (ShellDesign output)
-            if t_req == 0: t_req = t_used # Conservative fallback
+            t_req = c.get('t_req', 0.0)
+            if t_req == 0: t_req = t_used
             
             course_map.append({
                 'bottom': cum_h,
@@ -106,62 +105,24 @@ class NozzleDesign:
             ratio = 0.0
             
             if target_course:
-                # API 650 5.7.2: Reinforcement
-                # d = diameter of hole in shell (Assumed equal to OD_mm for set-through)
-                d = od 
-                
+                # 1. Shell Nozzle Reinforcement (5.7.2)
+                d = od
                 t_s_used = target_course['t_used']
                 t_s_req = target_course['t_req']
                 
-                # Required Area (A_req)
-                # API 650 5.7.2.1: A_req = d * t_r
-                # where t_r is the required shell thickness (calculated design thickness)
-                A_req = d * t_s_req 
-                
-                # Available Area (A_total = A1 + A2 + A3 + A4)
-                
-                # A1: Excess Shell Thickness
-                # Area available in the shell plate within vertical limits.
-                # A1 = (t_used - t_req) * d (Simplified, ignoring vertical limit cap)
+                A_req = d * t_s_req
                 A1 = (t_s_used - t_s_req) * d
                 if A1 < 0: A1 = 0
                 
-                # A2: Excess Nozzle Neck Thickness
-                # Requires nozzle neck thickness (Pipe_Thk_mm).
-                # t_n_used = Pipe_Thk_mm
-                # t_n_req = Pressure design + CA. Usually very small.
-                # Assuming conservative A2 = 0 unless detailed data.
-                tp = n.get('Pipe_Thk_mm', 0.0)
-                A2 = 0.0
-                if tp > 0:
-                    # Very rough estimate: (tp - 0) * 4 * tp ? No.
-                    # API 5.7.2.3: (2.5 * t_s) * (t_n - t_rn) * 2 sides
-                    # Use safety factor: Ignore A2 for now to be conservative.
-                    pass
-                
-                # A3: Reinforcing Pad (If applicable)
                 A3 = 0.0
                 if repad:
-                    # Standard Pad Assumption:
-                    # OD_pad = 2 * d
-                    # Width_pad = (2d - d) / 2 = d/2 per side.
-                    # Total Width = d.
-                    # Thickness = t_s_used (Standard practice to match shell)
-                    # A3 = Total_Width * t_pad = d * t_s_used
-                    A3 = d * t_s_used 
+                    A3 = d * t_s_used
                     
-                # A4: Weld Metal (Ignored for preliminary)
-                
-                A_total = A1 + A2 + A3
+                A_total = A1 + A3
                 
                 if A_req > 0:
                     ratio = A_total / A_req
-                    
-                    # Status Check
-                    if A_total >= A_req:
-                        status = "OK"
-                    else:
-                        status = "Reinforce Req"
+                    status = "OK" if A_total >= A_req else "Reinforce Req"
                 else:
                     status = "OK (Min Thk)"
                     
@@ -171,6 +132,52 @@ class NozzleDesign:
                 n['A_req_mm2'] = A_req
                 n['A_avail_mm2'] = A_total
                 n['Status'] = status
+                n['F24_Active'] = False
+                n['F24_Warning'] = ""
+                
+            elif elev >= cum_h:
+                # 2. Roof Nozzle Reinforcement Check (API 650 F.2.4)
+                # If design pressure > 2 kPa, reinforcement check is MANDATORY per F.2.4 and 5.7
+                d = od
+                t_r_used = roof_t_used if roof_t_used else 6.0
+                t_r_req = roof_t_req if roof_t_req else 5.0
+                
+                # F.2.4 mandatory reinforcement check if P > 2 kPa
+                f24_active = P_design_kPa > 2.0
+                
+                # For roof plates, required area:
+                A_req = d * t_r_req
+                
+                A1 = (t_r_used - t_r_req) * d
+                if A1 < 0: A1 = 0
+                
+                A3 = 0.0
+                if repad:
+                    A3 = d * t_r_used
+                
+                A_total = A1 + A3
+                
+                if A_req > 0:
+                    ratio = A_total / A_req
+                    status = "OK" if A_total >= A_req else "Reinforce Req"
+                else:
+                    status = "OK (Min Thk)"
+                
+                f24_warn = ""
+                if f24_active:
+                    if status != "OK":
+                        f24_warn = f"Design pressure ({P_design_kPa:.2f} kPa) > 2 kPa: Roof nozzle reinforcement is MANDATORY per F.2.4 (H_min = 5.0m assumed)."
+                    else:
+                        f24_warn = "Design pressure > 2 kPa: Roof nozzle reinforcement checked per F.2.4 and satisfied."
+                
+                n['Check_Course'] = "Roof Plate"
+                n['t_used'] = t_r_used
+                n['t_req'] = t_r_req
+                n['A_req_mm2'] = A_req
+                n['A_avail_mm2'] = A_total
+                n['Status'] = status
+                n['F24_Active'] = f24_active
+                n['F24_Warning'] = f24_warn
                 
             checked_list.append(n)
             
