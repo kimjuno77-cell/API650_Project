@@ -1222,7 +1222,7 @@ sloshing_res = gov_seismic_load_obj.check_sloshing_freeboard(
 
 # --- Integrate Seismic Annular Requirement into Bottom Design ---
 seismic_ann_status = gov_seismic_res.get('Annular_Check', 'Not Required')
-if "Required" in seismic_ann_status:
+if "Required" in seismic_ann_status and not apply_annex_j:
      # Update Bottom Design Result
      ann_res = bottom_design.results.get('Annular Plate', {})
      
