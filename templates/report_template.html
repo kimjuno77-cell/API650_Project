@@ -426,6 +426,10 @@
             <h2>5. Bottom Design</h2>
             <table>
                 <tr>
+                    <td>Annex J (Shop-Assembled)</td>
+                    <td>{{ "Applied (J.1.2 Scope D ≤ 6m)" if apply_annex_j else "Not Applied" }}</td>
+                </tr>
+                <tr>
                     <td>Material</td>
                     <td>{{ bottom_data.get('Material', '-') }}</td>
                 </tr>
@@ -438,16 +442,48 @@
                     <td>{{ "%.2f"|format(bottom_data.get('Req Thk (mm)', 0)) }} mm</td>
                 </tr>
                 <tr>
+                    <td>Bottom Joint Type</td>
+                    <td>{{ "Butt-Welded (Annex J.3.2)" if apply_annex_j else "Lap-Welded (API 650 5.1.5.4)" }}</td>
+                </tr>
+                <tr>
                     <td>Annular Plate?</td>
                     <td>{{ annular_data.get('Required?', '-') }}</td>
                 </tr>
+                {% if annular_data.get('Applied') %}
+                <tr>
+                    <td>Annular Joint Type</td>
+                    <td>{{ annular_data.get('Joint Type', '-') }}</td>
+                </tr>
+                <tr>
+                    <td>Min Required Radial Width</td>
+                    <td>{{ "%.1f"|format(annular_data.get('Min Width (mm)', 0)) }} mm</td>
+                </tr>
+                <tr>
+                    <td>Applied Width</td>
+                    <td>{{ "%.1f"|format(annular_data.get('Applied Width (mm)', 0)) }} mm</td>
+                </tr>
+                <tr>
+                    <td>Min Required Thickness</td>
+                    <td>{{ "%.1f"|format(annular_data.get('Min Thk (mm)', 0)) }} mm</td>
+                </tr>
+                <tr>
+                    <td>Applied Thickness</td>
+                    <td>{{ "%.1f"|format(annular_data.get('Applied Thk (mm)', 0)) }} mm</td>
+                </tr>
+                {% if annular_data.get('Joint Type') == 'Butt-Welded' %}
+                <tr>
+                    <td>Butt-Welding Requirements</td>
+                    <td>Full-penetration; backing strip &ge; 3mm; root opening &ge; 6mm (API 5.5.5)</td>
+                </tr>
+                {% endif %}
+                {% endif %}
                 <tr>
                     <td>Status</td>
                     <td>{{ annular_data.get('Status', '-') }}</td>
                 </tr>
                 <tr>
                     <td>Note</td>
-                    <td>{{ bottom_data.get('Notes', '-') }}</td>
+                    <td>{{ annular_data.get('Notes', '-') or bottom_data.get('Notes', '-') }}</td>
                 </tr>
             </table>
 

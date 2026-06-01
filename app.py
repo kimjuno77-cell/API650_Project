@@ -155,6 +155,22 @@ def display_design_warnings(rd):
             has_error = True
         elif n.get('F24_Active') and n.get('F24_Warning'):
             st.warning(f"⚠️ **[ANNEX F.2.4 COMPLIANCE NOTE]** {n.get('F24_Warning')}")
+    # 6. Bottom & Annular Plate Check
+    bot_design_res = results.get('bottom_res', {})
+    if bot_design_res:
+        bot_res = bot_design_res.get('Bottom Plate', {})
+        for w in bot_res.get('Warnings', []):
+            st.error(w)
+            has_error = True
+            
+        ann_res = bot_design_res.get('Annular Plate', {})
+        if ann_res.get('Warning'):
+            w_msg = ann_res['Warning']
+            if "REQUIRED" in w_msg or "MISSING" in w_msg or "Applied Width" in w_msg or "Applied Thickness" in w_msg:
+                st.error(f"🚨 **[ANNULAR PLATE FAIL]** {w_msg}")
+                has_error = True
+            else:
+                st.warning(f"⚠️ **[ANNULAR PLATE WARNING]** {w_msg}")
     
     if not has_error:
         st.success("✅ Design Integrity Check Passed! (Basic checks OK)")
@@ -374,6 +390,13 @@ with st.container():
         st.session_state["CA_annular"] = 0.0
         st.session_state["CA_roof"] = 0.0
         
+        # Annex J & Annular defaults
+        st.session_state["apply_annex_j"] = False
+        st.session_state["use_annular"] = True
+        st.session_state["annular_joint_type"] = "Lap-Welded"
+        st.session_state["ann_width_input"] = 600.0
+        st.session_state["ann_thk_input"] = 8.0
+        
         # Reset Table
         st.session_state.pop("shell_courses_data", None)
         
@@ -536,9 +559,25 @@ with st.container():
         mat_bottom = st.selectbox("Bottom Plate", all_materials, index=get_mat_idx("mat_bottom", "A283M-C"), key="mat_bottom")
         mat_annular = st.selectbox("Annular Plate", all_materials, index=get_mat_idx("mat_annular", "A283M-C"), key="mat_annular")
         roof_material = st.selectbox("Roof Plate", all_materials, index=get_mat_idx("roof_material", "A283M-C"), key="roof_material")
+        apply_annex_j = st.checkbox("Apply Annex J (Shop-Assembled Tanks)?", value=False, key="apply_annex_j")
         use_annular = st.checkbox("Use Annular Plate?", value=True, key="use_annular")
-        ann_width_input = 600.0
-        ann_thk_input = 8.0
+        
+        ann_joint_opts = ["Lap-Welded", "Butt-Welded"]
+        def get_ann_joint_idx():
+            val = st.session_state.get("annular_joint_type", "Lap-Welded")
+            try: return ann_joint_opts.index(val)
+            except: return 0
+            
+        if use_annular:
+            annular_joint_type = st.selectbox("Annular Plate Joint Type", ann_joint_opts, index=get_ann_joint_idx(), key="annular_joint_type")
+            def_width = float(st.session_state.get("ann_width_input", 600.0))
+            def_thk = float(st.session_state.get("ann_thk_input", 8.0))
+            ann_width_input = st.number_input("Applied Annular Plate Width [mm]", value=def_width, min_value=100.0, step=50.0, key="ann_width_input")
+            ann_thk_input = st.number_input("Applied Annular Plate Nominal Thickness [mm]", value=def_thk, min_value=1.0, step=0.5, key="ann_thk_input")
+        else:
+            annular_joint_type = "Lap-Welded"
+            ann_width_input = 0.0
+            ann_thk_input = 0.0
         
     # --- Nozzle Schedule (Tab 1 Main) ---
     with st.expander("Appurtenances & Nozzle Schedule", expanded=False):
@@ -1043,7 +1082,7 @@ props_first = shell_design.get_material_stress(mat_first)
 Sd_first = props_first[0]
 
 bottom_design = BottomDesign(D, CA_bottom, mat_bottom, stress_first_course=Sd_first)
-bottom_design.run_design(H=H, G=G, use_annular=use_annular, t_shell_bot_mm=t_shell_bot_mm, user_width=ann_width_input, user_thk=ann_thk_input)
+bottom_design.run_design(H=H, G=G, use_annular=use_annular, t_shell_bot_mm=t_shell_bot_mm, user_width=ann_width_input, user_thk=ann_thk_input, apply_annex_j=apply_annex_j, annular_joint_type=annular_joint_type)
 
 # 3. Loads
 # Wind
@@ -1685,15 +1724,37 @@ with st.container():
             st.write(f"- Buoyancy Safety Factor: {e_res.get('Safety_Factor', 0):.2f}")
         else:
             st.write("No Design Results")
-        
-        st.write("**Bottom Design**")
+        st.write("**Bottom & Annular Design**")
         bot_res = bottom_design.results.get('Bottom Plate', {})
-        st.write(f"- Required Thk: {bot_res.get('Req Thk (mm)',0):.2f} mm")
-        
+        st.write(f"- Required Bottom Thk: {bot_res.get('Req Thk (mm)',0):.2f} mm")
+        if apply_annex_j:
+            st.write(f"- **Annex J (Shop-Assembled)**: Applied")
+            st.write(f"- Bottom Joint Type: **Butt-Welded** (J.3.2)")
+            if bot_res.get('Warnings'):
+                for w in bot_res['Warnings']:
+                    st.error(w)
+        else:
+            st.write(f"- **Annex J (Shop-Assembled)**: Not Applied")
+            st.write(f"- Bottom Joint Type: **Lap-Welded** (API 650 5.1.5.4)")
+            
         ann_res = bottom_design.results.get('Annular Plate', {})
-        st.write(f"**Annular Plate**: {ann_res.get('Required?', 'N/A')}")
-        if ann_res.get('Min Width (mm)', 0) > 0:
-             st.write(f"- Min Width: {ann_res.get('Min Width (mm)', 0):.1f} mm")
+        st.write(f"- **Annular Plate Applied?**: {'Yes' if ann_res.get('Applied') else 'No'} (Required: {ann_res.get('Required?', 'N/A')})")
+        if ann_res.get('Applied'):
+            st.write(f"  - Joint Type: **{ann_res.get('Joint Type', 'Lap-Welded')}**")
+            st.write(f"  - Min Required Width: {ann_res.get('Min Width (mm)', 0):.1f} mm")
+            st.write(f"  - Applied Width: {ann_res.get('Applied Width (mm)', 0):.1f} mm")
+            st.write(f"  - Min Required Thk: {ann_res.get('Min Thk (mm)', 0):.1f} mm")
+            st.write(f"  - Applied Thk: {ann_res.get('Applied Thk (mm)', 0):.1f} mm")
+            st.write(f"  - Status: **{ann_res.get('Status', 'N/A')}**")
+            
+            calc_details = ann_res.get('Calculation Details', {})
+            with st.expander("Annular Plate Calculations Details", expanded=False):
+                st.write(f"- Stress in First Course ($S_d$): {calc_details.get('Stress in First Shell Course (S_d)', 'N/A')}")
+                st.write(f"- Radial Width Formula ($L_{{calc}}$): {calc_details.get('Calculated Radial Width L_calc', 'N/A')}")
+                st.write(f"- Inside limit: {calc_details.get('Min Inside Radial Width (Lap-Welded)', 'N/A')}")
+                st.write(f"- Formula for Width: {calc_details.get('Formula_Width', 'N/A')}")
+                st.write(f"- Formula for Thickness: {calc_details.get('Formula_Thk', 'N/A')}")
+                st.write(f"- Notes: {ann_res.get('Notes', 'N/A')}")
         if ann_res.get('Warning'):
              st.error(f"⚠️ {ann_res['Warning']}")
              
@@ -1861,7 +1922,9 @@ with st.container():
             'mat_shell': mat_shell,
             'roof_material': roof_material,
             'mat_bottom': mat_bottom,
-            'mat_annular': mat_annular if use_annular else "N/A"
+            'mat_annular': mat_annular if use_annular else "N/A",
+            'apply_annex_j': apply_annex_j,
+            'annular_joint_type': annular_joint_type if use_annular else "N/A"
         },
         'weights': {
             'W_shell_kg': W_shell_kg,
@@ -1983,7 +2046,11 @@ with st.container():
         'Liquid_Name': liquid_name,
         'Annex_F_Data': annex_f_res,
         'Anchor_Data': anchor_design.results,
-        'Seismic_Shell_Check': seismic_shell_checks
+        'Seismic_Shell_Check': seismic_shell_checks,
+        'apply_annex_j': apply_annex_j,
+        'annular_joint_type': annular_joint_type,
+        'ann_width_input': ann_width_input,
+        'ann_thk_input': ann_thk_input
     }
     
     # Applied Annexes
@@ -2011,6 +2078,8 @@ with st.container():
         if not is_dup: applied_annexes.append(ann)
     if shell_method == 'annex_a':
          if "Annex A (Small Tanks)" not in applied_annexes: applied_annexes.append("Annex A (Small Tanks)")
+    if apply_annex_j:
+         if "Annex J (Shop-Assembled Tanks)" not in applied_annexes: applied_annexes.append("Annex J (Shop-Assembled Tanks)")
     
     extended_design_data['Applied_Annexes'] = applied_annexes
     report_data['design_data']['Applied_Annexes'] = applied_annexes # Also put in design_data for easy access

@@ -447,6 +447,10 @@
             <h2>5. Bottom Design</h2>
             <table>
                 <tr>
+                    <td>Annex J (Shop-Assembled)</td>
+                    <td>{{ "Applied (J.1.2 Scope D ≤ 6m)" if apply_annex_j else "Not Applied" }}</td>
+                </tr>
+                <tr>
                     <td>Material</td>
                     <td>{{ bottom_data.get('Material', '-') }}</td>
                 </tr>
@@ -459,16 +463,42 @@
                     <td>{{ "%.2f"|format(bottom_data.get('Req Thk (mm)', 0)) }} mm</td>
                 </tr>
                 <tr>
+                    <td>Bottom Joint Type</td>
+                    <td>{{ "Butt-Welded (Annex J.3.2)" if apply_annex_j else "Lap-Welded (API 650 5.1.5.4)" }}</td>
+                </tr>
+                <tr>
                     <td>Annular Plate?</td>
                     <td>{{ annular_data.get('Required?', '-') }}</td>
                 </tr>
+                {% if annular_data.get('Applied') %}
+                <tr>
+                    <td>Annular Joint Type</td>
+                    <td>{{ annular_data.get('Joint Type', '-') }}</td>
+                </tr>
+                <tr>
+                    <td>Min Required Radial Width</td>
+                    <td>{{ "%.1f"|format(annular_data.get('Min Width (mm)', 0)) }} mm</td>
+                </tr>
+                <tr>
+                    <td>Applied Width</td>
+                    <td>{{ "%.1f"|format(annular_data.get('Applied Width (mm)', 0)) }} mm</td>
+                </tr>
+                <tr>
+                    <td>Min Required Thickness</td>
+                    <td>{{ "%.1f"|format(annular_data.get('Min Thk (mm)', 0)) }} mm</td>
+                </tr>
+                <tr>
+                    <td>Applied Thickness</td>
+                    <td>{{ "%.1f"|format(annular_data.get('Applied Thk (mm)', 0)) }} mm</td>
+                </tr>
+                {% endif %}
                 <tr>
                     <td>Status</td>
                     <td>{{ annular_data.get('Status', '-') }}</td>
                 </tr>
                 <tr>
                     <td>Note</td>
-                    <td>{{ bottom_data.get('Notes', '-') }}</td>
+                    <td>{{ annular_data.get('Notes', '-') or bottom_data.get('Notes', '-') }}</td>
                 </tr>
             </table>
 
@@ -484,22 +514,29 @@
             <h3>5.1 Annular Plate Calculation (API 650 5.5)</h3>
             <div class="summary-item"><span class="label">1. Thickness Check (5.5.3):</span></div>
             <div class="formula-box">
-                <strong>Stress Reference (Sd):</strong> {{ annular_data['Calculation Details'].get('Stress in First
-                Shell Course (S_d)') }}<br>
-                <strong>Criterion:</strong> Table 5-1 Limit = {{ annular_data['Calculation Details'].get('Governing
-                Table 5-1 Limit') }}<br>
+                <strong>Stress Reference (Sd):</strong> {{ annular_data['Calculation Details'].get('Stress in First Shell Course (S_d)') }}<br>
+                <strong>Criterion:</strong> Table 5-1 Limit = {{ annular_data['Calculation Details'].get('Governing Table 5-1 Limit') }}<br>
                 <strong>Calculation:</strong> {{ annular_data['Calculation Details'].get('Formula_Thk') }}<br>
                 <strong>Result:</strong> Min Req Thk = {{ "%.2f"|format(annular_data.get('Min Thk (mm)', 0)) }} mm
             </div>
 
             <div class="summary-item"><span class="label">2. Radial Width Check (5.5.2):</span></div>
             <div class="formula-box">
-                <strong>L_min = 600mm + t_shell + Projection</strong><br>
-                <strong>Shell Calc Height:</strong> {{ annular_data['Calculation Details'].get('Calculated t_shell_bot')
-                }}<br>
-                <strong>Calculation:</strong> {{ annular_data['Calculation Details'].get('Formula_Width') }}<br>
-                <strong>Result:</strong> Min Req Width = {{ "%.2f"|format(annular_data.get('Min Width (mm)', 0)) }} mm
+                <strong>Radial Width Governing Principle:</strong> {{ "Butt-Welded (L_min = L_calc + t_shell + 50)" if annular_data.get('Joint Type') == 'Butt-Welded' else "Lap-Welded (L_min = max(600, L_calc) + t_shell + 50)" }}<br>
+                <strong>Radial Width Formula (L_calc):</strong> {{ annular_data['Calculation Details'].get('Calculated Radial Width L_calc') }}<br>
+                <strong>Shell Course 1 Thickness:</strong> {{ annular_data['Calculation Details'].get('Calculated t_shell_bot') }} mm<br>
+                <strong>Width Calculation:</strong> {{ annular_data['Calculation Details'].get('Formula_Width') }}<br>
+                <strong>Result:</strong> Min Req Width = {{ "%.1f"|format(annular_data.get('Min Width (mm)', 0)) }} mm
             </div>
+            
+            {% if annular_data.get('Joint Type') == 'Butt-Welded' %}
+            <div class="summary-item"><span class="label">3. Butt Welding Requirements (5.5.5):</span></div>
+            <div class="formula-box">
+                <strong>Joint Type:</strong> Full penetration butt-welded with square or V-groove preparation.<br>
+                <strong>Backing Strip:</strong> Required, thickness &ge; 3 mm (1/8 in.).<br>
+                <strong>Root Opening:</strong> Required, opening &ge; 6 mm (1/4 in.).
+            </div>
+            {% endif %}
             {% endif %}
 
             <h2>6. Wind Moment (Detailed Calculation)</h2>

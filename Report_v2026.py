@@ -688,12 +688,35 @@ class ReportGenerator2026:
 
     def generate_chapter_5_bottom_plate(self):
         bott_res = (self.results.get('bottom_res') or {}).get('Bottom Plate', {})
+        apply_annex_j = self.design.get('apply_annex_j', False)
         
         # Build Table
         rows = ""
         for k, v in bott_res.items():
             if isinstance(v, dict): continue # skip calc details if nested
             rows += f"<tr><td>{k}</td><td>{v}</td></tr>"
+            
+        if apply_annex_j:
+            welding_block = """
+            <h3>5.2 BOTTOM PLATE WELDING (BUTT JOINT)</h3>
+            <div class='calculation-block'>
+                <b>API 650 Annex J.3.2 Bottom Plate Joints</b><br>
+                Bottom plate joints in shop-assembled tanks shall be butt-welded.<br>
+                Lap joints are not permitted for Annex J bottom plates.<br>
+                Minimum Nominal Thickness: <b>6.0 mm (J.3.1)</b><br>
+                Design Welding Style: Full penetration butt welds.
+            </div>
+            """
+        else:
+            welding_block = f"""
+            <h3>5.2 BOTTOM PLATE WELDING (LAP JOINT)</h3>
+            <div class='calculation-block'>
+                <b>API 650 5.1.5.4.1 Lap-Welded Bottom Joints</b><br>
+                Minimum Lap Width = max(5 * t_plate, 25 mm)<br>
+                <code>Lap = max(5 * {bott_res.get('Used Thk (mm)', 6)}, 25) = {max(5 * bott_res.get('Used Thk (mm)', 6), 25):.0f} mm</code><br>
+                Design Lap Width: <b>30 mm</b> (Standard Practice)
+            </div>
+            """
             
         html = f"""
         <h3>5.1 BOTTOM PLATE THICKNESS</h3>
@@ -704,13 +727,7 @@ class ReportGenerator2026:
             Provided Thickness: <b>{bott_res.get('Used Thk (mm)', 6)} mm</b>
         </div>
         
-        <h3>5.2 BOTTOM PLATE WELDING (LAP JOINT)</h3>
-        <div class='calculation-block'>
-            <b>API 650 5.1.5.4.1 Lap-Welded Bottom Joints</b><br>
-            Minimum Lap Width = max(5 * t_plate, 25 mm)<br>
-            <code>Lap = max(5 * {bott_res.get('Used Thk (mm)', 6)}, 25) = {max(5 * bott_res.get('Used Thk (mm)', 6), 25):.0f} mm</code><br>
-            Design Lap Width: <b>30 mm</b> (Standard Practice)
-        </div>
+        {welding_block}
         
         <table>
             <tr><th>Parameter</th><th>Value</th></tr>
@@ -721,8 +738,9 @@ class ReportGenerator2026:
         
     def generate_chapter_6_annular_plate(self):
         ann_res = (self.results.get('bottom_res') or {}).get('Annular Plate', {})
+        is_req = ann_res.get('Required?', ann_res.get('Required', 'No'))
         
-        if not ann_res or ann_res.get('Required') == 'No':
+        if not ann_res or 'Yes' not in str(is_req):
             html = "<p>Annular Plate Not Required by API 650 5.5.1.</p>"
             if self.extended.get('use_annular', False):
                  html += "<p><b>Note:</b> User selected to provide Annular Plate (See Design Data).</p>"
@@ -740,6 +758,38 @@ class ReportGenerator2026:
             H_d = c1.get('H_eff_d', self.design.get('H', 0))
             t_prov = c1.get('t_used', c1.get('t_use', 0))
             stress = (4.9 * D * (H_d - 0.3) * G) / t_prov if t_prov > 0 else 0
+            
+            # Annular Plate Joint type
+            annular_joint_type = ann_res.get('Joint Type', 'Lap-Welded')
+            prov_width = ann_res.get('Applied Width (mm)', ann_res.get('Width (mm)', 600.0))
+            details = ann_res.get('Calculation Details', {})
+            
+            if annular_joint_type == 'Butt-Welded':
+                dimension_block = f"""
+                <h3>6.2 ANNULAR PLATE DIMENSIONS & PROJECTION (BUTT-WELDED)</h3>
+                <div class='calculation-block'>
+                    <b>API 650 5.5.5 / 5.5.2 Butt-Welded Annular Plate Joints</b><br>
+                    Minimum Radial Width (governed by calculation L_calc):<br>
+                    <code>L_calc = 215 * tb / sqrt(H * G) = {details.get('Calculated Radial Width L_calc', 'N/A')}</code><br>
+                    Minimum Required Total Width = <b>{ann_res.get('Min Width (mm)', 0.0):.1f} mm</b> (including shell thickness and 50mm projection)<br>
+                    Actual Provided Width: <b>{prov_width:.1f} mm</b><br><br>
+                    <b>Butt-Welded Joint Requirements (API 650 5.5.5):</b><br>
+                    1. Must be full-penetration butt-welded with square or V-groove preparation.<br>
+                    2. Backing strip thickness: <b>&ge; 3 mm (1/8 in.)</b><br>
+                    3. Root opening: <b>&ge; 6 mm (1/4 in.)</b>
+                </div>
+                """
+            else:
+                dimension_block = f"""
+                <h3>6.2 ANNULAR PLATE DIMENSIONS & PROJECTION (LAP-WELDED)</h3>
+                <div class='calculation-block'>
+                    <b>API 650 5.5.2 Annular Plate Projection</b><br>
+                    The radial width of the annular plate shall not be less than 600 mm (24 in.).<br>
+                    Minimum Projection outside shell: <b>50 mm (2 in.)</b><br>
+                    Minimum Required Total Width: <b>{ann_res.get('Min Width (mm)', 600.0):.1f} mm</b><br>
+                    Actual Provided Width: <b>{prov_width:.1f} mm</b>
+                </div>
+                """
             
             html = f"""
             <h3>6.1 ANNULAR PLATE REQUIREMENT (API 650 5.5)</h3>
@@ -773,14 +823,7 @@ class ReportGenerator2026:
                 <b>Min. Annular Thickness Required:</b> {6.0 if stress <= 170 else (8.0 if stress <= 190 else (11.0 if stress <= 210 else 'Special'))} mm + CA
             </div>
 
-            <h3>6.2 ANNULAR PLATE DIMENSIONS & PROJECTION</h3>
-            <div class='calculation-block'>
-                <b>API 650 5.5.2 Annular Plate Projection</b><br>
-                The radial width of the annular plate shall not be less than 600 mm (24 in.).<br>
-                Minimum Projection outside shell: <b>50 mm (2 in.)</b><br>
-                Actual Width: <b>{ann_res.get('Width (mm)', 600):.0f} mm</b><br>
-                Actual Projection: <b>{ann_res.get('Width (mm)', 600) - 200:.0f} mm</b> (Assumed default)
-            </div>
+            {dimension_block}
 
             <table>
                 <tr><th>Parameter</th><th>Value</th></tr>
@@ -789,7 +832,6 @@ class ReportGenerator2026:
             """
             
             # Add Calc Details if present
-            details = ann_res.get('Calculation Details', {})
             if details:
                 html += "<h4>Calculation Details</h4><ul>"
                 for step, val in details.items():
