@@ -1089,7 +1089,7 @@ nozzle_design.process_nozzles()
 nozzle_res = nozzle_design.check_reinforcement(
     shell_courses=shell_design.shell_courses,
     roof_t_used=roof_design.t_used if ('roof_design' in locals() and roof_design) else 6.0,
-    roof_t_req=roof_design.t_req if ('roof_design' in locals() and roof_design) else 5.0,
+    roof_t_req=roof_design.results.get('Roof Plate', {}).get('Req Thk', 5.0) if ('roof_design' in locals() and roof_design) else 5.0,
     P_design_kPa=P_design_mm * 0.00980665
 )
 
