@@ -562,6 +562,9 @@ with st.container():
         apply_annex_j = st.checkbox("Apply Annex J (Shop-Assembled Tanks)?", value=False, key="apply_annex_j")
         use_annular = st.checkbox("Use Annular Plate?", value=True, key="use_annular")
         
+        if apply_annex_j and use_annular:
+            st.info("💡 **API 650 Annex J Note**: 공장 조립식 탱크(Annex J)는 쉘 두께가 얇고 응력이 매우 낮으므로, 별도의 Annular Plate(Section 5.5)가 물리적으로 요구되지 않습니다. 이미 바닥 전체가 맞대기 용접(J.3.2)으로 제작되므로, 불필요한 자재 낭비와 최소 폭(L_min) 계산 문제를 방지하기 위해 **'Use Annular Plate'를 체크 해제(비활성화)**하는 것이 표준 관행입니다.")
+        
         ann_joint_opts = ["Lap-Welded", "Butt-Welded"]
         def get_ann_joint_idx():
             val = st.session_state.get("annular_joint_type", "Lap-Welded")
