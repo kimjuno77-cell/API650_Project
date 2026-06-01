@@ -66,7 +66,7 @@ class ReportGenerator2026:
         toc_html = "<div class='toc'><h2>TABLE OF CONTENTS</h2><div class='toc-container'><ul>"
         body_html = ""
         
-        for ch in self.chapters:
+        for i, ch in enumerate(self.chapters):
             toc_html += f"""
             <li class='toc-item'>
                 <span class='toc-title'>CHAPTER {ch['num']}. {ch['title']}</span>
@@ -77,7 +77,9 @@ class ReportGenerator2026:
             body_html += f"<h1 class='chapter-title'>CHAPTER {ch['num']}. {ch['title']}</h1>"
             body_html += "<hr class='chapter-divider'>"
             body_html += ch['content']
-            body_html += "</div><div class='page-break'></div>"
+            body_html += "</div>"
+            if i < len(self.chapters) - 1:
+                body_html += "<div class='page-break'></div>"
             
         toc_html += "</ul></div></div><div class='page-break'></div>"
         
@@ -170,7 +172,7 @@ class ReportGenerator2026:
             font-family: 'Roboto Mono', monospace;
         }
 
-        .chapter { padding: 60px 80px; page-break-after: always; }
+        .chapter { padding: 60px 80px; }
         .chapter-title { 
             font-size: 2.2rem; 
             color: #2d3748; 
