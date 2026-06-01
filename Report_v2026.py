@@ -1357,6 +1357,35 @@ class ReportGenerator2026:
                  <tr><td>Frangibility Check</td><td>{af.get('Frangible?', '-')}</td></tr>
              </table>
              """
+             
+             # API 650 Annex F.2 Design Precautions & Warnings Section
+             d_warns = af.get('Design Warnings', [])
+             f_warns = af.get('Frangibility Warnings', [])
+             notes = af.get('Design Notes', '')
+             
+             html += f"""
+             <h3>14.2 ANNEX F.2 DESIGN CONSIDERATIONS & SAFETY PRECAUTIONS</h3>
+             <div style='background-color:#f8f9fa; padding:15px; border-left:4px solid #0056b3; margin-bottom:20px; font-size:13px;'>
+                 <b>Design Condition Note:</b><br>
+                 {notes}
+             </div>
+             """
+             
+             if d_warns or f_warns:
+                 html += """
+                 <div style='background-color:#fff3cd; border: 1px solid #ffeeba; padding:15px; border-radius:5px; color:#856404; font-size:13px;'>
+                     <b>⚠️ API 650 Annex F.2 & Frangibility Safety Precautions:</b>
+                     <ul style='margin:5px 0 0 20px; padding:0;'>
+                 """
+                 for w in d_warns:
+                     html += f"<li>{w}</li>"
+                 for w in f_warns:
+                     html += f"<li>{w}</li>"
+                 html += """
+                     </ul>
+                 </div>
+                 """
+                 
         self._add_chapter("DESIGN OF TANK FOR SMALL INTERNAL PRESSURES", html)
 
     def generate_chapter_15_loading_data(self):

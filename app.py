@@ -112,6 +112,17 @@ def display_design_warnings(rd):
         if p_design_kpa > p_max and p_max > 0:
             st.error(f"🚨 **[ANNEX F FAIL]** Design Pressure ({p_design_kpa:.3f} kPa) > Max Pressure ({p_max:.3f} kPa). **Increase Top Angle size or add Anchorage.**")
             has_error = True
+            
+        # Display API 650 Annex F.2 Design Warnings
+        d_warns = af.get('Design Warnings', [])
+        for w in d_warns:
+            st.error(f"🚨 **[ANNEX F.2 WARNING]** {w}")
+            has_error = True
+            
+        # Display API 650 5.10.2.6 Frangibility Warnings
+        f_warns = af.get('Frangibility Warnings', [])
+        for w in f_warns:
+            st.warning(f"⚠️ **[FRANGIBILITY WARNING]** {w}")
 
     # 2.5 Seismic Hoop Stress Check
     seismic_hoop = results.get('seismic_hoop_res', {})
@@ -1244,6 +1255,9 @@ anchor_chair = AnchorChairDesign(
 anchor_chair.run_design()
 
 # Annex F (Top Angle)
+t_shell_top = shell_design.shell_courses[-1]['t_used'] if shell_design.shell_courses else 0.0
+w_roof_plates_kN = (W_plates_N / 1000.0) if 'W_plates_N' in locals() else None
+
 annex_f = AnnexFDesign(
     D=D, 
     W_roof_total_kN=w_roof_kN, 
@@ -1251,7 +1265,9 @@ annex_f = AnnexFDesign(
     P_design_kPa=p_design_kPa, 
     roof_slope=roof_slope, 
     top_angle_size=top_angle_size, 
-    detail_type=detail_type
+    detail_type=detail_type,
+    t_shell_top_mm=t_shell_top,
+    W_roof_plates_kN=w_roof_plates_kN
 )
 annex_f.run_check()
 annex_f_res = annex_f.results
@@ -1673,6 +1689,13 @@ with st.container():
             st.write(f"- Size: {ann_f.get('Top Angle', '-')}")
             st.write(f"- Junction Area: {ann_f.get('Junction Area (mm2)', 0):.0f} mm2")
             st.caption(f"Ref: {ann_f.get('Detail', 'Generic')}")
+            
+            # Display Annex F.2 Design Notes & Warnings
+            st.write(f"**Annex F.2 Design Considerations**")
+            st.info(f"ℹ️ {ann_f.get('Design Notes', 'No notes.')}")
+            d_warns = ann_f.get('Design Warnings', [])
+            for w in d_warns:
+                st.error(f"🚨 {w}")
             
             # Frangibility Check
             area_junc = ann_f.get('Junction Area (mm2)', 0)

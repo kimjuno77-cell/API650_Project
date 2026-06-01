@@ -268,7 +268,26 @@
                     <td>Junction Area</td>
                     <td>{{ "%.1f"|format(annex_f.get('Junction Area (mm2)', 0)) }} mm2</td>
                 </tr>
+                {% if annex_f.get('Design Notes') %}
+                <tr>
+                    <td>Design Notes</td>
+                    <td>{{ annex_f.get('Design Notes') }}</td>
+                </tr>
+                {% endif %}
             </table>
+            {% if annex_f.get('Design Warnings') or annex_f.get('Frangibility Warnings') %}
+            <div style="background-color: #fff3cd; border: 1px solid #ffeeba; padding: 15px; margin: 10px 0; color: #856404; font-size: 13px; border-radius: 5px;">
+                <strong>⚠️ API 650 Annex F.2 & Frangibility Safety Precautions:</strong>
+                <ul style="margin: 5px 0 0 20px; padding: 0;">
+                    {% for w in annex_f.get('Design Warnings', []) %}
+                    <li>{{ w }}</li>
+                    {% endfor %}
+                    {% for w in annex_f.get('Frangibility Warnings', []) %}
+                    <li>{{ w }}</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
             {% endif %}
 
             {% if frangibility %}
